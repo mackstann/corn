@@ -1,0 +1,9 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=Quark Music Player
+Comment=Play music from the system tray
+Exec=strange-quark
+Icon=quark.png
+Terminal=false
+Type=Application
+Categories=Application;AudioVideo;

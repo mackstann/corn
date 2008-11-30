@@ -1,0 +1,192 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Kang Jeong-Hee <Keizi@mail.co.kr>, 2003.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Quark 3.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2003-10-07 02:26-0400\n"
+"PO-Revision-Date: 2003-06-18 20:11+0900\n"
+"Last-Translator: Kang Jeong-Hee <Keizi@mail.co.kr>\n"
+"Language-Team: Korean <ko@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: quark/music.c:51
+#, c-format
+msgid "Message from Xine: %s"
+msgstr ""
+
+#: quark/music.c:67
+msgid "Incompatible version of Xine-lib found."
+msgstr "이 버전의 Xine-lib로는 돌아가지 않습니다."
+
+#: quark/music.c:80
+msgid "Unable to open audio driver from Xine."
+msgstr "Xine의 음성 드라이버를 못 엽니다."
+
+#: quark/music.c:86
+msgid "Unable to open video driver from Xine."
+msgstr "Xine의 영상 드라이버를 못 엽니다."
+
+#: quark/music.c:91
+msgid "Unable to open a Xine stream."
+msgstr "Xine 스트림을 못 엽니다."
+
+#: quark/music.c:124
+#, c-format
+msgid "Skipping '%s'. Could not convert from UTF-8. Bug?"
+msgstr "'%s'는 넘어갑니다. UTF-8로 바꿀 수가 없습니다. 버그입니까?"
+
+#: quark/fifo.c:140
+#, fuzzy, c-format
+msgid ""
+"Skipping '%s'. Could not convert to UTF-8. See the README for a possible "
+"solution."
+msgstr "'%s'는 넘어갑니다. UTF-8로 바꿀 수가 없습니다. 버그입니까?"
+
+#: strange-quark/applet.c:134
+msgid "Save bookmark - Quark"
+msgstr ""
+
+#: strange-quark/applet.c:151
+msgid "Choose name for bookmark:"
+msgstr ""
+
+#: strange-quark/applet.c:241
+#, c-format
+msgid ""
+"Failed to load the Quark icon, quark is probably not installed correctly. "
+"The error given was '%s'."
+msgstr ""
+"쿼크 아이콘을 못 읽습니다. 아마 쿼크를 제대로 안 깐 것 같습니다.에러 내용은 "
+"'%s'입니다."
+
+#: strange-quark/applet.c:378
+#, c-format
+msgid "Playing: %s"
+msgstr ""
+
+#: strange-quark/applet.c:408
+msgid "_Play"
+msgstr "재생(_P)"
+
+#: strange-quark/applet.c:414
+msgid "Pa_use"
+msgstr "일시정지(_U)"
+
+#: strange-quark/applet.c:420
+msgid "_Stop"
+msgstr "정지(_S)"
+
+#: strange-quark/applet.c:429
+msgid "_Next track"
+msgstr "다음(_N)"
+
+#: strange-quark/applet.c:436
+msgid "Pre_vious track"
+msgstr "이전(_V)"
+
+#: strange-quark/applet.c:445
+msgid "_Recent"
+msgstr ""
+
+#: strange-quark/applet.c:452
+msgid "_Load songs..."
+msgstr "노래 읽기(_L)..."
+
+#: strange-quark/applet.c:458
+msgid "_Append songs..."
+msgstr "노래 추가(_A)..."
+
+#: strange-quark/applet.c:464
+msgid "_Clear playlist"
+msgstr "재생목록 비우기(_C)"
+
+#: strange-quark/applet.c:473
+msgid "Play on startup"
+msgstr "뜰 때 재생 시작"
+
+#: strange-quark/applet.c:482
+msgid "Loop playlist"
+msgstr "재생목록 반복"
+
+#: strange-quark/applet.c:491
+msgid "Random order"
+msgstr "무작위 재상"
+
+#: strange-quark/applet.c:504
+msgid "_Bookmarks"
+msgstr ""
+
+#: strange-quark/applet.c:511
+msgid "_Save playlist as bookmark"
+msgstr ""
+
+#: strange-quark/applet.c:522
+msgid "_Edit playlist..."
+msgstr "재생목록 편집(_E)..."
+
+#: strange-quark/quarkclient.c:243
+#, c-format
+msgid ""
+"%s is not a FIFO.\n"
+"If you have specified the path to the FIFO, please ensure it is actually a "
+"FIFO.\n"
+"If you have not specified a path, then this is likely a bug in the program. "
+"Remove the $HOME/.quark directory, restart the Quark backend, and try again. "
+"If this persists, contact the maintainer."
+msgstr ""
+
+#: strange-quark/quarkclient.c:275
+#, c-format
+msgid ""
+"Unable to launch the Quark backend. Quark was probably installed "
+"incorrectly. Check that \"quark\" binary is in your path and is executable "
+"by your user. The error given was: %s"
+msgstr ""
+"쿼크 엔진을 못 띄웁니다. 아마 쿼크를 제대로 안 깐 것 같습니다.\"quark\" 실행"
+"파일이 경로에 있는지 그리고 사용자가 실행할 수 있는지확인하세요. 에러 내용은 "
+"이렇습니다: %s"
+
+#: strange-quark/quarkclient.c:298
+#, c-format
+msgid ""
+"Unable to connect to a running Quark. The error given was '%s'. Run the "
+"Quark backend and try again."
+msgstr ""
+"실행중인 쿼크에 연결 못 합니다. 에러는 '%s'입니다.쿼크 엔진을 띄우고 다시 하"
+"세요."
+
+#: strange-quark/quarkclient.c:329
+#, c-format
+msgid ""
+"Unable to create a FIFO to communicate with the Quark backend. The error "
+"given was '%s'"
+msgstr ""
+
+#: strange-quark/quarkclient.c:343
+#, c-format
+msgid ""
+"Unable to open client FIFO to communicate with the Quark backend. Try "
+"ensuring that your permissions are correct. The error given was '%s'"
+msgstr ""
+
+#: strange-quark/editor.c:208
+msgid "Edit Playlist - Quark"
+msgstr "재생목록 편집 - 쿼크"
+
+#: strange-quark/editor.c:209
+msgid "Playlist Editor"
+msgstr "재생목록 편집기"
+
+#: strange-quark/editor.c:440
+msgid "Append Songs - Quark"
+msgstr "노래 추가 - 쿼크"
+
+#: strange-quark/editor.c:441
+msgid "Play Songs - Quark"
+msgstr "노래 재생 - 쿼크"

@@ -1,0 +1,26 @@
+How to use Quark
+----------------
+
+First, run the backend:
+% quark &
+
+To use the CLI:
+% charm-quark
+
+To use the GUI:
+% strange-quark
+
+Playing songs with non-english filenames
+----------------------------------------
+
+If you want to play files that are not named in UTF-8 encoding and contain
+non-ascii characters, then you will have to pull some strings to make Quark
+load them.
+
+Seting environment variables as shown here can make Quark work with them:
+
+export G_BROKEN_FILENAMES=0  # this says that your filenames are not UTF-8
+export CHARSET=ISO_8859-1    # this tells Quark what charset your files are
+                             # using, change its value as appropriate
+
+Alternately, you can rename your files to use UTF-8 characters. :)

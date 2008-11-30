@@ -1,0 +1,47 @@
+<gconfschemafile>
+  <schemalist>
+    <schema>
+      <key>/schemas/apps/quark/loop_playlist</key>
+      <applyto>/apps/quark/loop_playlist</applyto>
+      <owner>quark</owner>
+      <type>bool</type>
+      <default>false</default>
+      <locale name="C">
+        <short>Loop playlist at end</short>
+        <long>
+          When this is enabled, playback will resume at the top of the
+          playlist once the end is reached instead of stopping
+        </long>
+      </locale>
+    </schema>
+
+    <schema>
+      <key>/schemas/apps/quark/random_order</key>
+      <applyto>/apps/quark/random_order</applyto>
+      <owner>quark</owner>
+      <type>bool</type>
+      <default>false</default>
+      <locale name="C">
+        <short>Random track selection</short>
+        <long>
+          Plays tracks in random order
+        </long>
+      </locale>
+    </schema>
+
+    <schema>
+      <key>/schemas/apps/quark/playlist/position</key>
+      <applyto>/apps/quark/playlist/position</applyto>
+      <owner>quark</owner>
+      <type>int</type>
+      <default>-1</default>
+      <locale name="C">
+        <short>Playback position</short>
+        <long>
+          The position in the playlist, saved when Quark exits. Modifying this
+          value while quark is running will have no effect.
+        </long>
+      </locale>
+    </schema>
+  </schemalist>
+</gconfschemafile>

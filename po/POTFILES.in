@@ -1,0 +1,6 @@
+quark/music.c
+quark/fifo.c
+
+strange-quark/applet.c
+strange-quark/quarkclient.c
+strange-quark/editor.c
