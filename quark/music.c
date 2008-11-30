@@ -5,6 +5,8 @@
 #include "main.h"
 #include "playlist.h"
 
+#include <json-glib/json-glib.h>
+#include <glib-object.h>
 #include <xine.h>
 #include <glib.h>
 #include <string.h>
@@ -256,11 +258,36 @@ music_notify_msg (const char *message)
 }
 
 void
-music_notify_add_song (const gchar *song, gint pos)
+music_notify_add_song (const gchar *argsong, gint argpos)
 {
-    gchar *s = g_strdup_printf ("ADD\n%s\n%d\n", song, pos);
-    music_notify_msg (s);
-    g_free (s);
+    JsonObject * root_obj = json_object_new();
+
+    JsonNode * event = json_node_new(JSON_NODE_VALUE);
+    json_node_set_string(event, "add");
+    json_object_add_member(root_obj, "event", event);
+
+    JsonNode * song = json_node_new(JSON_NODE_VALUE);
+    json_node_set_string(song, argsong);
+    json_object_add_member(root_obj, "song", song);
+
+    JsonNode * pos = json_node_new(JSON_NODE_VALUE);
+    json_node_set_int(pos, argpos);
+    json_object_add_member(root_obj, "pos", pos);
+
+    JsonNode * root_node = json_node_new(JSON_NODE_OBJECT);
+    json_node_take_object(root_node, root_obj);
+
+    JsonGenerator * json = json_generator_new();
+    json_generator_set_root(json, root_node);
+    gsize len;
+    gchar * output = json_generator_to_data(json, &len);
+
+    music_notify_msg (output);
+    g_free (output);
+    json_node_free(event);
+    json_node_free(song);
+    json_node_free(pos);
+    json_node_free(root_node);
 }
 
 void
