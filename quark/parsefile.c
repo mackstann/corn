@@ -310,7 +310,7 @@ parse_file (const gchar *path)
         return FALSE;
     }
 
-    g_message ("mimetype: %s", info->mime_type);
+    //g_message ("mimetype: %s", info->mime_type);
 
     if (strcmp ("x-directory/normal", info->mime_type) == 0)
         return parse_dir (path);
