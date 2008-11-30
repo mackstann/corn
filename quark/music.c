@@ -207,7 +207,7 @@ music_list_notify (GIOChannel *channel, const char *message)
 {
     gsize written;
     GIOStatus status;
-    gboolean retval = FALSE;
+    gboolean retval = TRUE;
 
     while ( (status = g_io_channel_write_chars (channel, message,
                                                 strlen (message),
@@ -217,12 +217,12 @@ music_list_notify (GIOChannel *channel, const char *message)
     }
     
     if (status == G_IO_STATUS_ERROR) {
-        retval = TRUE;
+        retval = FALSE;
     }
     while ( (status = g_io_channel_flush(channel, NULL)) == G_IO_STATUS_AGAIN);
 
     if (status == G_IO_STATUS_ERROR)
-        retval = TRUE;
+        retval = FALSE;
 
     return retval;
 }
@@ -250,17 +250,16 @@ music_notify_msg (const char *format, ...)
     it = notify_channels;
 
     while (it != NULL) {
-        if (music_list_notify (it->data, message)) {
+        if (music_list_notify (it->data, message))
+            it = it->next;
+        else {
             GList *tmp = it->next;
             g_list_remove_link (notify_channels, it);
             g_io_channel_shutdown (it->data, FALSE, NULL);
             g_io_channel_unref (it->data);
-            if (it == notify_channels) {
+            if (it == notify_channels)
                 notify_channels = NULL;
-            }
             it = tmp;
-        } else {
-            it = it->next;
         }
     }
     g_free (message);
