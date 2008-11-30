@@ -149,7 +149,7 @@ case $1 in
         TEMPNAM=`mktemp -u $HOME/.quark/quark-client.XXXXXXXX` || \
             TEMPNAM="$HOME/.quark/quark-client.$$"
         mkfifo "$TEMPNAM"
-        (sleep 1; echo connect "$TEMPNAM" > "$FIFO") &
+        (sleep 1; echo "{\"command\": \"connect\", \"filename\": \"$TEMPNAM\"}" > "$FIFO") &
         cat "$TEMPNAM"
         rm "$TEMPNAM"
 	exit # nothing going to the fifo

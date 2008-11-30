@@ -6,6 +6,8 @@
 #include "playlist.h"
 #include "fifo.h"
 
+#include <json-glib/json-glib.h>
+#include <glib-object.h>
 #include <glib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -22,7 +24,7 @@ static GIOChannel *fifo_chan = NULL;
 static gboolean
 fifo_read (GIOChannel *chan, GIOCondition cond, gpointer data);
 static void
-fifo_execute (const char *command);
+fifo_execute (JsonObject *command);
 
 gboolean
 fifo_open ()
@@ -74,19 +76,38 @@ static gboolean
 fifo_read (GIOChannel *chan, GIOCondition cond, gpointer data)
 {
     char *command;
-    gsize term;
-    GError *err;
+    gsize len;
+    GError *err = NULL, * parse_err = NULL;
     gboolean ret;
 
     g_static_mutex_lock (&main_fifo_mutex);
 
-    err = NULL;
-
     if (cond & G_IO_IN) {
-        while (g_io_channel_read_line (chan, &command, NULL, &term, &err) ==
+        while (g_io_channel_read_line (chan, &command, NULL, &len, &err) ==
                G_IO_STATUS_NORMAL) {
-            command[term] = '\0';
-            fifo_execute (command);
+            command[len] = '\0';
+            JsonParser * parser = json_parser_new();
+            if(!json_parser_load_from_data(parser, command, len, &parse_err))
+            {
+                g_warning ("error parsing command: command: %s", command);
+                g_warning ("error parsing command: error: %s", parse_err->message);
+                g_error_free (parse_err);
+            }
+            else
+            {
+                JsonNode * root = json_parser_get_root(parser);
+                if(JSON_NODE_TYPE(root) != JSON_NODE_OBJECT)
+                    g_warning ("command is not an object: %s", command);
+                else
+                {
+                    JsonObject * obj = json_node_get_object(root);
+                    if(!json_object_has_member(obj, "command"))
+                        g_warning("command has no \"command\" member: %s", command);
+                    else
+                        fifo_execute(obj);
+                }
+            }
+            //fifo_execute (command);
             g_free (command);
         }
         if (err) {
@@ -111,31 +132,34 @@ fifo_read (GIOChannel *chan, GIOCondition cond, gpointer data)
 }
 
 static void
-fifo_execute (const char *command)
+fifo_execute (JsonObject *command)
 {
-    if (!g_ascii_strncasecmp (command, "quit", 4))
+    const gchar * commandstr = json_node_get_string(json_object_get_member(command, "command"));
+
+    if (!g_strcmp0 (commandstr, "quit"))
         main_quit ();
-    else if (!g_ascii_strncasecmp (command, "play", 4))
+    else if (!g_strcmp0 (commandstr, "play"))
         music_play ();
-    else if (!g_ascii_strncasecmp (command, "pause", 5))
+    else if (!g_strcmp0 (commandstr, "pause"))
         if (music_playing)
             music_pause ();
         else
             music_play ();
-    else if (!g_ascii_strncasecmp (command, "stop", 4))
+    else if (!g_strcmp0 (commandstr, "stop"))
         music_stop ();
-    else if (!g_ascii_strncasecmp (command, "next", 4)) {
+    else if (!g_strcmp0 (commandstr, "next")) {
         playlist_advance (1, TRUE);
     }
-    else if (!g_ascii_strncasecmp (command, "prev", 4)) {
+    else if (!g_strcmp0 (commandstr, "prev")) {
         playlist_advance (-1, TRUE);
     }
-    else if (!g_ascii_strncasecmp (command, "append", 6)) {
-        if (strlen (command) > 7) {
+    else if (!g_strcmp0 (commandstr, "append")) {
+        if(!json_object_has_member(command, "path"))
+            g_warning("append command has no \"path\" member");
+        else
+        {
+            const gchar * path = json_node_get_string(json_object_get_member(command, "path"));
             gchar *u;
-            const gchar *path;
-
-            path = (command + 7);
             if (!(u = g_filename_to_utf8 (path, -1, NULL, NULL, NULL))) {
                 g_warning (_("Skipping '%s'. Could not convert to UTF-8. "
                              "See the README for a possible solution."), path);
@@ -145,43 +169,58 @@ fifo_execute (const char *command)
             }
         }
     }
-    else if (!g_ascii_strncasecmp (command, "track", 5)) {
-        if (strlen (command) > 6) {
-            int i = atoi (command + 6);
-            playlist_seek (i - 1); /* first track is '1' */
+    else if (!g_strcmp0 (commandstr, "track")) {
+        if(!json_object_has_member(command, "track"))
+            g_warning("track command has no \"track\" member");
+        else
+        {
+            gint track = json_node_get_int(json_object_get_member(command, "track"));
+            playlist_seek (track-1); /* first track is '1' */
         }
     }
-    else if (!g_ascii_strncasecmp (command, "remove", 6)) {
-        if (strlen (command) > 7) {
-            int i = atoi (command + 7);
-            playlist_remove (i - 1); /* first track is '1' */
+    else if (!g_strcmp0 (commandstr, "remove")) {
+        if(!json_object_has_member(command, "track"))
+            g_warning("remove command has no \"track\" member");
+        else
+        {
+            gint track = json_node_get_int(json_object_get_member(command, "track"));
+            playlist_remove (track-1); /* first track is '1' */
         }
     }
-    else if (!g_ascii_strncasecmp (command, "clear", 5)) {
+    else if (!g_strcmp0 (commandstr, "clear")) {
         playlist_clear ();
     }
-    else if (!g_ascii_strncasecmp (command, "move", 4)) {
-        if (strlen (command) > 5) {
-            char *p;
-            int i = strtol (command + 5, &p, 10);
-            if (strlen (command) > (unsigned)(p - command)) {
-                int before = atoi (p);
-                playlist_move (i - 1, before - 1); /* first track is '1' */
+    else if (!g_strcmp0 (commandstr, "move")) {
+        if(!json_object_has_member(command, "from"))
+            g_warning("move command has no \"from\" member");
+        else
+        {
+            gint from = json_node_get_int(json_object_get_member(command, "from"));
+            if(!json_object_has_member(command, "to"))
+                g_warning("move command has no \"to\" member");
+            else
+            {
+                gint to = json_node_get_int(json_object_get_member(command, "to"));
+                playlist_move (to - 1, from - 1); /* first track is '1' */
             }
         }
     }
-    else if (!g_ascii_strncasecmp (command, "loop", 4)) {
+    else if (!g_strcmp0 (commandstr, "loop")) {
         main_set_loop_at_end(!main_loop_at_end);
     }
-    else if (!g_ascii_strncasecmp (command, "random", 6)) {
+    else if (!g_strcmp0 (commandstr, "random")) {
         main_set_random_order(!main_random_order);
     }
-    else if (!g_ascii_strncasecmp (command, "dump", 4)) {
+    else if (!g_strcmp0 (commandstr, "dump")) {
         playlist_dump ();
     }
-    else if (!g_ascii_strncasecmp (command, "connect", 7)) {
-        if (strlen (command) > 8) {
-            fifo_add_notify (command + 8);
+    else if (!g_strcmp0 (commandstr, "connect")) {
+        if(!json_object_has_member(command, "filename"))
+            g_warning("connect command has no \"filename\" member");
+        else
+        {
+            const gchar * filename = json_node_get_string(json_object_get_member(command, "filename"));
+            fifo_add_notify (filename);
         }
     }
 
