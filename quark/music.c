@@ -232,19 +232,15 @@ music_list_notify (GIOChannel *channel, const char *message)
 static void
 music_notify_msg (const char *message)
 {
-    char *fullmessage;
-    GList *it;
+    GList *it = notify_channels;
 
     g_message ("%s", message);
-    fullmessage = g_strdup_printf ("STARTMESSAGE\n%sENDMESSAGE\n", message);
-    
-    it = notify_channels;
 
     while (it != NULL) {
-        if (music_list_notify (it->data, fullmessage))
+        if (music_list_notify (it->data, message))
             it = it->next;
         else {
-            // i think this may be leaky/buggy
+            // i think this may be leaky/buggy, or at least awkward
             GList *tmp = it->next;
             g_list_remove_link (notify_channels, it);
             g_io_channel_shutdown (it->data, FALSE, NULL);
@@ -254,95 +250,153 @@ music_notify_msg (const char *message)
             it = tmp;
         }
     }
-    g_free (fullmessage);
 }
 
-void
-music_notify_add_song (const gchar *argsong, gint argpos)
+gchar *
+serialize_json_object (JsonObject * obj)
 {
-    JsonObject * root_obj = json_object_new();
-
-    JsonNode * event = json_node_new(JSON_NODE_VALUE);
-    json_node_set_string(event, "add");
-    json_object_add_member(root_obj, "event", event);
-
-    JsonNode * song = json_node_new(JSON_NODE_VALUE);
-    json_node_set_string(song, argsong);
-    json_object_add_member(root_obj, "song", song);
-
-    JsonNode * pos = json_node_new(JSON_NODE_VALUE);
-    json_node_set_int(pos, argpos);
-    json_object_add_member(root_obj, "pos", pos);
-
     JsonNode * root_node = json_node_new(JSON_NODE_OBJECT);
-    json_node_take_object(root_node, root_obj);
+    json_node_set_object(root_node, obj);
 
     JsonGenerator * json = json_generator_new();
     json_generator_set_root(json, root_node);
-    gsize len;
-    gchar * output = json_generator_to_data(json, &len);
+
+    gsize _;
+    gchar * output = json_generator_to_data(json, &_);
+
+    g_object_unref(json);
+    json_node_free(root_node);
+
+    return output;
+}
+
+typedef struct {
+    enum { NOTIFY_ATTR_INT = 1, NOTIFY_ATTR_STRING = 2 } type;
+    const gchar * name;
+    union {
+        gint i;
+        const gchar * s;
+    } val;
+} notify_attr_t;
+
+void notify_with_object (notify_attr_t * attrs)
+{
+    JsonObject * obj = json_object_new();
+
+    for(notify_attr_t * attr = attrs; attr->type; ++attr)
+    {
+        JsonNode * val_node = json_node_new(JSON_NODE_VALUE);
+
+        if(attr->type == NOTIFY_ATTR_STRING)
+            json_node_set_string(val_node, attr->val.s);
+        else if(attr->type == NOTIFY_ATTR_INT)
+            json_node_set_int(val_node, attr->val.i);
+        else
+            g_return_if_reached();
+
+        json_object_add_member(obj, attr->name, val_node);
+    }
+
+    gchar * output = serialize_json_object(obj);
+    json_object_unref(obj);
 
     music_notify_msg (output);
-    g_free (output);
-    json_node_free(event);
-    json_node_free(song);
-    json_node_free(pos);
-    json_node_free(root_node);
+    g_free(output);
+}
+
+void
+music_notify_add_song (const gchar *song, gint pos)
+{
+    notify_attr_t attrs[] = {
+        { .type = NOTIFY_ATTR_STRING, .name = "event",    .val = { .s = "add" } },
+        { .type = NOTIFY_ATTR_STRING, .name = "song",     .val = { .s = song } },
+        { .type = NOTIFY_ATTR_INT,    .name = "position", .val = { .i = pos } },
+        { 0 }
+    };
+    notify_with_object(attrs);
 }
 
 void
 music_notify_remove_song (gint pos)
 {
-    gchar *s = g_strdup_printf ("REMOVE\n%d\n", pos);
-    music_notify_msg (s);
-    g_free (s);
+    notify_attr_t attrs[] = {
+        { .type = NOTIFY_ATTR_STRING, .name = "event",    .val = { .s = "remove" } },
+        { .type = NOTIFY_ATTR_INT,    .name = "position", .val = { .i = pos } },
+        { 0 }
+    };
+    notify_with_object(attrs);
 }
 
 void
 music_notify_move_song (gint from, gint to)
 {
-    gchar *s = g_strdup_printf ("MOVE\n%d\n%d\n", from, to);
-    music_notify_msg (s);
-    g_free (s);
+    notify_attr_t attrs[] = {
+        { .type = NOTIFY_ATTR_STRING, .name = "event", .val = { .s = "move" } },
+        { .type = NOTIFY_ATTR_INT,    .name = "from",  .val = { .i = from } },
+        { .type = NOTIFY_ATTR_INT,    .name = "to",    .val = { .i = to } },
+        { 0 }
+    };
+    notify_with_object(attrs);
 }
 
 void
 music_notify_current_song (gint pos)
 {
-    gchar *s = g_strdup_printf ("CURRENT\n%d\n", pos);
-    music_notify_msg (s);
-    g_free (s);
+    notify_attr_t attrs[] = {
+        { .type = NOTIFY_ATTR_STRING, .name = "event",    .val = { .s = "current" } },
+        { .type = NOTIFY_ATTR_INT,    .name = "position", .val = { .i = pos } },
+        { 0 }
+    };
+    notify_with_object(attrs);
 }
 
 void
 music_notify_song_failed ()
 {
-    gchar *s = g_strdup_printf ("FAILED\n");
-    music_notify_msg (s);
-    g_free (s);
+    notify_attr_t attrs[] = {
+        { .type = NOTIFY_ATTR_STRING, .name = "event", .val = { .s = "failed" } },
+        { 0 }
+    };
+    notify_with_object(attrs);
 }
 
 void
 music_notify_playing ()
 {
-    gchar *s = g_strdup_printf ("PLAYING\n");
-    music_notify_msg (s);
-    g_free (s);
+    notify_attr_t attrs[] = {
+        { .type = NOTIFY_ATTR_STRING, .name = "event", .val = { .s = "playing" } },
+        { 0 }
+    };
+    notify_with_object(attrs);
 }
 
 void
 music_notify_paused ()
 {
-    gchar *s = g_strdup_printf ("PAUSED\n");
-    music_notify_msg (s);
-    g_free (s);
+    notify_attr_t attrs[] = {
+        { .type = NOTIFY_ATTR_STRING, .name = "event", .val = { .s = "paused" } },
+        { 0 }
+    };
+    notify_with_object(attrs);
 }
 
 void
 music_notify_stopped ()
 {
-    gchar *s = g_strdup_printf ("STOPPED\n");
-    music_notify_msg (s);
-    g_free (s);
+    notify_attr_t attrs[] = {
+        { .type = NOTIFY_ATTR_STRING, .name = "event", .val = { .s = "stopped" } },
+        { 0 }
+    };
+    notify_with_object(attrs);
+}
+
+void
+music_notify_clear ()
+{
+    notify_attr_t attrs[] = {
+        { .type = NOTIFY_ATTR_STRING, .name = "event", .val = { .s = "clear" } },
+        { 0 }
+    };
+    notify_with_object(attrs);
 }
 

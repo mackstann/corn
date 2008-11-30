@@ -25,5 +25,6 @@ void music_notify_song_failed  ();
 void music_notify_playing      ();
 void music_notify_paused       ();
 void music_notify_stopped      ();
+void music_notify_clear        ();
 
 #endif

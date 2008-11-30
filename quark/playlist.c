@@ -285,12 +285,11 @@ playlist_clear ()
     while (playlist) {
         listitem_free (playlist->data);
         playlist = g_list_delete_link (playlist, playlist);
-
-        music_notify_remove_song (0);
     }
     playlist = playlist_current = NULL;
     g_list_free (playlist_random);
     playlist_random = NULL;
+    music_notify_clear ();
     music_stop ();
 }
 
