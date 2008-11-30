@@ -228,31 +228,21 @@ music_list_notify (GIOChannel *channel, const char *message)
 }
     
 static void
-music_notify_msg (const char *format, ...)
+music_notify_msg (const char *message)
 {
-    char *message, *newformat;
+    char *fullmessage;
     GList *it;
-    va_list args;
-
-    va_start (args, format);
-    message = g_strdup_vprintf(format, args);
-    va_end (args);
 
     g_message ("%s", message);
-    g_free (message);
-            
-    newformat = g_strdup_printf ("STARTMESSAGE\n%sENDMESSAGE\n", format);
-
-    va_start (args, format);
-    message = g_strdup_vprintf (newformat, args);
-    va_end (args);
+    fullmessage = g_strdup_printf ("STARTMESSAGE\n%sENDMESSAGE\n", message);
     
     it = notify_channels;
 
     while (it != NULL) {
-        if (music_list_notify (it->data, message))
+        if (music_list_notify (it->data, fullmessage))
             it = it->next;
         else {
+            // i think this may be leaky/buggy
             GList *tmp = it->next;
             g_list_remove_link (notify_channels, it);
             g_io_channel_shutdown (it->data, FALSE, NULL);
@@ -262,16 +252,13 @@ music_notify_msg (const char *format, ...)
             it = tmp;
         }
     }
-    g_free (message);
-    g_free (newformat);
+    g_free (fullmessage);
 }
 
 void
 music_notify_add_song (const gchar *song, gint pos)
 {
-    gchar *s;
-
-    s = g_strdup_printf ("ADD\n%s\n%d\n", song, pos);
+    gchar *s = g_strdup_printf ("ADD\n%s\n%d\n", song, pos);
     music_notify_msg (s);
     g_free (s);
 }
@@ -279,9 +266,7 @@ music_notify_add_song (const gchar *song, gint pos)
 void
 music_notify_remove_song (gint pos)
 {
-    gchar *s;
-
-    s = g_strdup_printf ("REMOVE\n%d\n", pos);
+    gchar *s = g_strdup_printf ("REMOVE\n%d\n", pos);
     music_notify_msg (s);
     g_free (s);
 }
@@ -289,9 +274,7 @@ music_notify_remove_song (gint pos)
 void
 music_notify_move_song (gint from, gint to)
 {
-    gchar *s;
-
-    s = g_strdup_printf ("MOVE\n%d\n%d\n", from, to);
+    gchar *s = g_strdup_printf ("MOVE\n%d\n%d\n", from, to);
     music_notify_msg (s);
     g_free (s);
 }
@@ -299,9 +282,7 @@ music_notify_move_song (gint from, gint to)
 void
 music_notify_current_song (gint pos)
 {
-    gchar *s;
-
-    s = g_strdup_printf ("CURRENT\n%d\n", pos);
+    gchar *s = g_strdup_printf ("CURRENT\n%d\n", pos);
     music_notify_msg (s);
     g_free (s);
 }
@@ -309,9 +290,7 @@ music_notify_current_song (gint pos)
 void
 music_notify_song_failed ()
 {
-    gchar *s;
-
-    s = g_strdup_printf ("FAILED\n");
+    gchar *s = g_strdup_printf ("FAILED\n");
     music_notify_msg (s);
     g_free (s);
 }
@@ -319,9 +298,7 @@ music_notify_song_failed ()
 void
 music_notify_playing ()
 {
-    gchar *s;
-
-    s = g_strdup_printf ("PLAYING\n");
+    gchar *s = g_strdup_printf ("PLAYING\n");
     music_notify_msg (s);
     g_free (s);
 }
@@ -329,9 +306,7 @@ music_notify_playing ()
 void
 music_notify_paused ()
 {
-    gchar *s;
-
-    s = g_strdup_printf ("PAUSED\n");
+    gchar *s = g_strdup_printf ("PAUSED\n");
     music_notify_msg (s);
     g_free (s);
 }
@@ -339,9 +314,7 @@ music_notify_paused ()
 void
 music_notify_stopped ()
 {
-    gchar *s;
-
-    s = g_strdup_printf ("STOPPED\n");
+    gchar *s = g_strdup_printf ("STOPPED\n");
     music_notify_msg (s);
     g_free (s);
 }
