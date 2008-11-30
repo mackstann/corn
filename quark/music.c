@@ -236,8 +236,10 @@ music_notify_msg (const char *message)
 
     g_message ("%s", message);
 
+    gchar *s = g_strdup_printf ("%s\n", message);
+
     while (it != NULL) {
-        if (music_list_notify (it->data, message))
+        if (music_list_notify (it->data, s))
             it = it->next;
         else {
             // i think this may be leaky/buggy, or at least awkward
@@ -250,6 +252,7 @@ music_notify_msg (const char *message)
             it = tmp;
         }
     }
+    g_free(s);
 }
 
 gchar *
@@ -298,9 +301,10 @@ void notify_with_object (notify_attr_t * attrs)
     }
 
     gchar * output = serialize_json_object(obj);
-    json_object_unref(obj);
 
     music_notify_msg (output);
+
+    json_object_unref(obj);
     g_free(output);
 }
 
