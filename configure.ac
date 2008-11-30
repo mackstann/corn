@@ -41,6 +41,10 @@ PKG_CHECK_MODULES(GTHREAD, [gthread-2.0])
 AC_SUBST(GTHREAD_CFLAGS)
 AC_SUBST(GTHREAD_LIBS)
 
+PKG_CHECK_MODULES(JSON, [json-glib-1.0])
+AC_SUBST(JSON_CFLAGS)
+AC_SUBST(JSON_LIBS)
+
 AC_ARG_ENABLE(gconf,
   [  --disable-gconf         disable use of gconf (for embedded targets)],
   [], [enable_gconf="yes"])
