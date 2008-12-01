@@ -287,7 +287,7 @@ serialize_json_object (JsonObject * obj)
 }
 
 typedef struct {
-    enum { NOTIFY_ATTR_INT = 1, NOTIFY_ATTR_STRING = 2 } type;
+    gint type;
     const gchar * name;
     union {
         gint i;
@@ -299,13 +299,13 @@ void notify_with_object (notify_attr_t * attrs)
 {
     JsonObject * obj = json_object_new();
 
-    for(notify_attr_t * attr = attrs; attr->type; ++attr)
+    for(notify_attr_t * attr = attrs; attr->name; ++attr)
     {
         JsonNode * val_node = json_node_new(JSON_NODE_VALUE);
 
-        if(attr->type == NOTIFY_ATTR_STRING)
+        if(attr->type == G_TYPE_STRING)
             json_node_set_string(val_node, attr->val.s);
-        else if(attr->type == NOTIFY_ATTR_INT)
+        else if(attr->type == G_TYPE_INT)
             json_node_set_int(val_node, attr->val.i);
         else
             g_return_if_reached();
@@ -325,9 +325,9 @@ void
 music_notify_add_song (const gchar *song, gint pos)
 {
     notify_attr_t attrs[] = {
-        { .type = NOTIFY_ATTR_STRING, .name = "event",    .val = { .s = "add" } },
-        { .type = NOTIFY_ATTR_STRING, .name = "song",     .val = { .s = song } },
-        { .type = NOTIFY_ATTR_INT,    .name = "position", .val = { .i = pos } },
+        { .type = G_TYPE_STRING, .name = "event",    .val = { .s = "add" } },
+        { .type = G_TYPE_STRING, .name = "song",     .val = { .s = song } },
+        { .type = G_TYPE_INT,    .name = "position", .val = { .i = pos } },
         { 0 }
     };
     notify_with_object(attrs);
@@ -337,8 +337,8 @@ void
 music_notify_remove_song (gint pos)
 {
     notify_attr_t attrs[] = {
-        { .type = NOTIFY_ATTR_STRING, .name = "event",    .val = { .s = "remove" } },
-        { .type = NOTIFY_ATTR_INT,    .name = "position", .val = { .i = pos } },
+        { .type = G_TYPE_STRING, .name = "event",    .val = { .s = "remove" } },
+        { .type = G_TYPE_INT,    .name = "position", .val = { .i = pos } },
         { 0 }
     };
     notify_with_object(attrs);
@@ -348,9 +348,9 @@ void
 music_notify_move_song (gint from, gint to)
 {
     notify_attr_t attrs[] = {
-        { .type = NOTIFY_ATTR_STRING, .name = "event", .val = { .s = "move" } },
-        { .type = NOTIFY_ATTR_INT,    .name = "from",  .val = { .i = from } },
-        { .type = NOTIFY_ATTR_INT,    .name = "to",    .val = { .i = to } },
+        { .type = G_TYPE_STRING, .name = "event", .val = { .s = "move" } },
+        { .type = G_TYPE_INT,    .name = "from",  .val = { .i = from } },
+        { .type = G_TYPE_INT,    .name = "to",    .val = { .i = to } },
         { 0 }
     };
     notify_with_object(attrs);
@@ -360,8 +360,8 @@ void
 music_notify_current_song (gint pos)
 {
     notify_attr_t attrs[] = {
-        { .type = NOTIFY_ATTR_STRING, .name = "event",    .val = { .s = "current" } },
-        { .type = NOTIFY_ATTR_INT,    .name = "position", .val = { .i = pos } },
+        { .type = G_TYPE_STRING, .name = "event",    .val = { .s = "current" } },
+        { .type = G_TYPE_INT,    .name = "position", .val = { .i = pos } },
         { 0 }
     };
     notify_with_object(attrs);
@@ -371,7 +371,7 @@ void
 music_notify_song_failed ()
 {
     notify_attr_t attrs[] = {
-        { .type = NOTIFY_ATTR_STRING, .name = "event", .val = { .s = "failed" } },
+        { .type = G_TYPE_STRING, .name = "event", .val = { .s = "failed" } },
         { 0 }
     };
     notify_with_object(attrs);
@@ -381,7 +381,7 @@ void
 music_notify_playing ()
 {
     notify_attr_t attrs[] = {
-        { .type = NOTIFY_ATTR_STRING, .name = "event", .val = { .s = "playing" } },
+        { .type = G_TYPE_STRING, .name = "event", .val = { .s = "playing" } },
         { 0 }
     };
     notify_with_object(attrs);
@@ -391,7 +391,7 @@ void
 music_notify_paused ()
 {
     notify_attr_t attrs[] = {
-        { .type = NOTIFY_ATTR_STRING, .name = "event", .val = { .s = "paused" } },
+        { .type = G_TYPE_STRING, .name = "event", .val = { .s = "paused" } },
         { 0 }
     };
     notify_with_object(attrs);
@@ -401,7 +401,7 @@ void
 music_notify_stopped ()
 {
     notify_attr_t attrs[] = {
-        { .type = NOTIFY_ATTR_STRING, .name = "event", .val = { .s = "stopped" } },
+        { .type = G_TYPE_STRING, .name = "event", .val = { .s = "stopped" } },
         { 0 }
     };
     notify_with_object(attrs);
@@ -411,7 +411,7 @@ void
 music_notify_clear ()
 {
     notify_attr_t attrs[] = {
-        { .type = NOTIFY_ATTR_STRING, .name = "event", .val = { .s = "clear" } },
+        { .type = G_TYPE_STRING, .name = "event", .val = { .s = "clear" } },
         { 0 }
     };
     notify_with_object(attrs);
