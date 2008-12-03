@@ -57,10 +57,10 @@ msgid "Choose name for bookmark:"
 msgstr ""
 
 #: strange-quark/applet.c:241
-#, c-format
+#, fuzzy, c-format
 msgid ""
-"Failed to load the Quark icon, quark is probably not installed correctly. "
-"The error given was '%s'."
+"Failed to load the Quark icon, corn is probably not installed correctly. The "
+"error given was '%s'."
 msgstr ""
 "쿼크 아이콘을 못 읽습니다. 아마 쿼크를 제대로 안 깐 것 같습니다.에러 내용은 "
 "'%s'입니다."

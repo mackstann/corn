@@ -11,7 +11,7 @@ typedef enum {
 
 extern gboolean        main_loop_at_end;
 extern gboolean        main_random_order;
-extern QuarkStatus     main_status;
+extern CornStatus      main_status;
 extern GStaticMutex    main_mutex;
 extern GStaticMutex    main_fifo_mutex;
 extern GStaticMutex    main_signal_mutex;
