@@ -20,3 +20,5 @@ POTFILES
 corn/corn
 stamp-h1
 *.gmo
+*~
+config.rpath
