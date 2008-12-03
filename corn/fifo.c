@@ -136,24 +136,7 @@ fifo_execute (JsonObject *command)
 {
     const gchar * commandstr = json_node_get_string(json_object_get_member(command, "command"));
 
-    if (!g_strcmp0 (commandstr, "quit"))
-        main_quit ();
-    else if (!g_strcmp0 (commandstr, "play"))
-        music_play ();
-    else if (!g_strcmp0 (commandstr, "pause"))
-        if (music_playing)
-            music_pause ();
-        else
-            music_play ();
-    else if (!g_strcmp0 (commandstr, "stop"))
-        music_stop ();
-    else if (!g_strcmp0 (commandstr, "next")) {
-        playlist_advance (1, TRUE);
-    }
-    else if (!g_strcmp0 (commandstr, "prev")) {
-        playlist_advance (-1, TRUE);
-    }
-    else if (!g_strcmp0 (commandstr, "append")) {
+    if (!g_strcmp0 (commandstr, "append")) {
         if(!json_object_has_member(command, "path"))
             g_warning("append command has no \"path\" member");
         else
