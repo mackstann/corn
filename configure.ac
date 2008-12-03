@@ -78,7 +78,6 @@ AC_CONFIG_FILES([
   m4/Makefile 
   po/Makefile.in
   corn/Makefile
-  charm-quark/Makefile
   strange-quark/Makefile
   pixmaps/Makefile
 ])
