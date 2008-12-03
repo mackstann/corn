@@ -68,7 +68,7 @@ if test "$enable_gconf" = "yes"; then
 else
   AM_CONDITIONAL(GCONF_SCHEMAS_INSTALL, false)
 
-  AC_MSG_WARN([Not building with GConf, disabling build of the strange-quark frontend])
+  AC_MSG_WARN([Not building with GConf])
 fi
 AM_CONDITIONAL(USE_GCONF, test "$enable_gconf" = "yes")
 
@@ -78,7 +78,6 @@ AC_CONFIG_FILES([
   m4/Makefile 
   po/Makefile.in
   corn/Makefile
-  strange-quark/Makefile
   pixmaps/Makefile
 ])
 
