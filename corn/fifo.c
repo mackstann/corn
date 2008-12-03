@@ -161,15 +161,6 @@ fifo_execute (JsonObject *command)
             playlist_seek (track-1); /* first track is '1' */
         }
     }
-    else if (!g_strcmp0 (commandstr, "remove")) {
-        if(!json_object_has_member(command, "track"))
-            g_warning("remove command has no \"track\" member");
-        else
-        {
-            gint track = json_node_get_int(json_object_get_member(command, "track"));
-            playlist_remove (track-1); /* first track is '1' */
-        }
-    }
     else if (!g_strcmp0 (commandstr, "clear")) {
         playlist_clear ();
     }
