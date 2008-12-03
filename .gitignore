@@ -18,3 +18,4 @@ POTFILES
 *.o
 corn/corn
 stamp-h1
+*.gmo
