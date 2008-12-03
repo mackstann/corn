@@ -1,3 +1,8 @@
+Corn is a small music playing daemon, forked from Quark.  It communicates via
+D-BUS, adhering to the MPRIS spec for interoperability with frontends and
+utilities that support MPRIS.
+
+
 Playing songs with non-english filenames
 ----------------------------------------
 
