@@ -21,19 +21,19 @@
 
 gboolean        main_loop_at_end = FALSE; /* loop at the end of the playlist */
 gboolean        main_random_order = FALSE; /* play tracks in random order */
-QuarkStatus     main_status;
+CornStatus      main_status;
 GStaticMutex    main_mutex        = G_STATIC_MUTEX_INIT;
 GStaticMutex    main_fifo_mutex   = G_STATIC_MUTEX_INIT;
 GStaticMutex    main_signal_mutex = G_STATIC_MUTEX_INIT;
 
 static GMainLoop *loop;
 
-#define QUARK_GCONF_ROOT          "/apps/quark"
-#define QUARK_GCONF_ROOT_PLAYLIST "/apps/quark/playlist"
-#define LOOP_PLAYLIST             QUARK_GCONF_ROOT "/loop_playlist"
-#define RANDOM_ORDER              QUARK_GCONF_ROOT "/random_order"
-#define PLAYLIST_POSITION         QUARK_GCONF_ROOT_PLAYLIST "/position"
-#define PLAYLIST                  QUARK_GCONF_ROOT_PLAYLIST "/playlist"
+#define CORN_GCONF_ROOT          "/apps/corn"
+#define CORN_GCONF_ROOT_PLAYLIST "/apps/corn/playlist"
+#define LOOP_PLAYLIST            CORN_GCONF_ROOT "/loop_playlist"
+#define RANDOM_ORDER             CORN_GCONF_ROOT "/random_order"
+#define PLAYLIST_POSITION        CORN_GCONF_ROOT_PLAYLIST "/position"
+#define PLAYLIST                 CORN_GCONF_ROOT_PLAYLIST "/playlist"
 
 #ifdef USE_GCONF
 static void config_load    (GConfClient *gconf);
@@ -71,7 +71,7 @@ main (int argc, char **argv)
     struct sigaction action;
     sigset_t sigset;
 
-    main_status = QUARK_STARTING;
+    main_status = CORN_STARTING;
 
     /* initialize the locale */
     if (!setlocale(LC_ALL, ""))
@@ -94,14 +94,14 @@ main (int argc, char **argv)
 
 #ifdef USE_GCONF
     gconf = gconf_client_get_default ();
-    gconf_client_add_dir (gconf, QUARK_GCONF_ROOT,
+    gconf_client_add_dir (gconf, CORN_GCONF_ROOT,
                           GCONF_CLIENT_PRELOAD_RECURSIVE, NULL);
-    gconf_client_notify_add (gconf, QUARK_GCONF_ROOT, config_changed, NULL,
+    gconf_client_notify_add (gconf, CORN_GCONF_ROOT, config_changed, NULL,
                              NULL, NULL);
 #endif
 
     /* make the directory we use in ~ */
-    dir = g_build_filename (g_get_home_dir(), ".quark", NULL);
+    dir = g_build_filename (g_get_home_dir(), ".corn", NULL);
     mkdir (dir, S_IRWXU|S_IRWXG|S_IRWXO);
     g_free (dir);
 
@@ -120,13 +120,13 @@ main (int argc, char **argv)
 #ifdef USE_GCONF
     config_load (gconf);
 #endif
-    main_status = QUARK_RUNNING;
+    main_status = CORN_RUNNING;
     g_static_mutex_unlock (&main_mutex);
 
     g_main_loop_run (loop);
 
     g_static_mutex_lock (&main_mutex);
-    main_status = QUARK_EXITING;
+    main_status = CORN_EXITING;
 #ifdef USE_GCONF
     config_save (gconf);
 #endif
@@ -177,7 +177,7 @@ config_load (GConfClient *gconf)
 
     /* don't need another copy of the playlist in memory, and
        gconf_client_clear_cache makes a nice segfault when I try save stuff
-       later. This value can't be edited while quark is running anyways.
+       later. This value can't be edited while corn is running anyways.
     */
     gconf_client_unset (gconf, PLAYLIST, NULL);
 

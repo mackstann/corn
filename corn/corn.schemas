@@ -1,9 +1,9 @@
 <gconfschemafile>
   <schemalist>
     <schema>
-      <key>/schemas/apps/quark/loop_playlist</key>
-      <applyto>/apps/quark/loop_playlist</applyto>
-      <owner>quark</owner>
+      <key>/schemas/apps/corn/loop_playlist</key>
+      <applyto>/apps/corn/loop_playlist</applyto>
+      <owner>corn</owner>
       <type>bool</type>
       <default>false</default>
       <locale name="C">
@@ -16,9 +16,9 @@
     </schema>
 
     <schema>
-      <key>/schemas/apps/quark/random_order</key>
-      <applyto>/apps/quark/random_order</applyto>
-      <owner>quark</owner>
+      <key>/schemas/apps/corn/random_order</key>
+      <applyto>/apps/corn/random_order</applyto>
+      <owner>corn</owner>
       <type>bool</type>
       <default>false</default>
       <locale name="C">
@@ -30,16 +30,16 @@
     </schema>
 
     <schema>
-      <key>/schemas/apps/quark/playlist/position</key>
-      <applyto>/apps/quark/playlist/position</applyto>
-      <owner>quark</owner>
+      <key>/schemas/apps/corn/playlist/position</key>
+      <applyto>/apps/corn/playlist/position</applyto>
+      <owner>corn</owner>
       <type>int</type>
       <default>-1</default>
       <locale name="C">
         <short>Playback position</short>
         <long>
-          The position in the playlist, saved when Quark exits. Modifying this
-          value while quark is running will have no effect.
+          The position in the playlist, saved when corn exits. Modifying this
+          value while corn is running will have no effect.
         </long>
       </locale>
     </schema>

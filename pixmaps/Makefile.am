@@ -1,9 +1,9 @@
 pixmapdir = $(datadir)/pixmaps
 
 pixmap_DATA = \
-  quark.png
+  corn.png
 
 EXTRA_DIST = \
-  quark.png \
-  quark32.png \
-  quark64.png
+  corn.png \
+  corn32.png \
+  corn64.png

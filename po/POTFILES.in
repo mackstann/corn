@@ -1,5 +1,5 @@
-quark/music.c
-quark/fifo.c
+corn/music.c
+corn/fifo.c
 
 strange-quark/applet.c
 strange-quark/quarkclient.c

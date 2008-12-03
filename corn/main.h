@@ -4,10 +4,10 @@
 #include <glib.h>
 
 typedef enum {
-    QUARK_STARTING,
-    QUARK_RUNNING,
-    QUARK_EXITING
-} QuarkStatus;
+    CORN_STARTING,
+    CORN_RUNNING,
+    CORN_EXITING
+} CornStatus;
 
 extern gboolean        main_loop_at_end;
 extern gboolean        main_random_order;

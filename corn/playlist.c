@@ -272,7 +272,7 @@ playlist_seek (gint num)
 
         /* this function is used during load, and we don't want to start
            playing necessarily */
-        if (main_status == QUARK_RUNNING) {
+        if (main_status == CORN_RUNNING) {
             music_stop ();
             music_play ();
         }

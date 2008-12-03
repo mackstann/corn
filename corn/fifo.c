@@ -32,7 +32,7 @@ fifo_open ()
     int fifo_fd;
     char *path;
 
-    path = g_build_filename (g_get_home_dir (), ".quark", FIFO_NAME, NULL);
+    path = g_build_filename (g_get_home_dir (), ".corn", FIFO_NAME, NULL);
 
     if ((fifo_fd = open (path, O_RDONLY|O_NONBLOCK)) == -1) {
         if (mkfifo (path, S_IRWXU|S_IRWXG|S_IRWXO) == -1) {
@@ -67,7 +67,7 @@ fifo_destroy()
 
     fifo_close ();
 
-    path = g_build_filename (g_get_home_dir (), ".quark", FIFO_NAME, NULL);
+    path = g_build_filename (g_get_home_dir (), ".corn", FIFO_NAME, NULL);
     unlink (path);
     g_free (path);
 }
@@ -230,7 +230,7 @@ fifo_execute (JsonObject *command)
  A create a per client notification FIFO.
 
  To be notified of status changes, a client must create a FIFO, then send a
- "connect <filename>" message to quark. quark can then open the supplied fifo
+ "connect <filename>" message to corn. corn can then open the supplied fifo
  for reading.
 */
 void

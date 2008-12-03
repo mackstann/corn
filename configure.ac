@@ -1,7 +1,7 @@
 AC_PREREQ([2.54])
-AC_INIT([quark], [3.21], [http://bugs.com/])
+AC_INIT([corn], [3.21], [http://bugs.com/])
 AM_INIT_AUTOMAKE
-AC_CONFIG_SRCDIR([quark/main.c])
+AC_CONFIG_SRCDIR([corn/main.c])
 
 AC_PREFIX_DEFAULT([/usr/local])
 test "$prefix" = "NONE" && prefix=$ac_default_prefix
@@ -77,7 +77,7 @@ AC_CONFIG_FILES([
   Makefile
   m4/Makefile 
   po/Makefile.in
-  quark/Makefile
+  corn/Makefile
   charm-quark/Makefile
   strange-quark/Makefile
   pixmaps/Makefile

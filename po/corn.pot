@@ -16,33 +16,33 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: quark/music.c:51
+#: corn/music.c:51
 #, c-format
 msgid "Message from Xine: %s"
 msgstr ""
 
-#: quark/music.c:67
+#: corn/music.c:67
 msgid "Incompatible version of Xine-lib found."
 msgstr ""
 
-#: quark/music.c:80
+#: corn/music.c:80
 msgid "Unable to open audio driver from Xine."
 msgstr ""
 
-#: quark/music.c:86
+#: corn/music.c:86
 msgid "Unable to open video driver from Xine."
 msgstr ""
 
-#: quark/music.c:91
+#: corn/music.c:91
 msgid "Unable to open a Xine stream."
 msgstr ""
 
-#: quark/music.c:124
+#: corn/music.c:124
 #, c-format
 msgid "Skipping '%s'. Could not convert from UTF-8. Bug?"
 msgstr ""
 
-#: quark/fifo.c:140
+#: corn/fifo.c:140
 #, c-format
 msgid ""
 "Skipping '%s'. Could not convert to UTF-8. See the README for a possible "
@@ -60,7 +60,7 @@ msgstr ""
 #: strange-quark/applet.c:241
 #, c-format
 msgid ""
-"Failed to load the Quark icon, quark is probably not installed correctly. "
+"Failed to load the Quark icon, corn is probably not installed correctly. "
 "The error given was '%s'."
 msgstr ""
 

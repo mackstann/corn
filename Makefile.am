@@ -1,4 +1,4 @@
-SUBDIRS = m4 po quark charm-quark pixmaps
+SUBDIRS = m4 po corn charm-quark pixmaps
 
 #if USE_GCONF
 #SUBDIRS += strange-quark

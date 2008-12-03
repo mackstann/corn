@@ -32,7 +32,7 @@ music_events (void *data, const xine_event_t *e)
 
     thread_lock ();
 
-    if (main_status == QUARK_RUNNING) {
+    if (main_status == CORN_RUNNING) {
 
         g_message ("XINE EVENT %d", e->type);
 

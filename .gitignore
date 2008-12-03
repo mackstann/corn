@@ -16,5 +16,5 @@ POTFILES
 .deps
 .*.swp
 *.o
-quark/quark
+corn/corn
 stamp-h1

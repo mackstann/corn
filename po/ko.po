@@ -5,7 +5,7 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Quark 3.0\n"
+"Project-Id-Version: Corn 0.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2003-10-07 02:26-0400\n"
 "PO-Revision-Date: 2003-06-18 20:11+0900\n"
@@ -15,33 +15,33 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: quark/music.c:51
+#: corn/music.c:51
 #, c-format
 msgid "Message from Xine: %s"
 msgstr ""
 
-#: quark/music.c:67
+#: corn/music.c:67
 msgid "Incompatible version of Xine-lib found."
 msgstr "이 버전의 Xine-lib로는 돌아가지 않습니다."
 
-#: quark/music.c:80
+#: corn/music.c:80
 msgid "Unable to open audio driver from Xine."
 msgstr "Xine의 음성 드라이버를 못 엽니다."
 
-#: quark/music.c:86
+#: corn/music.c:86
 msgid "Unable to open video driver from Xine."
 msgstr "Xine의 영상 드라이버를 못 엽니다."
 
-#: quark/music.c:91
+#: corn/music.c:91
 msgid "Unable to open a Xine stream."
 msgstr "Xine 스트림을 못 엽니다."
 
-#: quark/music.c:124
+#: corn/music.c:124
 #, c-format
 msgid "Skipping '%s'. Could not convert from UTF-8. Bug?"
 msgstr "'%s'는 넘어갑니다. UTF-8로 바꿀 수가 없습니다. 버그입니까?"
 
-#: quark/fifo.c:140
+#: corn/fifo.c:140
 #, fuzzy, c-format
 msgid ""
 "Skipping '%s'. Could not convert to UTF-8. See the README for a possible "
