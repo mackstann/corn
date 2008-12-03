@@ -3,6 +3,7 @@
 #include "gettext.h"
 #include <locale.h>
 
+#include "dbus.h"
 #include "fifo.h"
 #include "music.h"
 #include "playlist.h"
@@ -112,6 +113,7 @@ main (int argc, char **argv)
     }
 
     music_init ();
+    mpris_init();
 
     g_static_mutex_lock (&main_mutex);
     playlist_init ();
@@ -132,6 +134,7 @@ main (int argc, char **argv)
     g_static_mutex_unlock (&main_mutex);
 
     music_destroy ();
+    mpris_destroy();
 
     fifo_destroy ();
     g_main_loop_unref (loop);

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<node name="/">
+    <interface name="org.freedesktop.MediaPlayer">
+        <method name="Next">
+        </method>
+        <method name="Prev">
+        </method>
+        <method name="Pause">
+        </method>
+        <method name="Stop">
+        </method>
+        <method name="Play">
+        </method>
+
+        <method name="GetCaps">
+            <arg type="i" direction="out" />
+        </method>
+    </interface>
+</node>
+

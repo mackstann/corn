@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<node name="/">
+    <interface name="org.freedesktop.MediaPlayer">
+        <method name="Identity">
+            <arg type="s" direction="out"/>
+        </method>
+        <method name="Quit">
+        </method>
+        <method name="MprisVersion">
+            <arg type="(qq)" direction="out"/>
+        </method>
+    </interface>
+</node>
+
