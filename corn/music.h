@@ -14,6 +14,7 @@ void music_destroy    ();
 void music_play       ();
 void music_pause      ();
 void music_stop       ();
+void music_set_volume(gint vol);
 /* this should probably go in some other namespace... */
 void music_add_notify (GIOChannel *output);
 

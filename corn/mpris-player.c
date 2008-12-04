@@ -29,8 +29,8 @@ mpris_player_class_init(MprisPlayerClass * klass)
 // PositionGet
 
 // example for calling these on the command line:
-// $ dbus-send --session --type=method_call --dest=org.mpris.brunt \
-//   /Player org.freedesktop.MediaPlayer.Next
+// $ dbus-send --session --type=method_call --dest=org.mpris.brunt <backslash>
+//        /Player org.freedesktop.MediaPlayer.Next
 
 gboolean mpris_player_next(MprisPlayer * obj, GError ** error)
 {
@@ -71,6 +71,12 @@ gboolean mpris_player_get_caps(MprisPlayer * obj, gint * caps, GError ** error)
     //CAN_SEEK
     //CAN_PROVIDE_METADATA
     //CAN_HAS_TRACKLIST
+    return TRUE;
+}
+
+gboolean mpris_player_volume_set(MprisPlayer * obj, gint vol, GError ** error)
+{
+    music_set_volume(vol);
     return TRUE;
 }
 

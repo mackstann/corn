@@ -16,6 +16,9 @@
         <method name="GetCaps">
             <arg type="i" direction="out" />
         </method>
+        <method name="VolumeSet">
+            <arg type="i"/>
+        </method>
     </interface>
 </node>
 

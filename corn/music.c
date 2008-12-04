@@ -19,10 +19,12 @@ static xine_audio_port_t  *ao;
 static xine_video_port_t  *vo;
 static xine_event_queue_t *events;
 
-static int                 stream_pos;
+static gint stream_pos;
 
 static GList *notify_channels = NULL;
+
 gboolean music_playing = FALSE;
+gint music_volume = 100; // XXX
 
 void
 music_events (void *data, const xine_event_t *e)
@@ -195,6 +197,12 @@ music_stop ()
     stream_pos = 0;
     music_playing = FALSE;
     music_notify_stopped ();
+}
+
+void music_set_volume(gint vol)
+{
+    music_volume = CLAMP(vol, 0, 100);
+    xine_set_param(stream, XINE_PARAM_AUDIO_AMP_LEVEL, music_volume);
 }
 
 void
