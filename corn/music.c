@@ -21,7 +21,7 @@ static gint stream_time;
 
 gboolean music_gapless = FALSE;
 gboolean music_playing = FALSE;
-gint music_volume = 100; // XXX
+gint music_volume;
 
 void music_events(void *data, const xine_event_t *e)
 {
@@ -106,6 +106,8 @@ void music_init()
 #if defined(XINE_PARAM_GAPLESS_SWITCH) && defined(XINE_PARAM_EARLY_FINISHED_EVENT)
     music_gapless = !!xine_check_version(1, 1, 1);
 #endif
+
+    music_volume = xine_get_param(stream, XINE_PARAM_AUDIO_VOLUME);
 }
 
 
