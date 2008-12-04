@@ -84,12 +84,15 @@ AC_CONFIG_FILES([
 AM_MAINTAINER_MODE
 
 AC_ARG_ENABLE([debug],
-  [  --enable-debug          enable debugging shit],
+  [  --enable-debug          enable debugging],
   [], [enable_debug="yes"])
+
+CFLAGS="-std=gnu99 -Wall -pedantic -Wsign-compare -Waggregate-return -Wcast-qual -Wbad-function-cast -Wpointer-arith"
+
 if test "$enable_debug" = "yes"; then
-  CFLAGS="-g -fno-inline"
-  CFLAGS="$CFLAGS -Wall -Wsign-compare -Waggregate-return"
-  CFLAGS="$CFLAGS -Wcast-qual -Wbad-function-cast -Wpointer-arith"
+  CFLAGS="$CFLAGS -g -fno-inline"
+else
+  CFLAGS="$CFLAGS -Os"
 fi
 
 AC_OUTPUT
