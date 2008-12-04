@@ -45,6 +45,7 @@ void music_events(void *data, const xine_event_t *e)
             mrl_change = FALSE;
             break;
         case XINE_EVENT_MRL_REFERENCE:
+        case XINE_EVENT_MRL_REFERENCE_EXT:
             mrl = e->data;
             g_message("MRL REFERENCE %s", mrl->mrl);
             if(playlist_current)
