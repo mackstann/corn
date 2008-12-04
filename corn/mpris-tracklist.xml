@@ -16,6 +16,12 @@
         <method name="GetCurrentTrack">
             <arg type="i" direction="out" />
         </method>
+        <method name="SetLoop">
+            <arg type="b" />
+        </method>
+        <method name="SetRandom">
+            <arg type="b" />
+        </method>
     </interface>
 </node>
 

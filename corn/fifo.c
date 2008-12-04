@@ -163,12 +163,6 @@ fifo_execute (JsonObject *command)
             }
         }
     }
-    else if (!g_strcmp0 (commandstr, "loop")) {
-        main_set_loop_at_end(!main_loop_at_end);
-    }
-    else if (!g_strcmp0 (commandstr, "random")) {
-        main_set_random_order(!main_random_order);
-    }
     else if (!g_strcmp0 (commandstr, "dump")) {
         playlist_dump ();
     }

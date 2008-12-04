@@ -68,3 +68,17 @@ gboolean mpris_tracklist_get_current_track
     return TRUE;
 }
 
+gboolean mpris_tracklist_set_loop
+(MprisTrackList * obj, gboolean on, GError ** error)
+{
+    main_set_loop_at_end(on);
+    return TRUE;
+}
+
+gboolean mpris_tracklist_set_random
+(MprisTrackList * obj, gboolean on, GError ** error)
+{
+    main_set_random_order(on);
+    return TRUE;
+}
+
