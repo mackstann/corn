@@ -115,7 +115,11 @@ main (int argc, char **argv)
     }
 
     music_init ();
-    mpris_init();
+    if(!mpris_init())
+    {
+        g_critical("failed to initialize D-BUS");
+        return 2;
+    }
 
     g_static_mutex_lock (&main_mutex);
     playlist_init ();
