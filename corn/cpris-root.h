@@ -31,6 +31,7 @@ GType cpris_root_get_type (void);
 
 gboolean cpris_root_clear(CprisRoot * obj, GError ** error);
 gboolean cpris_root_play_track(CprisRoot * obj, gint track, GError ** error);
+gboolean cpris_root_move(CprisRoot * obj, gint from, gint to, GError ** error);
 
 #endif
 

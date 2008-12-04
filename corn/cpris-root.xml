@@ -7,6 +7,10 @@
         <method name="PlayTrack"><!-- play a certain track -->
             <arg type="i" direction="in" />
         </method>
+        <method name="Move"><!-- move track at position $1 to position $2 -->
+            <arg type="i" direction="in" />
+            <arg type="i" direction="in" />
+        </method>
     </interface>
 </node>
 

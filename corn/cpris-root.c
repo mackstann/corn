@@ -35,3 +35,10 @@ gboolean cpris_root_play_track(CprisRoot * obj, gint track, GError ** error)
     return TRUE;
 }
 
+gboolean cpris_root_move(CprisRoot * obj, gint from, gint to, GError ** error)
+{
+    // sanity check?
+    playlist_move(to, from);
+    return TRUE;
+}
+
