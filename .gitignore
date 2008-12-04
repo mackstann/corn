@@ -22,3 +22,4 @@ stamp-h1
 *.gmo
 *~
 config.rpath
+*-glue.h
