@@ -3,10 +3,6 @@
 
 #include <glib.h>
 
-#ifndef G_GNUC_PRINTF
-#  define G_GNUC_PRINTF()
-#endif
-
 extern gboolean music_playing;
 extern gint music_volume;
 
