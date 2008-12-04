@@ -5,6 +5,11 @@
         <method name="DelTrack">
             <arg type="i" />
         </method>
+        <method name="AddTrack">
+            <arg type="s" direction="in" />
+            <arg type="b" direction="in" />
+            <arg type="i" direction="out" />
+        </method>
     </interface>
 </node>
 

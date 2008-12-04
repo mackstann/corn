@@ -136,23 +136,7 @@ fifo_execute (JsonObject *command)
 {
     const gchar * commandstr = json_node_get_string(json_object_get_member(command, "command"));
 
-    if (!g_strcmp0 (commandstr, "append")) {
-        if(!json_object_has_member(command, "path"))
-            g_warning("append command has no \"path\" member");
-        else
-        {
-            const gchar * path = json_node_get_string(json_object_get_member(command, "path"));
-            gchar *u;
-            if (!(u = g_filename_to_utf8 (path, -1, NULL, NULL, NULL))) {
-                g_warning (_("Skipping '%s'. Could not convert to UTF-8. "
-                             "See the README for a possible solution."), path);
-            } else {
-                playlist_append_single (u);
-                g_free (u);
-            }
-        }
-    }
-    else if (!g_strcmp0 (commandstr, "track")) {
+    if (!g_strcmp0 (commandstr, "track")) {
         if(!json_object_has_member(command, "track"))
             g_warning("track command has no \"track\" member");
         else
