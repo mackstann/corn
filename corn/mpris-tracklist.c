@@ -20,8 +20,6 @@ mpris_tracklist_class_init(MprisTrackListClass * klass)
 {
 }
 
-// TODO: GetMetadata
-
 gboolean mpris_tracklist_del_track(MprisTrackList * obj, gint track, GError ** error)
 {
     playlist_remove(track);

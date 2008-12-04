@@ -21,7 +21,6 @@ mpris_player_class_init(MprisPlayerClass * klass)
 
 // TODO:
 // GetStatus
-// GetMetadata
 
 // example for calling these on the command line:
 // $ dbus-send --session --type=method_call --dest=org.mpris.corn <backslash>
