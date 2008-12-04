@@ -129,6 +129,7 @@ main (int argc, char **argv)
     main_status = CORN_RUNNING;
     g_static_mutex_unlock (&main_mutex);
 
+    g_message("ready");
     g_main_loop_run (loop);
 
     g_static_mutex_lock (&main_mutex);

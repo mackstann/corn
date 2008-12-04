@@ -16,7 +16,6 @@
 static xine_t             *xine;
 static xine_stream_t      *stream;
 static xine_audio_port_t  *ao;
-static xine_video_port_t  *vo;
 static xine_event_queue_t *events;
 
 static gint stream_time;
@@ -77,25 +76,25 @@ void music_init()
 
     xine = xine_new();
 
-    configfile = g_build_filename(g_get_home_dir(), ".xine", "config", NULL);
+    xine_config_register_string(xine,
+        "audio.driver", "auto", "audio driver", NULL, 0, NULL, NULL);
+
+    configfile = g_build_filename(g_get_home_dir(), ".corn", "xine_config", NULL);
     xine_config_load(xine, configfile);
     g_free(configfile);
 
+    xine_cfg_entry_t driver = {0};
+    xine_config_lookup_entry(xine, "audio.driver", &driver);
+
     xine_init(xine);
 
-    if(!(ao = xine_open_audio_driver(xine, NULL, NULL)))
+    if(!(ao = xine_open_audio_driver(xine, driver.str_value, NULL)))
     {
         g_critical(_("Unable to open audio driver from Xine."));
         exit(EXIT_FAILURE);
     }
 
-    if(!(vo = xine_open_video_driver(xine, NULL, XINE_VISUAL_TYPE_NONE, NULL)))
-    {
-        g_critical(_("Unable to open video driver from Xine."));
-        exit(EXIT_FAILURE);
-    }
-
-    if(!(stream = xine_stream_new(xine, ao, vo)))
+    if(!(stream = xine_stream_new(xine, ao, NULL)))
     {
         g_critical(_("Unable to open a Xine stream."));
         exit(EXIT_FAILURE);
@@ -114,7 +113,6 @@ void music_destroy()
 {
     xine_event_dispose_queue(events);
     xine_dispose(stream);
-    xine_close_video_driver(xine, vo);
     xine_close_audio_driver(xine, ao);
     xine_exit(xine);
 }
