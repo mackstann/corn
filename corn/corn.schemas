@@ -45,6 +45,21 @@
     </schema>
 
     <schema>
+      <key>/schemas/apps/corn/playing</key>
+      <applyto>/apps/corn/playing</applyto>
+      <owner>corn</owner>
+      <type>bool</type>
+      <default>false</default>
+      <locale name="C">
+        <short>Player state</short>
+        <long>
+            The state of corn (playing or stopped). Modifying this value while
+            corn is running will have no effect.
+        </long>
+      </locale>
+    </schema>
+
+    <schema>
       <key>/schemas/apps/corn/playlist/position</key>
       <applyto>/apps/corn/playlist/position</applyto>
       <owner>corn</owner>
