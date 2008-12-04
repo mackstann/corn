@@ -24,7 +24,7 @@ mpris_player_class_init(MprisPlayerClass * klass)
 // GetMetadata
 
 // example for calling these on the command line:
-// $ dbus-send --session --type=method_call --dest=org.mpris.brunt <backslash>
+// $ dbus-send --session --type=method_call --dest=org.mpris.corn <backslash>
 //        /Player org.freedesktop.MediaPlayer.Next
 
 gboolean mpris_player_next(MprisPlayer * obj, GError ** error)

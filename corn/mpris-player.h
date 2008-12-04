@@ -1,14 +1,14 @@
-#ifndef __brunt_mpris_player_h__
-#define __brunt_mpris_player_h__
+#ifndef __corn_mpris_player_h__
+#define __corn_mpris_player_h__
 
 #include <glib-object.h>
 
-#define BRUNT_TYPE_MPRIS_PLAYER                  (mpris_player_get_type ())
-#define BRUNT_MPRIS_PLAYER(obj)                  (G_TYPE_CHECK_INSTANCE_CAST ((obj), BRUNT_TYPE_MPRIS_PLAYER, MprisPlayer))
-#define BRUNT_IS_MPRIS_PLAYER(obj)               (G_TYPE_CHECK_INSTANCE_TYPE ((obj), BRUNT_TYPE_MPRIS_PLAYER))
-#define BRUNT_MPRIS_PLAYER_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST ((klass), BRUNT_TYPE_MPRIS_PLAYER, MprisPlayerClass))
-#define BRUNT_IS_MPRIS_PLAYER_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE ((klass), BRUNT_TYPE_MPRIS_PLAYER))
-#define BRUNT_MPRIS_PLAYER_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS ((obj), BRUNT_TYPE_MPRIS_PLAYER, MprisPlayerClass))
+#define CORN_TYPE_MPRIS_PLAYER                  (mpris_player_get_type ())
+#define CORN_MPRIS_PLAYER(obj)                  (G_TYPE_CHECK_INSTANCE_CAST ((obj), CORN_TYPE_MPRIS_PLAYER, MprisPlayer))
+#define CORN_IS_MPRIS_PLAYER(obj)               (G_TYPE_CHECK_INSTANCE_TYPE ((obj), CORN_TYPE_MPRIS_PLAYER))
+#define CORN_MPRIS_PLAYER_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST ((klass), CORN_TYPE_MPRIS_PLAYER, MprisPlayerClass))
+#define CORN_IS_MPRIS_PLAYER_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE ((klass), CORN_TYPE_MPRIS_PLAYER))
+#define CORN_MPRIS_PLAYER_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS ((obj), CORN_TYPE_MPRIS_PLAYER, MprisPlayerClass))
 
 typedef struct _MprisPlayer MprisPlayer;
 typedef struct _MprisPlayerClass MprisPlayerClass;

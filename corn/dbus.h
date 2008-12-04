@@ -1,5 +1,5 @@
-#ifndef __brunt_dbus_h__
-#define __brunt_dbus_h__
+#ifndef __corn_dbus_h__
+#define __corn_dbus_h__
 
 #include <glib.h>
 

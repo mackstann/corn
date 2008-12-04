@@ -21,7 +21,7 @@ mpris_root_class_init(MprisRootClass * klass)
 
 gboolean mpris_root_identity(MprisRoot * obj, gchar ** identity, GError ** error)
 {
-    *identity = g_strdup("brunt");
+    *identity = g_strdup("corn");
     return TRUE;
 }
 
