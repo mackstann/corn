@@ -21,6 +21,7 @@
 
 gboolean        main_loop_at_end = FALSE; /* loop at the end of the playlist */
 gboolean        main_random_order = FALSE; /* play tracks in random order */
+gboolean        main_repeat_track = FALSE; /* repeat same track continuously */
 CornStatus      main_status;
 GStaticMutex    main_mutex        = G_STATIC_MUTEX_INIT;
 GStaticMutex    main_fifo_mutex   = G_STATIC_MUTEX_INIT;
@@ -159,8 +160,9 @@ config_load (GConfClient *gconf)
 {
     GSList *paths, *it;
 
-    main_set_loop_at_end (gconf_client_get_bool (gconf, LOOP_PLAYLIST, NULL));
-    main_set_random_order (gconf_client_get_bool (gconf, RANDOM_ORDER, NULL));
+    main_loop_at_end = gconf_client_get_bool(gconf, LOOP_PLAYLIST, NULL);
+    main_random_order = gconf_client_get_bool(gconf, RANDOM_ORDER, NULL);
+    main_repeat_track = FALSE;
 
     paths = gconf_client_get_list (gconf, PLAYLIST, GCONF_VALUE_STRING, NULL);
     for (it = paths; it; it = g_slist_next (it)) {
@@ -213,25 +215,10 @@ config_changed (GConfClient *gconf,
                 gpointer data)
 {
     if (!strcmp (entry->key, LOOP_PLAYLIST)) {
-        main_set_loop_at_end (gconf_value_get_bool (entry->value));
+        main_loop_at_end = gconf_value_get_bool(entry->value);
     } else if (!strcmp (entry->key, RANDOM_ORDER)) {
-        main_set_random_order (gconf_value_get_bool (entry->value));
+        main_random_order = gconf_value_get_bool(entry->value);
     }
 }
 #endif
 
-void
-main_set_loop_at_end (gboolean loop)
-{
-    main_loop_at_end = loop;
-    g_message ("looping at end of playlist: %s",
-               main_loop_at_end ? "On" : "Off");
-}
-
-void
-main_set_random_order (gboolean random)
-{
-    main_random_order = random;
-    g_message ("random order playback: %s",
-               main_random_order ? "On" : "Off");
-}

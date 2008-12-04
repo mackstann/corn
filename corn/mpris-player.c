@@ -94,3 +94,9 @@ gboolean mpris_player_position_get(MprisPlayer * obj, gint * ms, GError ** error
     return TRUE;
 }
 
+gboolean mpris_player_repeat(MprisPlayer * obj, gboolean on, GError ** error)
+{
+    main_repeat_track = on;
+    return TRUE;
+}
+

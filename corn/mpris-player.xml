@@ -30,6 +30,10 @@
         <method name="PositionGet">
             <arg type="i" direction="out"/>
         </method>
+
+        <method name="Repeat">
+            <arg type="b" />
+        </method>
     </interface>
 </node>
 

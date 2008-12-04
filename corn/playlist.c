@@ -206,45 +206,48 @@ playlist_advance (gint num, gboolean loop)
     gboolean looped = FALSE, playing = music_playing;
 
     if (!playlist) return;
-    
-    if (main_random_order) {
-        rand_cur = g_list_find (playlist_random, playlist_current->data);
 
-        while (rand_cur && num > 0) {
-            rand_cur = g_list_next (rand_cur);
-            if (!rand_cur) {
-                playlist_rerandomize ();
-                rand_cur = playlist_random;
-                looped = TRUE;
+    if(!main_repeat_track)
+    {
+        if (main_random_order) {
+            rand_cur = g_list_find (playlist_random, playlist_current->data);
+
+            while (rand_cur && num > 0) {
+                rand_cur = g_list_next (rand_cur);
+                if (!rand_cur) {
+                    playlist_rerandomize ();
+                    rand_cur = playlist_random;
+                    looped = TRUE;
+                }
+                --num;
             }
-            --num;
-        }
-        while (rand_cur && num < 0) {
-            rand_cur = g_list_previous (rand_cur);
-            if (!rand_cur) {
-                playlist_rerandomize ();
-                rand_cur = g_list_last (playlist_random);
-                looped = TRUE;
+            while (rand_cur && num < 0) {
+                rand_cur = g_list_previous (rand_cur);
+                if (!rand_cur) {
+                    playlist_rerandomize ();
+                    rand_cur = g_list_last (playlist_random);
+                    looped = TRUE;
+                }
+                ++num;
             }
-            ++num;
-        }
-        playlist_current = g_list_find (playlist, rand_cur->data);
-    } else {
-        while (playlist_current && num > 0) {
-            playlist_current = g_list_next (playlist_current);
-            if (!playlist_current) {
-                playlist_current = playlist;
-                looped = TRUE;
+            playlist_current = g_list_find (playlist, rand_cur->data);
+        } else {
+            while (playlist_current && num > 0) {
+                playlist_current = g_list_next (playlist_current);
+                if (!playlist_current) {
+                    playlist_current = playlist;
+                    looped = TRUE;
+                }
+                --num;
             }
-            --num;
-        }
-        while (playlist_current && num < 0) {
-            playlist_current = g_list_previous (playlist_current);
-            if (!playlist_current) {
-                playlist_current = g_list_last (playlist);
-                looped = TRUE;
+            while (playlist_current && num < 0) {
+                playlist_current = g_list_previous (playlist_current);
+                if (!playlist_current) {
+                    playlist_current = g_list_last (playlist);
+                    looped = TRUE;
+                }
+                ++num;
             }
-            ++num;
         }
     }
 
