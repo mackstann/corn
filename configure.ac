@@ -81,7 +81,7 @@ AM_MAINTAINER_MODE
 
 AC_ARG_ENABLE([debug],
   [  --enable-debug          enable debugging],
-  [], [enable_debug="yes"])
+  [], [enable_debug="no"])
 
 CFLAGS="-std=gnu99 -Wall -pedantic -Wsign-compare -Waggregate-return -Wcast-qual -Wbad-function-cast -Wpointer-arith"
 
