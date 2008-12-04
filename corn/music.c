@@ -5,7 +5,6 @@
 #include "main.h"
 #include "playlist.h"
 
-#include <json-glib/json-glib.h>
 #include <glib-object.h>
 #include <xine.h>
 #include <glib.h>
