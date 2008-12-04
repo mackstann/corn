@@ -40,15 +40,7 @@ gboolean mpris_tracklist_add_track(MprisTrackList * obj, const gchar * uri,
         playlist_append_single (u);
         g_free (u);
         if(playnow)
-        {
-            gint new_pos = g_list_length(playlist) - 1;
-            // the supplied uri may have "resolved" to another uri.  and if the
-            // supplied uri resolves to multiple uris, like a playlist would,
-            // this will only give the last track...
-            PlaylistItem * new_item = g_list_last(playlist)->data;
-            music_notify_add_song(MAIN_PATH(new_item), new_pos);
-            playlist_seek(new_pos);
-        }
+            playlist_seek(g_list_length(playlist) - 1);
         *failed = 0;
     }
     return TRUE;

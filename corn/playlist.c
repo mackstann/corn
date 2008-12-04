@@ -70,12 +70,9 @@ playlist_append (PlaylistItem *item)
     gint p;
 
     playlist = g_list_append (playlist, item);
-    music_notify_add_song (MAIN_PATH (item), g_list_length(playlist) - 1);
 
-    if (!playlist_current) {
+    if (!playlist_current)
         playlist_current = playlist;
-        music_notify_current_song(0);
-    }
 
     p = g_list_position (playlist_random,
                          g_list_find (playlist_random,
@@ -173,12 +170,9 @@ playlist_fail ()
     while (item->paths[nalts]) ++nalts;
     if (nalts - 1 > item->use_path) {
         ++item->use_path;
-        music_notify_song_failed ();
         /* try again */
         music_play ();
     } else {
-        music_notify_song_failed ();
-
         if (!cur) cur = playlist_current;
 
         /*playlist_remove (g_list_position (playlist, playlist_current));*/
@@ -254,8 +248,6 @@ playlist_advance (gint num, gboolean loop)
         }
     }
 
-    music_notify_current_song(g_list_position(playlist, playlist_current));
-
     music_stop ();
     if ((!looped || loop) && playing)
         music_play ();
@@ -268,7 +260,6 @@ playlist_seek (gint num)
 
     if (it) {
         playlist_current = it;
-        music_notify_current_song(g_list_position(playlist, playlist_current));
 
         /* this function is used during load, and we don't want to start
            playing necessarily */
@@ -289,7 +280,6 @@ playlist_clear ()
     playlist = playlist_current = NULL;
     g_list_free (playlist_random);
     playlist_random = NULL;
-    music_notify_clear ();
     music_stop ();
 }
 
@@ -304,16 +294,14 @@ playlist_remove (gint num)
             music_stop ();
             playlist_advance (1, main_loop_at_end);
         }
-        if (it == playlist_current) {
+        if (it == playlist_current)
             playlist_current = NULL;
-            music_notify_current_song (0);
-        } else if (playing)
+        else if (playing)
             music_play ();
 
         listitem_free (it->data);
         playlist = g_list_delete_link (playlist, it);
 
-        music_notify_remove_song (num);
     }
 }
 
@@ -325,8 +313,6 @@ playlist_move (gint num, gint before)
 
     if (!it || num == before) return;
 
-    music_notify_move_song (num, before);
-    
     item = it->data;
     if (before > num) ++before;
     playlist = g_list_insert (playlist, item, before);

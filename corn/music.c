@@ -21,8 +21,6 @@ static xine_event_queue_t *events;
 
 static gint stream_time;
 
-static GList *notify_channels = NULL;
-
 gboolean music_playing = FALSE;
 gint music_volume = 100; // XXX
 
@@ -134,9 +132,6 @@ music_play ()
         if (state != XINE_STATUS_IDLE)
             xine_close (stream);
 
-        music_notify_current_song (g_list_position
-                                   (playlist, playlist_current));
-
         if (!xine_open (stream, path)) {
             playlist_fail ();
             return;
@@ -159,7 +154,6 @@ music_play ()
             meta = xine_get_meta_info(stream, XINE_META_INFO_CDINDEX_DISCID); g_message("XINE_META_INFO_CDINDEX_DISCID: %s", meta);
             meta = xine_get_meta_info(stream, XINE_META_INFO_TRACK_NUMBER);   g_message("XINE_META_INFO_TRACK_NUMBER:   %s", meta);
             music_playing = TRUE;
-            music_notify_playing ();
         } else {
             music_playing = FALSE;
             playlist_fail ();
@@ -213,224 +207,5 @@ void music_set_volume(gint vol)
 {
     music_volume = CLAMP(vol, 0, 100);
     xine_set_param(stream, XINE_PARAM_AUDIO_AMP_LEVEL, music_volume);
-}
-
-void
-music_add_notify (GIOChannel *output)
-{
-    GList *it;
-    gint i;
-
-    GList *all = g_list_prepend (notify_channels, output);
-    GList *only_new = g_list_prepend(NULL, output);
-
-    notify_channels = only_new;
-
-    for (it = playlist, i = 0; it; it = g_list_next(it), ++i)
-        music_notify_add_song(MAIN_PATH(LISTITEM(it)), i);
-    if (playlist_current)
-        music_notify_current_song(g_list_position(playlist, playlist_current));
-
-    g_list_free(only_new);
-    notify_channels = all;
-}
-
-gboolean
-music_list_notify (GIOChannel *channel, const char *message)
-{
-    gsize written;
-    GIOStatus status;
-    gboolean retval = TRUE;
-
-    while ( (status = g_io_channel_write_chars (channel, message,
-                                                strlen (message),
-                                                &written, NULL))
-            == G_IO_STATUS_AGAIN) {
-        message += written;
-    }
-    
-    if (status == G_IO_STATUS_ERROR) {
-        retval = FALSE;
-    }
-    while ( (status = g_io_channel_flush(channel, NULL)) == G_IO_STATUS_AGAIN);
-
-    if (status == G_IO_STATUS_ERROR)
-        retval = FALSE;
-
-    return retval;
-}
-    
-static void
-music_notify_msg (const char *message)
-{
-    GList *it = notify_channels;
-
-    g_message ("%s", message);
-
-    gchar *s = g_strdup_printf ("%s\n", message);
-
-    while (it != NULL) {
-        if (music_list_notify (it->data, s)) it = it->next;
-        else {
-            // i think this may be leaky/buggy, or at least awkward
-            GList *tmp = it->next;
-            g_list_remove_link (notify_channels, it);
-            g_io_channel_shutdown (it->data, FALSE, NULL);
-            g_io_channel_unref (it->data);
-            if (it == notify_channels)
-                notify_channels = NULL;
-            it = tmp;
-        }
-    }
-    g_free(s);
-}
-
-gchar *
-serialize_json_object (JsonObject * obj)
-{
-    JsonNode * root_node = json_node_new(JSON_NODE_OBJECT);
-    json_node_set_object(root_node, obj);
-
-    JsonGenerator * json = json_generator_new();
-    json_generator_set_root(json, root_node);
-
-    gsize _;
-    gchar * output = json_generator_to_data(json, &_);
-
-    g_object_unref(json);
-    json_node_free(root_node);
-
-    return output;
-}
-
-typedef struct {
-    gint type;
-    const gchar * name;
-    union {
-        gint i;
-        const gchar * s;
-    } val;
-} notify_attr_t;
-
-void notify_with_object (notify_attr_t * attrs)
-{
-    JsonObject * obj = json_object_new();
-
-    for(notify_attr_t * attr = attrs; attr->name; ++attr)
-    {
-        JsonNode * val_node = json_node_new(JSON_NODE_VALUE);
-
-        if(attr->type == G_TYPE_STRING)
-            json_node_set_string(val_node, attr->val.s);
-        else if(attr->type == G_TYPE_INT)
-            json_node_set_int(val_node, attr->val.i);
-        else
-            g_return_if_reached();
-
-        json_object_add_member(obj, attr->name, val_node);
-    }
-
-    gchar * output = serialize_json_object(obj);
-
-    music_notify_msg (output);
-
-    json_object_unref(obj);
-    g_free(output);
-}
-
-void
-music_notify_add_song (const gchar *song, gint pos)
-{
-    notify_attr_t attrs[] = {
-        { .type = G_TYPE_STRING, .name = "event",    .val = { .s = "add" } },
-        { .type = G_TYPE_STRING, .name = "song",     .val = { .s = song } },
-        { .type = G_TYPE_INT,    .name = "position", .val = { .i = pos } },
-        { 0 }
-    };
-    notify_with_object(attrs);
-}
-
-void
-music_notify_remove_song (gint pos)
-{
-    notify_attr_t attrs[] = {
-        { .type = G_TYPE_STRING, .name = "event",    .val = { .s = "remove" } },
-        { .type = G_TYPE_INT,    .name = "position", .val = { .i = pos } },
-        { 0 }
-    };
-    notify_with_object(attrs);
-}
-
-void
-music_notify_move_song (gint from, gint to)
-{
-    notify_attr_t attrs[] = {
-        { .type = G_TYPE_STRING, .name = "event", .val = { .s = "move" } },
-        { .type = G_TYPE_INT,    .name = "from",  .val = { .i = from } },
-        { .type = G_TYPE_INT,    .name = "to",    .val = { .i = to } },
-        { 0 }
-    };
-    notify_with_object(attrs);
-}
-
-void
-music_notify_current_song (gint pos)
-{
-    notify_attr_t attrs[] = {
-        { .type = G_TYPE_STRING, .name = "event",    .val = { .s = "current" } },
-        { .type = G_TYPE_INT,    .name = "position", .val = { .i = pos } },
-        { 0 }
-    };
-    notify_with_object(attrs);
-}
-
-void
-music_notify_song_failed ()
-{
-    notify_attr_t attrs[] = {
-        { .type = G_TYPE_STRING, .name = "event", .val = { .s = "failed" } },
-        { 0 }
-    };
-    notify_with_object(attrs);
-}
-
-void
-music_notify_playing ()
-{
-    notify_attr_t attrs[] = {
-        { .type = G_TYPE_STRING, .name = "event", .val = { .s = "playing" } },
-        { 0 }
-    };
-    notify_with_object(attrs);
-}
-
-void
-music_notify_paused ()
-{
-    notify_attr_t attrs[] = {
-        { .type = G_TYPE_STRING, .name = "event", .val = { .s = "paused" } },
-        { 0 }
-    };
-    notify_with_object(attrs);
-}
-
-void
-music_notify_stopped ()
-{
-    notify_attr_t attrs[] = {
-        { .type = G_TYPE_STRING, .name = "event", .val = { .s = "stopped" } },
-        { 0 }
-    };
-    notify_with_object(attrs);
-}
-
-void
-music_notify_clear ()
-{
-    notify_attr_t attrs[] = {
-        { .type = G_TYPE_STRING, .name = "event", .val = { .s = "clear" } },
-        { 0 }
-    };
-    notify_with_object(attrs);
 }
 
