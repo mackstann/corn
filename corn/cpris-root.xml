@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
+<!--
+CPRIS: the Corn Media Player Interfacing Specification
+
+AKA stuff that should be in MPRIS but isn't yet
+-->
+
 <node name="/">
     <interface name="org.corn.CornPlayer">
         <method name="Clear"><!-- clear the playlist -->
