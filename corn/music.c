@@ -220,6 +220,6 @@ music_stop ()
 void music_set_volume(gint vol)
 {
     music_volume = CLAMP(vol, 0, 100);
-    xine_set_param(stream, XINE_PARAM_AUDIO_AMP_LEVEL, music_volume);
+    xine_set_param(stream, XINE_PARAM_AUDIO_VOLUME, music_volume);
 }
 
