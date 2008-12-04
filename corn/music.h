@@ -8,6 +8,7 @@
 #endif
 
 extern gboolean music_playing;
+extern gint music_volume;
 
 void music_init       ();
 void music_destroy    ();

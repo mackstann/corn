@@ -23,8 +23,6 @@ mpris_player_class_init(MprisPlayerClass * klass)
 // Repeat
 // GetStatus
 // GetMetadata
-// VolumeSet
-// VolumeGet
 // PositionSet
 // PositionGet
 
@@ -77,6 +75,12 @@ gboolean mpris_player_get_caps(MprisPlayer * obj, gint * caps, GError ** error)
 gboolean mpris_player_volume_set(MprisPlayer * obj, gint vol, GError ** error)
 {
     music_set_volume(vol);
+    return TRUE;
+}
+
+gboolean mpris_player_volume_get(MprisPlayer * obj, gint * vol, GError ** error)
+{
+    *vol = music_volume;
     return TRUE;
 }
 

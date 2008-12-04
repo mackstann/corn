@@ -44,6 +44,7 @@ gboolean mpris_player_play (MprisPlayer * obj, GError ** error);
 
 gboolean mpris_player_get_caps(MprisPlayer * obj, gint * caps, GError ** error);
 gboolean mpris_player_volume_set(MprisPlayer * obj, gint vol, GError ** error);
+gboolean mpris_player_volume_get(MprisPlayer * obj, gint * vol, GError ** error);
 
 #endif
 

@@ -19,6 +19,9 @@
         <method name="VolumeSet">
             <arg type="i"/>
         </method>
+        <method name="VolumeGet">
+            <arg type="i" direction="out"/>
+        </method>
     </interface>
 </node>
 
