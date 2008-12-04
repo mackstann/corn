@@ -257,28 +257,24 @@ pls_fail:
 gboolean
 parse_dir (const gchar *path)
 {
-    GnomeVFSDirectoryHandle *h;
+    GnomeVFSDirectoryHandle *dirh;
     GnomeVFSFileInfo *info;
     GSList *entries = NULL, *it;
 
     g_message ("adding dir: %s", path);
 
-    if (gnome_vfs_directory_open (&h, path, GNOME_VFS_FILE_INFO_FOLLOW_LINKS))
+    if (gnome_vfs_directory_open (&dirh, path, GNOME_VFS_FILE_INFO_FOLLOW_LINKS))
         return FALSE;
 
     g_message ("really adding dir: %s", path);
 
     info = gnome_vfs_file_info_new ();
 
-    while (gnome_vfs_directory_read_next (h, info) == GNOME_VFS_OK) {
-        gchar *fullpath;
-
+    while(gnome_vfs_directory_read_next(dirh, info) == GNOME_VFS_OK
+            && info->name[0] != '.')
+    {
         g_message ("read dir entry: %s", info->name);
-
-        if (info->name[0] == '.')
-            continue;
-
-        fullpath = add_relative_dir (info->name, path);
+        gchar * fullpath = add_relative_dir (info->name, path);
         entries = g_slist_append (entries, fullpath);
     }
 
@@ -289,7 +285,7 @@ parse_dir (const gchar *path)
     }
     g_slist_free (entries);
 
-    gnome_vfs_directory_close (h);
+    gnome_vfs_directory_close (dirh);
     gnome_vfs_file_info_unref (info);
 
     return FALSE;
