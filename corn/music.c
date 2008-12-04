@@ -21,6 +21,7 @@ static xine_event_queue_t *events;
 
 static gint stream_time;
 
+gboolean music_gapless = FALSE;
 gboolean music_playing = FALSE;
 gint music_volume = 100; // XXX
 
@@ -38,6 +39,10 @@ music_events (void *data, const xine_event_t *e)
 
         switch (e->type) {
         case XINE_EVENT_UI_PLAYBACK_FINISHED:
+#if defined(XINE_PARAM_GAPLESS_SWITCH) && defined(XINE_PARAM_EARLY_FINISHED_EVENT)
+            if(music_gapless)
+                xine_set_param(stream, XINE_PARAM_GAPLESS_SWITCH, 1);
+#endif
             playlist_advance ((mrl_change ? 0 : 1), main_loop_at_end);
             mrl_change = FALSE;
             break;
@@ -96,6 +101,10 @@ music_init ()
 
     events = xine_event_new_queue (stream);
     xine_event_create_listener_thread (events, music_events, NULL);
+
+#if defined(XINE_PARAM_GAPLESS_SWITCH) && defined(XINE_PARAM_EARLY_FINISHED_EVENT)
+    music_gapless = !!xine_check_version(1, 1, 1);
+#endif
 }
 
 
@@ -136,6 +145,11 @@ music_play ()
             playlist_fail ();
             return;
         }
+
+#if defined(XINE_PARAM_GAPLESS_SWITCH) && defined(XINE_PARAM_EARLY_FINISHED_EVENT)
+        if(music_gapless)
+            xine_set_param(stream, XINE_PARAM_EARLY_FINISHED_EVENT, 1);
+#endif
         
         time = stream_time;
         stream_time = 0;
