@@ -275,7 +275,7 @@ parse_dir (const gchar *path)
 
         g_message ("read dir entry: %s", info->name);
 
-        if (strcmp (info->name, ".") == 0 || strcmp (info->name, "..") == 0)
+        if (info->name[0] == '.')
             continue;
 
         fullpath = add_relative_dir (info->name, path);
