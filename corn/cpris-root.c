@@ -22,6 +22,8 @@ cpris_root_class_init(CprisRootClass * klass)
 {
 }
 
+// TODO: GetAllMetadata
+
 gboolean cpris_root_clear(CprisRoot * obj, GError ** error)
 {
     playlist_clear();

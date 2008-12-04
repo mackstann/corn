@@ -15,8 +15,6 @@ corn_SOURCES = \
   gettext.h \
   main.h \
   main.c \
-  fifo.h \
-  fifo.c \
   music.h \
   music.c \
   playlist.h \

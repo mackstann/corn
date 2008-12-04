@@ -16,16 +16,13 @@ extern gboolean main_repeat_track;
 extern CornStatus main_status;
 
 extern GStaticMutex main_mutex;
-extern GStaticMutex main_fifo_mutex;
 extern GStaticMutex main_signal_mutex;
 
 void main_quit(void);
 
 #define thread_lock() do { g_static_mutex_lock (&main_mutex); \
-                           g_static_mutex_lock (&main_fifo_mutex); \
                            g_static_mutex_lock (&main_signal_mutex); } while(0)
 #define thread_unlock() do { g_static_mutex_unlock (&main_mutex); \
-                             g_static_mutex_unlock (&main_fifo_mutex); \
                              g_static_mutex_unlock (&main_signal_mutex); } while(0)
 
 #endif

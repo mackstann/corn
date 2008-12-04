@@ -4,7 +4,6 @@
 #include <locale.h>
 
 #include "dbus.h"
-#include "fifo.h"
 #include "music.h"
 #include "playlist.h"
 #include "main.h"
@@ -26,7 +25,6 @@ gboolean main_repeat_track = FALSE; /* repeat same track continuously */
 CornStatus main_status;
 
 GStaticMutex main_mutex        = G_STATIC_MUTEX_INIT;
-GStaticMutex main_fifo_mutex   = G_STATIC_MUTEX_INIT;
 GStaticMutex main_signal_mutex = G_STATIC_MUTEX_INIT;
 
 static GMainLoop * loop;
@@ -113,12 +111,6 @@ int main(int argc, char ** argv)
 
     loop = g_main_loop_new(NULL, FALSE);
 
-    if(!fifo_open())
-    {
-        g_critical("failed to open fifo");
-        return 1;
-    }
-
     music_init();
     if(!mpris_init())
     {
@@ -148,7 +140,6 @@ int main(int argc, char ** argv)
     music_destroy();
     mpris_destroy();
 
-    fifo_destroy();
     g_main_loop_unref(loop);
 #ifdef USE_GCONF
     g_object_unref(G_OBJECT(gconf));
