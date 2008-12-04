@@ -7,7 +7,7 @@
 #include <glib.h>
 #include <glib-object.h>
 
-G_DEFINE_TYPE(MprisPlayer, mpris_player, G_TYPE_OBJECT);
+G_DEFINE_TYPE(MprisPlayer, mpris_player, G_TYPE_OBJECT)
 
 static void
 mpris_player_init(MprisPlayer * obj)
@@ -96,6 +96,12 @@ gboolean mpris_player_position_get(MprisPlayer * obj, gint * ms, GError ** error
 gboolean mpris_player_repeat(MprisPlayer * obj, gboolean on, GError ** error)
 {
     main_repeat_track = on;
+    return TRUE;
+}
+
+gboolean mpris_player_get_metadata(MprisPlayer * obj, GHashTable ** meta, GError ** error)
+{
+    *meta = music_get_metadata();
     return TRUE;
 }
 

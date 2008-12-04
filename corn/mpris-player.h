@@ -48,6 +48,7 @@ gboolean mpris_player_volume_get(MprisPlayer * obj, gint * vol, GError ** error)
 gboolean mpris_player_position_set(MprisPlayer * obj, gint ms, GError ** error);
 gboolean mpris_player_position_get(MprisPlayer * obj, gint * ms, GError ** error);
 gboolean mpris_player_repeat(MprisPlayer * obj, gboolean on, GError ** error);
+gboolean mpris_player_get_metadata(MprisPlayer * obj, GHashTable ** meta, GError ** error);
 
 #endif
 

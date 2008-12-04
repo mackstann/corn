@@ -14,5 +14,6 @@ void music_stop(void);
 void music_set_volume(gint vol);
 void music_seek(gint ms);
 gint music_get_position(void);
+GHashTable * music_get_metadata(void);
 
 #endif

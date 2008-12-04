@@ -178,6 +178,53 @@ void music_play()
     }
 }
 
+static void free_gvalue_and_its_value(gpointer value)
+{
+    g_value_unset((GValue*)value);
+    g_free((GValue*)value);
+}
+
+void add_metadata_from_xine_meta_info(GHashTable * meta, const gchar * name, gint field)
+{
+    const char * s = xine_get_meta_info(stream, field);
+    if(!s)
+        return;
+
+    gchar * u = g_locale_to_utf8(s, strlen(s), NULL, NULL, NULL);
+    if(!u)
+    {
+        g_critical(_("Skipping %s value '%s'. Could not convert to UTF-8. Bug?"), name, s);
+        return;
+    }
+
+    GValue * val = g_new0(GValue, 1);
+    g_value_init(val, G_TYPE_STRING);
+    g_value_take_string(val, u);
+
+    g_hash_table_insert(meta, name, val);
+}
+
+GHashTable * music_get_metadata(void)
+{
+    GHashTable * meta = g_hash_table_new_full(
+            g_str_hash, g_str_equal, NULL, free_gvalue_and_its_value);
+
+    add_metadata_from_xine_meta_info(meta, "title", XINE_META_INFO_TITLE);
+    add_metadata_from_xine_meta_info(meta, "artist", XINE_META_INFO_ARTIST);
+    add_metadata_from_xine_meta_info(meta, "album", XINE_META_INFO_ALBUM);
+    add_metadata_from_xine_meta_info(meta, "tracknumber", XINE_META_INFO_TRACK_NUMBER);
+    // "time" - stream length - int xine_get_pos_length
+    // "mtime" - stream length (ms) - int xine_get_pos_length
+    add_metadata_from_xine_meta_info(meta, "genre", XINE_META_INFO_GENRE);
+    // "comment"
+    // "rating" int [1..5] or [0..5]?
+    add_metadata_from_xine_meta_info(meta, "year", XINE_META_INFO_YEAR); // XXX int
+    // "date" - timestamp of original performance - int
+    // "audio-bitrate" int XINE_STREAM_INFO_BITRATE
+    // "audio-samplerate" int XINE_STREAM_INFO_AUDIO_SAMPLERATE
+    return meta;
+}
+
 static void _do_pause(void)
 {
     stream_time = music_get_position();

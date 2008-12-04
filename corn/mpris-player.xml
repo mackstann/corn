@@ -34,6 +34,10 @@
         <method name="Repeat">
             <arg type="b" />
         </method>
+
+        <method name="GetMetadata">
+            <arg type="a{sv}" direction="out" />
+        </method>
     </interface>
 </node>
 
