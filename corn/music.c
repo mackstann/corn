@@ -111,7 +111,6 @@ void music_init()
     music_volume = xine_get_param(stream, XINE_PARAM_AUDIO_VOLUME);
 }
 
-
 void music_destroy()
 {
     xine_event_dispose_queue(events);
@@ -211,31 +210,31 @@ void add_metadata_from_int(GHashTable * meta, const gchar * name, gint num)
     g_hash_table_insert(meta, name, val);
 }
 
-GHashTable * music_get_metadata(void)
+static GHashTable * get_stream_metadata(xine_stream_t * strm)
 {
     GHashTable * meta = g_hash_table_new_full(g_str_hash, g_str_equal,
             NULL, // our keys are all static -- no free function for them
             free_gvalue_and_its_value);
 
-    add_metadata_from_string(meta, "title", xine_get_meta_info(stream, XINE_META_INFO_TITLE));
-    add_metadata_from_string(meta, "artist", xine_get_meta_info(stream, XINE_META_INFO_ARTIST));
-    add_metadata_from_string(meta, "album", xine_get_meta_info(stream, XINE_META_INFO_ALBUM));
-    add_metadata_from_string(meta, "tracknumber", xine_get_meta_info(stream, XINE_META_INFO_TRACK_NUMBER));
+    add_metadata_from_string(meta, "title", xine_get_meta_info(strm, XINE_META_INFO_TITLE));
+    add_metadata_from_string(meta, "artist", xine_get_meta_info(strm, XINE_META_INFO_ARTIST));
+    add_metadata_from_string(meta, "album", xine_get_meta_info(strm, XINE_META_INFO_ALBUM));
+    add_metadata_from_string(meta, "tracknumber", xine_get_meta_info(strm, XINE_META_INFO_TRACK_NUMBER));
 
     gint pos, time, length;
     /* length = 0 for streams */
-    if(xine_get_pos_length(stream, &pos, &time, &length) && length)
+    if(xine_get_pos_length(strm, &pos, &time, &length) && length)
     {
         add_metadata_from_int(meta, "time", length/1000);
         add_metadata_from_int(meta, "mtime", length);
     }
 
-    add_metadata_from_string(meta, "genre", xine_get_meta_info(stream, XINE_META_INFO_GENRE));
+    add_metadata_from_string(meta, "genre", xine_get_meta_info(strm, XINE_META_INFO_GENRE));
 
     // "comment"
     // "rating" int [1..5] or [0..5]?
 
-    const gchar * yearstr = xine_get_meta_info(stream, XINE_META_INFO_YEAR);
+    const gchar * yearstr = xine_get_meta_info(strm, XINE_META_INFO_YEAR);
     if(yearstr)
     {
         gchar * end;
@@ -246,8 +245,57 @@ GHashTable * music_get_metadata(void)
 
     // "date" - timestamp of original performance - int
 
-    add_metadata_from_int(meta, "audio-bitrate", xine_get_stream_info(stream, XINE_STREAM_INFO_BITRATE));
-    add_metadata_from_int(meta, "audio-samplerate", xine_get_stream_info(stream, XINE_STREAM_INFO_AUDIO_SAMPLERATE));
+    add_metadata_from_int(meta, "audio-bitrate", xine_get_stream_info(strm, XINE_STREAM_INFO_BITRATE));
+    add_metadata_from_int(meta, "audio-samplerate", xine_get_stream_info(strm, XINE_STREAM_INFO_AUDIO_SAMPLERATE));
+    return meta;
+}
+
+GHashTable * music_get_metadata(void)
+{
+    return get_stream_metadata(stream);
+}
+
+GHashTable * music_get_track_metadata(gint track)
+{
+    GHashTable * empty = g_hash_table_new(NULL, NULL);
+
+    if(track >= g_list_length(playlist) || track < 0)
+        return empty;
+
+    xine_audio_port_t * audio = xine_open_audio_driver(xine, "none", NULL);
+    if(!audio)
+        return empty;
+
+    xine_stream_t * strm = xine_stream_new(xine, audio, NULL);
+    if(!strm)
+    {
+        xine_close_audio_driver(xine, audio);
+        return empty;
+    }
+
+    gchar * path;
+    PlaylistItem * item = LISTITEM(g_list_nth(playlist, track));
+    if(!(path = g_filename_from_utf8(PATH(item), -1, NULL, NULL, NULL)))
+    {
+        g_critical(_("Skipping getting track metadata for '%s'. "
+                     "Could not convert from UTF-8. Bug?"), PATH(item));
+        xine_dispose(strm);
+        xine_close_audio_driver(xine, audio);
+        return empty;
+    }
+
+    if(!xine_open(strm, path))
+    {
+        xine_dispose(strm);
+        xine_close_audio_driver(xine, audio);
+    }
+
+    GHashTable * meta = get_stream_metadata(strm);
+
+    xine_dispose(strm);
+    xine_close_audio_driver(xine, audio);
+
+    g_hash_table_unref(empty);
     return meta;
 }
 

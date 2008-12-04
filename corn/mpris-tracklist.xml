@@ -22,6 +22,10 @@
         <method name="SetRandom">
             <arg type="b" />
         </method>
+        <method name="GetMetadata">
+            <arg type="i" direction="in" />
+            <arg type="a{sv}" direction="out" />
+        </method>
     </interface>
 </node>
 

@@ -2,6 +2,7 @@
 #define __corn_mpris_tracklist_h__
 
 #include <glib-object.h>
+#include <glib.h>
 
 #define CORN_TYPE_MPRIS_TRACKLIST                  (mpris_tracklist_get_type ())
 #define CORN_MPRIS_TRACKLIST(obj)                  (G_TYPE_CHECK_INSTANCE_CAST ((obj), CORN_TYPE_MPRIS_TRACKLIST, MprisTrackList))
@@ -41,6 +42,9 @@ gboolean mpris_tracklist_set_loop
 
 gboolean mpris_tracklist_set_random
 (MprisTrackList * obj, gboolean on, GError ** error);
+
+gboolean mpris_tracklist_get_metadata
+(MprisTrackList * obj, gint track, GHashTable ** meta, GError ** error);
 
 #endif
 

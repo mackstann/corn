@@ -8,7 +8,7 @@
 #include <glib.h>
 #include <glib-object.h>
 
-G_DEFINE_TYPE(MprisTrackList, mpris_tracklist, G_TYPE_OBJECT);
+G_DEFINE_TYPE(MprisTrackList, mpris_tracklist, G_TYPE_OBJECT)
 
 static void
 mpris_tracklist_init(MprisTrackList * obj)
@@ -73,6 +73,13 @@ gboolean mpris_tracklist_set_random
 (MprisTrackList * obj, gboolean on, GError ** error)
 {
     main_random_order = on;
+    return TRUE;
+}
+
+gboolean mpris_tracklist_get_metadata
+(MprisTrackList * obj, gint track, GHashTable ** meta, GError ** error)
+{
+    *meta = music_get_track_metadata(track);
     return TRUE;
 }
 
