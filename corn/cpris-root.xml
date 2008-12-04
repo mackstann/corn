@@ -4,6 +4,9 @@
     <interface name="org.corn.CornPlayer">
         <method name="Clear"><!-- clear the playlist -->
         </method>
+        <method name="PlayTrack"><!-- play a certain track -->
+            <arg type="i" direction="in" />
+        </method>
     </interface>
 </node>
 

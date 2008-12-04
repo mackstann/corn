@@ -3,6 +3,7 @@
 // AKA stuff that should be in MPRIS but isn't yet
 
 #include "main.h"
+#include "playlist.h"
 
 #include "cpris-root.h"
 
@@ -24,6 +25,13 @@ cpris_root_class_init(CprisRootClass * klass)
 gboolean cpris_root_clear(CprisRoot * obj, GError ** error)
 {
     playlist_clear();
+    return TRUE;
+}
+
+gboolean cpris_root_play_track(CprisRoot * obj, gint track, GError ** error)
+{
+    // sanity check?
+    playlist_seek(track);
     return TRUE;
 }
 
