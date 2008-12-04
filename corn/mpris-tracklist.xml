@@ -10,6 +10,12 @@
             <arg type="b" direction="in" />
             <arg type="i" direction="out" />
         </method>
+        <method name="GetLength">
+            <arg type="i" direction="out" />
+        </method>
+        <method name="GetCurrentTrack">
+            <arg type="i" direction="out" />
+        </method>
     </interface>
 </node>
 

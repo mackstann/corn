@@ -52,3 +52,19 @@ gboolean mpris_tracklist_add_track(MprisTrackList * obj, const gchar * uri,
     return TRUE;
 }
 
+gboolean mpris_tracklist_get_length
+(MprisTrackList * obj, gint * len, GError ** error)
+{
+    *len = g_list_length(playlist);
+    return TRUE;
+}
+
+gboolean mpris_tracklist_get_current_track
+(MprisTrackList * obj, gint * track, GError ** error)
+{
+    // will be -1 when list is empty, but that's ok because the spec says
+    // behavior is undefined when calling this on an empty tracklist.
+    *track = g_list_position(playlist, playlist_current);
+    return TRUE;
+}
+
