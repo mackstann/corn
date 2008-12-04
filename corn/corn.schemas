@@ -10,7 +10,7 @@
         <short>Loop playlist at end</short>
         <long>
           When this is enabled, playback will resume at the top of the
-          playlist once the end is reached instead of stopping
+          playlist once the end is reached instead of stopping.
         </long>
       </locale>
     </schema>
@@ -24,7 +24,22 @@
       <locale name="C">
         <short>Random track selection</short>
         <long>
-          Plays tracks in random order
+          Plays tracks in random order.
+        </long>
+      </locale>
+    </schema>
+
+    <schema>
+      <key>/schemas/apps/corn/repeat_track</key>
+      <applyto>/apps/corn/repeat_track</applyto>
+      <owner>corn</owner>
+      <type>bool</type>
+      <default>false</default>
+      <locale name="C">
+        <short>Repeat same track continuously</short>
+        <long>
+            When this is enabled, playback will not proceed to the next song.
+            It will play the current song continuously.
         </long>
       </locale>
     </schema>

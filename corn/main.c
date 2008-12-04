@@ -33,6 +33,7 @@ static GMainLoop *loop;
 #define CORN_GCONF_ROOT_PLAYLIST "/apps/corn/playlist"
 #define LOOP_PLAYLIST            CORN_GCONF_ROOT "/loop_playlist"
 #define RANDOM_ORDER             CORN_GCONF_ROOT "/random_order"
+#define REPEAT_TRACK             CORN_GCONF_ROOT "/repeat_track"
 #define PLAYLIST_POSITION        CORN_GCONF_ROOT_PLAYLIST "/position"
 #define PLAYLIST                 CORN_GCONF_ROOT_PLAYLIST "/playlist"
 
@@ -162,7 +163,7 @@ config_load (GConfClient *gconf)
 
     main_loop_at_end = gconf_client_get_bool(gconf, LOOP_PLAYLIST, NULL);
     main_random_order = gconf_client_get_bool(gconf, RANDOM_ORDER, NULL);
-    main_repeat_track = FALSE;
+    main_repeat_track = gconf_client_get_bool(gconf, REPEAT_TRACK, NULL);
 
     paths = gconf_client_get_list (gconf, PLAYLIST, GCONF_VALUE_STRING, NULL);
     for (it = paths; it; it = g_slist_next (it)) {
@@ -194,6 +195,7 @@ config_save (GConfClient *gconf)
 
     gconf_client_set_bool (gconf, LOOP_PLAYLIST, main_loop_at_end, NULL);
     gconf_client_set_bool (gconf, RANDOM_ORDER, main_random_order, NULL);
+    gconf_client_set_bool (gconf, REPEAT_TRACK, main_repeat_track, NULL);
 
     gconf_client_set_int (gconf, PLAYLIST_POSITION,
                           g_list_position (playlist, playlist_current), NULL);
@@ -218,6 +220,8 @@ config_changed (GConfClient *gconf,
         main_loop_at_end = gconf_value_get_bool(entry->value);
     } else if (!strcmp (entry->key, RANDOM_ORDER)) {
         main_random_order = gconf_value_get_bool(entry->value);
+    } else if (!strcmp (entry->key, REPEAT_TRACK)) {
+        main_repeat_track = gconf_value_get_bool(entry->value);
     }
 }
 #endif
