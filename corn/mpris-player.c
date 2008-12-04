@@ -19,6 +19,15 @@ mpris_player_class_init(MprisPlayerClass * klass)
 {
 }
 
+// TODO:
+// Repeat
+// GetStatus
+// GetMetadata
+// VolumeSet
+// VolumeGet
+// PositionSet
+// PositionGet
+
 // example for calling these on the command line:
 // $ dbus-send --session --type=method_call --dest=org.mpris.brunt \
 //   /Player org.freedesktop.MediaPlayer.Next
