@@ -11,6 +11,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <errno.h>
 
 static xine_t             *xine;
 static xine_stream_t      *stream;
@@ -184,44 +185,69 @@ static void free_gvalue_and_its_value(gpointer value)
     g_free((GValue*)value);
 }
 
-void add_metadata_from_xine_meta_info(GHashTable * meta, const gchar * name, gint field)
+void add_metadata_from_string(GHashTable * meta, const gchar * name, const gchar * str)
 {
-    const char * s = xine_get_meta_info(stream, field);
-    if(!s)
+    if(!str)
         return;
 
-    gchar * u = g_locale_to_utf8(s, strlen(s), NULL, NULL, NULL);
+    gchar * u = g_locale_to_utf8(str, strlen(str), NULL, NULL, NULL);
     if(!u)
     {
-        g_critical(_("Skipping %s value '%s'. Could not convert to UTF-8. Bug?"), name, s);
+        g_critical(_("Skipping %s value '%s'. Could not convert to UTF-8. Bug?"), name, str);
         return;
     }
 
     GValue * val = g_new0(GValue, 1);
     g_value_init(val, G_TYPE_STRING);
-    g_value_take_string(val, u);
+    g_value_set_string(val, u);
+    g_hash_table_insert(meta, name, val);
+}
 
+void add_metadata_from_int(GHashTable * meta, const gchar * name, gint num)
+{
+    GValue * val = g_new0(GValue, 1);
+    g_value_init(val, G_TYPE_INT);
+    g_value_set_int(val, num);
     g_hash_table_insert(meta, name, val);
 }
 
 GHashTable * music_get_metadata(void)
 {
-    GHashTable * meta = g_hash_table_new_full(
-            g_str_hash, g_str_equal, NULL, free_gvalue_and_its_value);
+    GHashTable * meta = g_hash_table_new_full(g_str_hash, g_str_equal,
+            NULL, // our keys are all static -- no free function for them
+            free_gvalue_and_its_value);
 
-    add_metadata_from_xine_meta_info(meta, "title", XINE_META_INFO_TITLE);
-    add_metadata_from_xine_meta_info(meta, "artist", XINE_META_INFO_ARTIST);
-    add_metadata_from_xine_meta_info(meta, "album", XINE_META_INFO_ALBUM);
-    add_metadata_from_xine_meta_info(meta, "tracknumber", XINE_META_INFO_TRACK_NUMBER);
-    // "time" - stream length - int xine_get_pos_length
-    // "mtime" - stream length (ms) - int xine_get_pos_length
-    add_metadata_from_xine_meta_info(meta, "genre", XINE_META_INFO_GENRE);
+    add_metadata_from_string(meta, "title", xine_get_meta_info(stream, XINE_META_INFO_TITLE));
+    add_metadata_from_string(meta, "artist", xine_get_meta_info(stream, XINE_META_INFO_ARTIST));
+    add_metadata_from_string(meta, "album", xine_get_meta_info(stream, XINE_META_INFO_ALBUM));
+    add_metadata_from_string(meta, "tracknumber", xine_get_meta_info(stream, XINE_META_INFO_TRACK_NUMBER));
+
+    gint pos, time, length;
+    /* length = 0 for streams */
+    if(xine_get_pos_length(stream, &pos, &time, &length) && length)
+    {
+        add_metadata_from_int(meta, "time", length/1000);
+        add_metadata_from_int(meta, "mtime", length);
+    }
+
+    add_metadata_from_string(meta, "genre", xine_get_meta_info(stream, XINE_META_INFO_GENRE));
+
     // "comment"
     // "rating" int [1..5] or [0..5]?
-    add_metadata_from_xine_meta_info(meta, "year", XINE_META_INFO_YEAR); // XXX int
+
+    const gchar * yearstr = xine_get_meta_info(stream, XINE_META_INFO_YEAR);
+    if(yearstr)
+    {
+        gchar * end;
+        gint year = (gint)strtol(yearstr, &end, 10);
+        if(!errno && end != yearstr)
+            add_metadata_from_int(meta, "year", year);
+    }
+
     // "date" - timestamp of original performance - int
-    // "audio-bitrate" int XINE_STREAM_INFO_BITRATE
-    // "audio-samplerate" int XINE_STREAM_INFO_AUDIO_SAMPLERATE
+
+    add_metadata_from_int(meta, "audio-bitrate", xine_get_stream_info(stream, XINE_STREAM_INFO_BITRATE));
+    add_metadata_from_int(meta, "audio-samplerate", xine_get_stream_info(stream, XINE_STREAM_INFO_AUDIO_SAMPLERATE));
     return meta;
 }
 
@@ -244,15 +270,12 @@ void music_seek(gint ms)
 
 gint music_get_position(void)
 {
-    if(xine_get_status(stream) != XINE_STATUS_IDLE)
-    {
-        int pos, time, length;
-        /* length = 0 for streams */
-        if(xine_get_pos_length(stream, &pos, &time, &length) && length)
-            return time;
-        return 0;
-    }
-    return stream_time;
+    if(xine_get_status(stream) == XINE_STATUS_IDLE)
+        return stream_time;
+    gint pos, time, length;
+    if(xine_get_pos_length(stream, &pos, &time, &length))
+        return time;
+    return 0;
 }
 
 void music_pause()
