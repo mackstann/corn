@@ -20,7 +20,6 @@ mpris_player_class_init(MprisPlayerClass * klass)
 }
 
 // TODO:
-// Repeat
 // GetStatus
 // GetMetadata
 
