@@ -177,8 +177,9 @@ static void _do_pause(void)
 
 void music_seek(gint ms)
 {
+    // if it goes past end of song, xine will just end the song
+    ms = MAX(0, ms);
     _do_pause();
-    // XXX DO SANITY CHECK!
     stream_time = ms;
     music_play();
 }
@@ -188,16 +189,9 @@ gint music_get_position(void)
     if (xine_get_status(stream) != XINE_STATUS_IDLE) {
         int pos, time, length;
         /* length = 0 for streams */
-        if (!(xine_get_pos_length (stream, &pos, &time, &length) && length))
-        {
-            time = 0;
-        } else
-        {
-            g_message("pos: %d", pos);
-            g_message("time: %d", time);
-            g_message("len: %d", length);
-        }
-        return time;
+        if (xine_get_pos_length(stream, &pos, &time, &length) && length)
+            return time;
+        return 0;
     }
     return stream_time;
 }
