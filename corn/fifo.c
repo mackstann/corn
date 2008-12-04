@@ -166,49 +166,6 @@ fifo_execute (JsonObject *command)
     else if (!g_strcmp0 (commandstr, "dump")) {
         playlist_dump ();
     }
-    else if (!g_strcmp0 (commandstr, "connect")) {
-        if(!json_object_has_member(command, "filename"))
-            g_warning("connect command has no \"filename\" member");
-        else
-        {
-            const gchar * filename = json_node_get_string(json_object_get_member(command, "filename"));
-            fifo_add_notify (filename);
-        }
-    }
 
 }
 
-/**
- A create a per client notification FIFO.
-
- To be notified of status changes, a client must create a FIFO, then send a
- "connect <filename>" message to corn. corn can then open the supplied fifo
- for reading.
-*/
-void
-fifo_add_notify (const char *filename)
-{
-    struct stat statbuf;
-    GIOChannel *channel;
-    
-    int fifo_fd = open (filename, O_WRONLY | O_NONBLOCK);
-    if (fifo_fd < 0) {
-        g_warning ("Unable to open client notify FIFO %s", filename);
-        return;
-    }
-
-    if (fstat (fifo_fd, &statbuf) < 0) {
-        g_warning ("Unable to stat client notify FIFO %s:", strerror(errno));
-        return;
-    }
-    
-    if (!S_ISFIFO (statbuf.st_mode)) {
-        g_warning ("Client notify file %s not a FIFO", filename);
-        return;
-    }
-
-    g_message ("Connecting to client FIFO %s", filename);
-    channel = g_io_channel_unix_new (fifo_fd);
-    
-    music_add_notify (channel);
-}
