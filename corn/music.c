@@ -19,7 +19,7 @@ static xine_audio_port_t  *ao;
 static xine_video_port_t  *vo;
 static xine_event_queue_t *events;
 
-static gint stream_pos;
+static gint stream_time;
 
 static GList *notify_channels = NULL;
 
@@ -115,7 +115,7 @@ void
 music_play ()
 {
     PlaylistItem *item;
-    gint state, pos;
+    gint state, time;
     gchar *path;
 
     state = xine_get_status (stream);
@@ -142,9 +142,9 @@ music_play ()
             return;
         }
         
-        pos = stream_pos;
-        stream_pos = 0;
-        if (xine_play (stream, pos, 0)) {
+        time = stream_time;
+        stream_time = 0;
+        if (xine_play (stream, 0, time)) {
             const gchar * meta;
             meta = xine_get_meta_info(stream, XINE_META_INFO_TITLE);          g_message("XINE_META_INFO_TITLE:          %s", meta);
             meta = xine_get_meta_info(stream, XINE_META_INFO_COMMENT);        g_message("XINE_META_INFO_COMMENT:        %s", meta);
@@ -167,36 +167,52 @@ music_play ()
     }
 }
 
-void
-music_pause ()
+static void _do_pause(void)
 {
-    int state;
+    stream_time = music_get_position();
+    if (xine_get_status(stream) != XINE_STATUS_IDLE)
+        xine_close (stream);
+    music_playing = FALSE;
+}
 
-    state = xine_get_status (stream);
-    if (state != XINE_STATUS_IDLE) {
+void music_seek(gint ms)
+{
+    _do_pause();
+    // XXX DO SANITY CHECK!
+    stream_time = ms;
+    music_play();
+}
+
+gint music_get_position(void)
+{
+    if (xine_get_status(stream) != XINE_STATUS_IDLE) {
         int pos, time, length;
         /* length = 0 for streams */
         if (!(xine_get_pos_length (stream, &pos, &time, &length) && length))
-            pos = 0;
-        stream_pos = pos;
-        g_message ("stream_pos: %d", pos);
-        xine_close (stream);
+        {
+            time = 0;
+        } else
+        {
+            g_message("pos: %d", pos);
+            g_message("time: %d", time);
+            g_message("len: %d", length);
+        }
+        return time;
     }
-    music_playing = FALSE;
-    music_notify_paused ();
+    return stream_time;
+}
+
+void
+music_pause ()
+{
+    _do_pause();
 }
 
 void
 music_stop ()
 {
-    int state;
-
-    state = xine_get_status (stream);
-    if (state != XINE_STATUS_IDLE)
-        xine_close (stream);
-    stream_pos = 0;
-    music_playing = FALSE;
-    music_notify_stopped ();
+    _do_pause();
+    stream_time = 0;
 }
 
 void music_set_volume(gint vol)
@@ -260,8 +276,7 @@ music_notify_msg (const char *message)
     gchar *s = g_strdup_printf ("%s\n", message);
 
     while (it != NULL) {
-        if (music_list_notify (it->data, s))
-            it = it->next;
+        if (music_list_notify (it->data, s)) it = it->next;
         else {
             // i think this may be leaky/buggy, or at least awkward
             GList *tmp = it->next;

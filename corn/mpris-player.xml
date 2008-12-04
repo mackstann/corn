@@ -16,10 +16,18 @@
         <method name="GetCaps">
             <arg type="i" direction="out" />
         </method>
+
         <method name="VolumeSet">
             <arg type="i"/>
         </method>
         <method name="VolumeGet">
+            <arg type="i" direction="out"/>
+        </method>
+
+        <method name="PositionSet">
+            <arg type="i"/>
+        </method>
+        <method name="PositionGet">
             <arg type="i" direction="out"/>
         </method>
     </interface>

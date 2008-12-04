@@ -84,3 +84,15 @@ gboolean mpris_player_volume_get(MprisPlayer * obj, gint * vol, GError ** error)
     return TRUE;
 }
 
+gboolean mpris_player_position_set(MprisPlayer * obj, gint ms, GError ** error)
+{
+    music_seek(ms);
+    return TRUE;
+}
+
+gboolean mpris_player_position_get(MprisPlayer * obj, gint * ms, GError ** error)
+{
+    *ms = music_get_position();
+    return TRUE;
+}
+
