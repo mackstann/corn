@@ -25,6 +25,9 @@ corn_SOURCES = \
   parsefile.c \
   dbus.h \
   dbus.c \
+  cpris-root.h \
+  cpris-root.c \
+  cpris-root-glue.h \
   mpris-root.h \
   mpris-root.c \
   mpris-root-glue.h \
@@ -35,9 +38,12 @@ corn_SOURCES = \
   mpris-tracklist.c \
   mpris-tracklist-glue.h
 
-EXTRA_DIST = corn.schemas mpris-root.xml mpris-player.xml mpris-tracklist.xml
+EXTRA_DIST = corn.schemas cpris-root.xml mpris-root.xml mpris-player.xml mpris-tracklist.xml
 
-BUILT_SOURCES = mpris-root-glue.h mpris-player-glue.h mpris-tracklist-glue.h
+BUILT_SOURCES = cpris-root-glue.h mpris-root-glue.h mpris-player-glue.h mpris-tracklist-glue.h
+
+cpris-root-glue.h: cpris-root.xml
+	$(LIBTOOL) --mode=execute dbus-binding-tool --prefix=cpris_root --mode=glib-server --output=cpris-root-glue.h $(srcdir)/cpris-root.xml
 
 mpris-root-glue.h: mpris-root.xml
 	$(LIBTOOL) --mode=execute dbus-binding-tool --prefix=mpris_root --mode=glib-server --output=mpris-root-glue.h $(srcdir)/mpris-root.xml

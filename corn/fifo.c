@@ -145,9 +145,6 @@ fifo_execute (JsonObject *command)
             playlist_seek (track-1); /* first track is '1' */
         }
     }
-    else if (!g_strcmp0 (commandstr, "clear")) {
-        playlist_clear ();
-    }
     else if (!g_strcmp0 (commandstr, "move")) {
         if(!json_object_has_member(command, "from"))
             g_warning("move command has no \"from\" member");
