@@ -5,7 +5,7 @@
 #include <glib.h>
 #include <glib-object.h>
 
-G_DEFINE_TYPE(MprisRoot, mpris_root, G_TYPE_OBJECT);
+G_DEFINE_TYPE(MprisRoot, mpris_root, G_TYPE_OBJECT)
 
 static void
 mpris_root_init(MprisRoot * obj)
@@ -31,19 +31,21 @@ gboolean mpris_root_quit(MprisRoot * obj, GError ** error)
     return TRUE;
 }
 
-#define DBUS_STRUCT_INT_INT (dbus_g_type_get_struct ("GValueArray", G_TYPE_INT, G_TYPE_INT, G_TYPE_INVALID))
+#define DBUS_STRUCT_UINT_UINT (dbus_g_type_get_struct ("GValueArray", G_TYPE_UINT, G_TYPE_UINT, G_TYPE_INVALID))
 
 gboolean mpris_root_mpris_version(MprisRoot * obj, GValue ** version, GError ** error)
 {
 
-    GValue * value = g_new0(GValue, 1);
-    g_value_init(value, DBUS_STRUCT_INT_INT);
-    g_value_take_boxed(value, dbus_g_type_specialized_construct(DBUS_STRUCT_INT_INT));
-
+    GValue value = {0};
+    g_value_init(&value, DBUS_STRUCT_UINT_UINT);
+    g_value_take_boxed(&value, dbus_g_type_specialized_construct(DBUS_STRUCT_UINT_UINT));
     // field number, value, G_MAXUINT at the end
-    dbus_g_type_struct_set(value, 0, 1, 1, 0, G_MAXUINT);
-
-    *version = value;
+    dbus_g_type_struct_set(&value,
+        0, 1,
+        1, 0,
+        G_MAXUINT
+    );
+    *version = g_value_get_boxed(&value);
 
     //GValueArray * arr = g_value_array_new(2);
     //GValue major = {0};
