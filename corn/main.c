@@ -64,9 +64,6 @@ signal_handler(int signal)
 
 int main(int argc, char ** argv)
 {
-    GConfClient * gconf;
-
-    char * dir;
     struct sigaction action;
     sigset_t sigset;
 
@@ -91,14 +88,12 @@ int main(int argc, char ** argv)
     g_type_init();
     gnome_vfs_init();
 
-    gconf = gconf_client_get_default();
-    gconf_client_add_dir(gconf, CORN_GCONF_ROOT,
-                          GCONF_CLIENT_PRELOAD_RECURSIVE, NULL);
-    gconf_client_notify_add(gconf, CORN_GCONF_ROOT, config_changed, NULL,
-                             NULL, NULL);
+    GConfClient * gconf = gconf_client_get_default();
+    gconf_client_add_dir(gconf, CORN_GCONF_ROOT, GCONF_CLIENT_PRELOAD_RECURSIVE, NULL);
+    gconf_client_notify_add(gconf, CORN_GCONF_ROOT, config_changed, NULL, NULL, NULL);
 
-    /* make the directory we use in ~ */
-    dir = g_build_filename(g_get_home_dir(), ".corn", NULL);
+    /* make sure the config directory exists */
+    const gchar * dir = g_build_filename(g_get_user_config_dir(), PACKAGE, NULL);
     mkdir(dir, S_IRWXU|S_IRWXG|S_IRWXO);
     g_free(dir);
 

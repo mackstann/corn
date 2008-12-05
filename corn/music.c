@@ -18,6 +18,8 @@ static xine_stream_t      *stream;
 static xine_audio_port_t  *ao;
 static xine_event_queue_t *events;
 
+static GHashTable * current_song_meta;
+
 static gint stream_time;
 
 gboolean music_gapless = FALSE;
@@ -74,7 +76,7 @@ void music_init()
     xine_config_register_string(xine,
         "audio.driver", "auto", "audio driver", NULL, 0, NULL, NULL);
 
-    configfile = g_build_filename(g_get_home_dir(), ".corn", "xine_config", NULL);
+    configfile = g_build_filename(g_get_user_config_dir(), PACKAGE, "xine_config", NULL);
     xine_config_load(xine, configfile);
     g_free(configfile);
 
