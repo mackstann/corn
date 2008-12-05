@@ -95,6 +95,13 @@ void music_init()
         exit(EXIT_FAILURE);
     }
 
+    // hey, everyone else is doing it
+    // http://www.google.com/codesearch?q=xine_set_param\(.*%2C\s*XINE_PARAM_METRONOM_PREBUFFER%2C\s*6000
+    xine_set_param(stream, XINE_PARAM_METRONOM_PREBUFFER, 6000);
+
+    xine_set_param(stream, XINE_PARAM_IGNORE_VIDEO, 1);
+    xine_set_param(stream, XINE_PARAM_IGNORE_SPU, 1);
+
     events = xine_event_new_queue(stream);
     xine_event_create_listener_thread(events, music_events, NULL);
 
