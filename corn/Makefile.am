@@ -14,14 +14,16 @@ corn_SOURCES = \
   gettext.h \
   main.h \
   main.c \
+  dbus.h \
+  dbus.c \
   music.h \
   music.c \
   playlist.h \
   playlist.c \
   parsefile.h \
   parsefile.c \
-  dbus.h \
-  dbus.c \
+  configuration.h \
+  configuration.c \
   cpris-root.h \
   cpris-root.c \
   cpris-root-glue.h \

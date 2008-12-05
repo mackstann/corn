@@ -2,6 +2,7 @@
 #include "music.h"
 #include "main.h"
 #include "playlist.h"
+#include "configuration.h"
 
 #include "mpris-tracklist.h"
 
@@ -63,14 +64,14 @@ gboolean mpris_tracklist_get_current_track
 gboolean mpris_tracklist_set_loop
 (MprisTrackList * obj, gboolean on, GError ** error)
 {
-    main_loop_at_end = on;
+    config_loop_at_end = on;
     return TRUE;
 }
 
 gboolean mpris_tracklist_set_random
 (MprisTrackList * obj, gboolean on, GError ** error)
 {
-    main_random_order = on;
+    config_random_order = on;
     return TRUE;
 }
 

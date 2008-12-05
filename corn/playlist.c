@@ -4,6 +4,7 @@
 #include "music.h"
 #include "main.h"
 #include "parsefile.h"
+#include "configuration.h"
 
 GList *playlist = NULL;
 GList *playlist_current = NULL;
@@ -165,7 +166,7 @@ playlist_fail ()
         if (!cur) cur = playlist_current;
 
         /*playlist_remove (g_list_position (playlist, playlist_current));*/
-        playlist_advance (1, main_loop_at_end);
+        playlist_advance (1, config_loop_at_end);
         if (playlist_current != cur)
             music_play (); /* because this can recurse back here, the cur
                               checks prevent an infinate loop, and only allow
@@ -197,9 +198,9 @@ playlist_advance (gint num, gboolean loop)
 
     if (!playlist) return;
 
-    if(!main_repeat_track)
+    if(!config_repeat_track)
     {
-        if (main_random_order) {
+        if (config_random_order) {
             rand_cur = g_list_find (playlist_random, playlist_current->data);
 
             while (rand_cur && num > 0) {
@@ -285,7 +286,7 @@ playlist_remove (gint num)
     if (it) {
         if (it == playlist_current) {
             music_stop ();
-            playlist_advance (1, main_loop_at_end);
+            playlist_advance (1, config_loop_at_end);
         }
         if (it == playlist_current)
             playlist_current = NULL;

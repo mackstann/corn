@@ -1,6 +1,7 @@
 #include "main.h"
 #include "music.h"
 #include "playlist.h"
+#include "configuration.h"
 
 #include "mpris-player.h"
 
@@ -95,7 +96,7 @@ gboolean mpris_player_position_get(MprisPlayer * obj, gint * ms, GError ** error
 
 gboolean mpris_player_repeat(MprisPlayer * obj, gboolean on, GError ** error)
 {
-    main_repeat_track = on;
+    config_repeat_track = on;
     return TRUE;
 }
 
@@ -115,9 +116,9 @@ gboolean mpris_player_get_status(MprisPlayer * obj, GValue ** status, GError ** 
     // index, value, ... G_MAXUINT at the end
     dbus_g_type_struct_set(&value,
         0, music_playing,
-        1, main_random_order ? 1 : 0,
-        2, main_repeat_track ? 1 : 0,
-        3, main_loop_at_end ? 1 : 0,
+        1, config_random_order ? 1 : 0,
+        2, config_repeat_track ? 1 : 0,
+        3, config_loop_at_end ? 1 : 0,
         G_MAXUINT
     );
     *status = g_value_get_boxed(&value);

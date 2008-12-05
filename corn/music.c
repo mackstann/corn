@@ -4,6 +4,7 @@
 #include "music.h"
 #include "main.h"
 #include "playlist.h"
+#include "configuration.h"
 
 #include <glib-object.h>
 #include <xine.h>
@@ -42,7 +43,7 @@ void music_events(void *data, const xine_event_t *e)
             if(music_gapless)
                 xine_set_param(stream, XINE_PARAM_GAPLESS_SWITCH, 1);
 #endif
-            playlist_advance((mrl_change ? 0 : 1), main_loop_at_end);
+            playlist_advance((mrl_change ? 0 : 1), config_loop_at_end);
             mrl_change = FALSE;
             break;
         case XINE_EVENT_MRL_REFERENCE:
