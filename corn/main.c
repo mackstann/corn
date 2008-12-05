@@ -46,27 +46,15 @@ static void config_changed(GConfClient * gconf,
         guint cnxn_id, GConfEntry * entry, gpointer data);
 
 void
-signal_handler(int signal)
+signal_handler_quit(int signal)
 {
     g_static_mutex_lock(&main_signal_mutex);
-
-    switch(signal)
-    {
-    case SIGTERM:
-    case SIGINT:
-    case SIGHUP:
-        main_quit();
-        break;
-    }
-
+    main_quit();
     g_static_mutex_unlock(&main_signal_mutex);
 }
 
 int main(int argc, char ** argv)
 {
-    struct sigaction action;
-    sigset_t sigset;
-
     main_status = CORN_STARTING;
 
     /* initialize the locale */
@@ -76,14 +64,23 @@ int main(int argc, char ** argv)
     bind_textdomain_codeset(PACKAGE_NAME, "UTF-8");
     textdomain(PACKAGE_NAME);
 
-    /* set up signal handler */
+    /* signals */
+    sigset_t sigset;
     sigemptyset(&sigset);
-    action.sa_handler = signal_handler;
-    action.sa_mask = sigset;
-    action.sa_flags = SA_NOCLDSTOP;
-    sigaction(SIGTERM, &action, (struct sigaction *) NULL);
-    sigaction(SIGINT, &action, (struct sigaction *) NULL);
-    sigaction(SIGHUP, &action, (struct sigaction *) NULL);
+
+    struct sigaction quit_action;
+    quit_action.sa_handler = signal_handler_quit;
+    quit_action.sa_mask = sigset;
+    quit_action.sa_flags = SA_NOCLDSTOP;
+
+    struct sigaction ignore_action;
+    ignore_action.sa_handler = SIG_IGN;
+    ignore_action.sa_mask = sigset;
+    ignore_action.sa_flags = SA_NOCLDSTOP;
+
+    sigaction(SIGTERM, &quit_action, (struct sigaction *)NULL);
+    sigaction(SIGINT, &quit_action, (struct sigaction *)NULL);
+    sigaction(SIGHUP, &ignore_action, (struct sigaction *)NULL);
 
     g_type_init();
     gnome_vfs_init();
@@ -101,7 +98,7 @@ int main(int argc, char ** argv)
     music_init();
     if(!mpris_init())
     {
-        g_critical("failed to initialize D-BUS");
+        g_critical(_("Failed to initialize D-BUS."));
         return 2;
     }
 
