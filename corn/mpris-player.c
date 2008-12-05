@@ -4,6 +4,7 @@
 
 #include "mpris-player.h"
 
+#include <dbus/dbus-glib.h>
 #include <glib.h>
 #include <glib-object.h>
 
@@ -40,9 +41,9 @@ gboolean mpris_player_prev(MprisPlayer * obj, GError ** error)
 
 gboolean mpris_player_pause(MprisPlayer * obj, GError ** error)
 {
-    if (music_playing)
+    if(music_playing == MUSIC_PLAYING)
         music_pause();
-    else
+    else if(music_playing == MUSIC_PAUSED)
         music_play();
     return TRUE;
 }
@@ -101,6 +102,25 @@ gboolean mpris_player_repeat(MprisPlayer * obj, gboolean on, GError ** error)
 gboolean mpris_player_get_metadata(MprisPlayer * obj, GHashTable ** meta, GError ** error)
 {
     *meta = music_get_metadata();
+    return TRUE;
+}
+
+#define DBUS_STRUCT_INT_INT_INT_INT (dbus_g_type_get_struct ("GValueArray", G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INVALID))
+
+gboolean mpris_player_get_status(MprisPlayer * obj, GValue ** status, GError ** error)
+{
+    GValue value = {0};
+    g_value_init(&value, DBUS_STRUCT_INT_INT_INT_INT);
+    g_value_take_boxed(&value, dbus_g_type_specialized_construct(DBUS_STRUCT_INT_INT_INT_INT));
+    // index, value, ... G_MAXUINT at the end
+    dbus_g_type_struct_set(&value,
+        0, music_playing,
+        1, main_random_order ? 1 : 0,
+        2, main_repeat_track ? 1 : 0,
+        3, main_loop_at_end ? 1 : 0,
+        G_MAXUINT
+    );
+    *status = g_value_get_boxed(&value);
     return TRUE;
 }
 

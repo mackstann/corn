@@ -21,7 +21,7 @@ static xine_event_queue_t *events;
 static gint stream_time;
 
 gboolean music_gapless = FALSE;
-gboolean music_playing = FALSE;
+gint music_playing = MUSIC_STOPPED;
 gint music_volume;
 
 void music_events(void *data, const xine_event_t *e)
@@ -128,7 +128,7 @@ void music_play()
 
     state = xine_get_status(stream);
 
-    if(!music_playing && playlist_current)
+    if(music_playing != MUSIC_PLAYING && playlist_current)
     {
         item = LISTITEM(playlist_current);
 
@@ -156,10 +156,10 @@ void music_play()
         time = stream_time;
         stream_time = 0;
         if(xine_play(stream, 0, time))
-            music_playing = TRUE;
+            music_playing = MUSIC_PLAYING;
         else
         {
-            music_playing = FALSE;
+            music_playing = MUSIC_STOPPED;
             playlist_fail();
         }
     }
@@ -291,7 +291,6 @@ static void _do_pause(void)
     stream_time = music_get_position();
     if(xine_get_status(stream) != XINE_STATUS_IDLE)
         xine_close(stream);
-    music_playing = FALSE;
 }
 
 void music_seek(gint ms)
@@ -316,11 +315,13 @@ gint music_get_position(void)
 void music_pause()
 {
     _do_pause();
+    music_playing = MUSIC_PAUSED;
 }
 
 void music_stop()
 {
     _do_pause();
+    music_playing = MUSIC_STOPPED;
     stream_time = 0;
 }
 

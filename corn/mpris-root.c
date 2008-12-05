@@ -2,6 +2,7 @@
 
 #include "mpris-root.h"
 
+#include <dbus/dbus-glib.h>
 #include <glib.h>
 #include <glib-object.h>
 

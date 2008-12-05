@@ -51,9 +51,24 @@
       <type>bool</type>
       <default>false</default>
       <locale name="C">
-        <short>Player state</short>
+        <short>Player play state</short>
         <long>
-            The state of corn (playing or stopped). Modifying this value while
+            The state of corn (playing or not). Modifying this value while
+            corn is running will have no effect.
+        </long>
+      </locale>
+    </schema>
+
+    <schema>
+      <key>/schemas/apps/corn/playing</key>
+      <applyto>/apps/corn/paused</applyto>
+      <owner>corn</owner>
+      <type>bool</type>
+      <default>false</default>
+      <locale name="C">
+        <short>Player pause state</short>
+        <long>
+            The state of corn (paused or not). Modifying this value while
             corn is running will have no effect.
         </long>
       </locale>

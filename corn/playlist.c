@@ -203,7 +203,8 @@ void
 playlist_advance (gint num, gboolean loop)
 {
     static GList *rand_cur = NULL;
-    gboolean looped = FALSE, playing = music_playing;
+    gboolean looped = FALSE;
+    gint playing = music_playing;
 
     if (!playlist) return;
 
@@ -252,7 +253,7 @@ playlist_advance (gint num, gboolean loop)
     }
 
     music_stop ();
-    if ((!looped || loop) && playing)
+    if ((!looped || loop) && playing == MUSIC_PLAYING)
         music_play ();
 }
 
@@ -290,7 +291,7 @@ void
 playlist_remove (gint num)
 {
     GList *it = g_list_nth (playlist, num);
-    gboolean playing = music_playing;
+    gint playing = music_playing;
 
     if (it) {
         if (it == playlist_current) {
@@ -299,7 +300,7 @@ playlist_remove (gint num)
         }
         if (it == playlist_current)
             playlist_current = NULL;
-        else if (playing)
+        else if (playing == MUSIC_PLAYING)
             music_play ();
 
         listitem_free (it->data);

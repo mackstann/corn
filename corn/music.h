@@ -3,7 +3,13 @@
 
 #include <glib.h>
 
-extern gboolean music_playing;
+enum {
+    MUSIC_PLAYING = 0,
+    MUSIC_PAUSED = 1,
+    MUSIC_STOPPED = 2
+} MusicPlayingStatus;
+
+extern gint music_playing;
 extern gint music_volume;
 
 void music_init(void);

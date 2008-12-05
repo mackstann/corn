@@ -34,6 +34,7 @@ static GMainLoop * loop;
 #define RANDOM_ORDER  CORN_GCONF_ROOT "/random_order"
 #define REPEAT_TRACK  CORN_GCONF_ROOT "/repeat_track"
 #define PLAYING       CORN_GCONF_ROOT "/playing"
+#define PAUSED        CORN_GCONF_ROOT "/paused"
 
 #define PLAYLIST_POSITION CORN_GCONF_ROOT_PLAYLIST "/position"
 #define PLAYLIST          CORN_GCONF_ROOT_PLAYLIST "/playlist"
@@ -177,7 +178,8 @@ static void config_load(GConfClient * gconf)
 
     playlist_seek(gconf_client_get_int(gconf, PLAYLIST_POSITION, NULL));
 
-    if(gconf_client_get_bool(gconf, PLAYING, NULL))
+    if(gconf_client_get_bool(gconf, PLAYING, NULL) &&
+      !gconf_client_get_bool(gconf, PAUSED, NULL))
         music_play(); // should probably set a flag instead
 }
 
@@ -190,7 +192,8 @@ config_save(GConfClient * gconf)
     gconf_client_set_bool(gconf, LOOP_PLAYLIST, main_loop_at_end, NULL);
     gconf_client_set_bool(gconf, RANDOM_ORDER, main_random_order, NULL);
     gconf_client_set_bool(gconf, REPEAT_TRACK, main_repeat_track, NULL);
-    gconf_client_set_bool(gconf, PLAYING, music_playing, NULL);
+    gconf_client_set_bool(gconf, PLAYING, music_playing == MUSIC_PLAYING ? TRUE : FALSE, NULL);
+    gconf_client_set_bool(gconf, PAUSED, music_playing == MUSIC_PAUSED ? TRUE : FALSE, NULL);
 
     gconf_client_set_int(gconf, PLAYLIST_POSITION,
                           g_list_position(playlist, playlist_current), NULL);

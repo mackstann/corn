@@ -46,6 +46,10 @@
         <method name="GetMetadata">
             <arg type="a{sv}" direction="out" />
         </method>
+
+        <method name="GetStatus">
+            <arg type="(iiii)" direction="out"/>
+        </method>
     </interface>
 </node>
 
