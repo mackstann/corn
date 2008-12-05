@@ -119,12 +119,11 @@ int main(int argc, char ** argv)
 
                 main_status = CORN_EXITING;
 
-                mpris_destroy();
-
                 g_static_mutex_lock(&main_mutex);
                 config_save(gconf);
                 g_static_mutex_unlock(&main_mutex);
 
+                mpris_destroy();
             }
             music_destroy();
         }
@@ -189,13 +188,9 @@ config_save(GConfClient * gconf)
     gconf_client_set_bool(gconf, LOOP_PLAYLIST, main_loop_at_end, NULL);
     gconf_client_set_bool(gconf, RANDOM_ORDER, main_random_order, NULL);
     gconf_client_set_bool(gconf, REPEAT_TRACK, main_repeat_track, NULL);
-    g_message("saving playing as %d", music_playing == MUSIC_PLAYING ? TRUE : FALSE);
-    g_message("saving paused as %d", music_playing == MUSIC_PAUSED ? TRUE : FALSE);
     gconf_client_set_bool(gconf, PLAYING, music_playing == MUSIC_PLAYING ? TRUE : FALSE, NULL);
     gconf_client_set_bool(gconf, PAUSED, music_playing == MUSIC_PAUSED ? TRUE : FALSE, NULL);
 
-    g_message("save position as %d",
-                          g_list_position(playlist, playlist_current));
     gconf_client_set_int(gconf, PLAYLIST_POSITION,
                           g_list_position(playlist, playlist_current), NULL);
 
