@@ -45,42 +45,54 @@ static void config_save(GConfClient * gconf);
 static void config_changed(GConfClient * gconf,
         guint cnxn_id, GConfEntry * entry, gpointer data);
 
-void
-signal_handler_quit(int signal)
+void main_quit() { g_main_loop_quit(loop); }
+
+void signal_handler_quit(int signal)
 {
     g_static_mutex_lock(&main_signal_mutex);
     main_quit();
     g_static_mutex_unlock(&main_signal_mutex);
 }
 
-int main(int argc, char ** argv)
+void init_locale(void)
 {
-    main_status = CORN_STARTING;
-
-    /* initialize the locale */
     if(!setlocale(LC_ALL, ""))
 	g_warning("Couldn't set locale from environment.\n");
     bindtextdomain(PACKAGE_NAME, LOCALEDIR);
     bind_textdomain_codeset(PACKAGE_NAME, "UTF-8");
     textdomain(PACKAGE_NAME);
+}
 
-    /* signals */
+void init_signals(void)
+{
     sigset_t sigset;
     sigemptyset(&sigset);
 
-    struct sigaction quit_action;
-    quit_action.sa_handler = signal_handler_quit;
-    quit_action.sa_mask = sigset;
-    quit_action.sa_flags = SA_NOCLDSTOP;
-
-    struct sigaction ignore_action;
-    ignore_action.sa_handler = SIG_IGN;
-    ignore_action.sa_mask = sigset;
-    ignore_action.sa_flags = SA_NOCLDSTOP;
+    struct sigaction quit_action = {
+        .sa_handler = signal_handler_quit,
+        .sa_mask = sigset,
+        .sa_flags = SA_NOCLDSTOP
+    };
 
     sigaction(SIGTERM, &quit_action, (struct sigaction *)NULL);
-    sigaction(SIGINT, &quit_action, (struct sigaction *)NULL);
+    sigaction(SIGINT,  &quit_action, (struct sigaction *)NULL);
+
+    struct sigaction ignore_action = {
+        .sa_handler = SIG_IGN,
+        .sa_mask = sigset,
+        .sa_flags = SA_NOCLDSTOP
+    };
+
     sigaction(SIGHUP, &ignore_action, (struct sigaction *)NULL);
+}
+
+int main(int argc, char ** argv)
+{
+    main_status = CORN_STARTING;
+
+    init_locale();
+
+    init_signals();
 
     g_type_init();
     gnome_vfs_init();
@@ -112,7 +124,7 @@ int main(int argc, char ** argv)
     g_main_loop_run(loop);
 
     g_static_mutex_lock(&main_mutex);
-    main_status = CORN_EXITING;
+
     config_save(gconf);
     playlist_destroy();
     g_static_mutex_unlock(&main_mutex);
@@ -126,11 +138,6 @@ int main(int argc, char ** argv)
     gnome_vfs_shutdown();
 
     return 0;
-}
-
-void main_quit()
-{
-    g_main_loop_quit(loop);
 }
 
 static void config_load(GConfClient * gconf)
