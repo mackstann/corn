@@ -55,10 +55,6 @@ void music_events(void *data, const xine_event_t *e)
                 mrl_change = TRUE;
             }
             break;
-        case XINE_EVENT_UI_MESSAGE:
-            g_message(_("Message from Xine: %s"),
-                       (char*) e->data);
-            break;
         }
     }
 

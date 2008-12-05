@@ -51,15 +51,12 @@ mpris-player-glue.h: mpris-player.xml
 mpris-tracklist-glue.h: mpris-tracklist.xml
 	$(LIBTOOL) --mode=execute dbus-binding-tool --prefix=mpris_tracklist --mode=glib-server --output=mpris-tracklist-glue.h $(srcdir)/mpris-tracklist.xml
 
-if USE_GCONF
 install-data-local: corn.schemas
-if GCONF_SCHEMAS_INSTALL
 	GCONF_CONFIG_SOURCE=$(GCONF_SCHEMA_CONFIG_SOURCE) \
 	gconftool-2 --makefile-install-rule $<
-endif
 	$(INSTALL) -d $(DESTDIR)$(GCONF_SCHEMA_FILE_DIR)
 	$(INSTALL) $< $(DESTDIR)$(GCONF_SCHEMA_FILE_DIR)
 
 uninstall-local:
 	$(RM) $(DESTDIR)$(GCONF_SCHEMA_FILE_DIR)/corn.schemas
-endif
+

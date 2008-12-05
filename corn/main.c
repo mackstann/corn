@@ -10,9 +10,7 @@
 
 #include <libgnomevfs/gnome-vfs.h>
 #include <glib.h>
-#ifdef USE_GCONF
 #include <gconf/gconf-client.h>
-#endif
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <signal.h>
@@ -41,12 +39,10 @@ static GMainLoop * loop;
 #define PLAYLIST          CORN_GCONF_ROOT_PLAYLIST "/playlist"
 
 // XXX make config.{c,h}
-#ifdef USE_GCONF
 static void config_load(GConfClient * gconf);
 static void config_save(GConfClient * gconf);
 static void config_changed(GConfClient * gconf,
         guint cnxn_id, GConfEntry * entry, gpointer data);
-#endif
 
 void
 signal_handler(int signal)
@@ -67,9 +63,7 @@ signal_handler(int signal)
 
 int main(int argc, char ** argv)
 {
-#ifdef USE_GCONF
     GConfClient * gconf;
-#endif
 
     char * dir;
     struct sigaction action;
@@ -96,13 +90,11 @@ int main(int argc, char ** argv)
     g_type_init();
     gnome_vfs_init();
 
-#ifdef USE_GCONF
     gconf = gconf_client_get_default();
     gconf_client_add_dir(gconf, CORN_GCONF_ROOT,
                           GCONF_CLIENT_PRELOAD_RECURSIVE, NULL);
     gconf_client_notify_add(gconf, CORN_GCONF_ROOT, config_changed, NULL,
                              NULL, NULL);
-#endif
 
     /* make the directory we use in ~ */
     dir = g_build_filename(g_get_home_dir(), ".corn", NULL);
@@ -120,9 +112,7 @@ int main(int argc, char ** argv)
 
     g_static_mutex_lock(&main_mutex);
     playlist_init();
-#ifdef USE_GCONF
     config_load(gconf);
-#endif
     main_status = CORN_RUNNING;
     g_static_mutex_unlock(&main_mutex);
 
@@ -131,9 +121,7 @@ int main(int argc, char ** argv)
 
     g_static_mutex_lock(&main_mutex);
     main_status = CORN_EXITING;
-#ifdef USE_GCONF
     config_save(gconf);
-#endif
     playlist_destroy();
     g_static_mutex_unlock(&main_mutex);
 
@@ -141,9 +129,7 @@ int main(int argc, char ** argv)
     mpris_destroy();
 
     g_main_loop_unref(loop);
-#ifdef USE_GCONF
     g_object_unref(G_OBJECT(gconf));
-#endif
 
     gnome_vfs_shutdown();
 
@@ -155,7 +141,6 @@ void main_quit()
     g_main_loop_quit(loop);
 }
 
-#ifdef USE_GCONF
 static void config_load(GConfClient * gconf)
 {
     GSList * paths, * it;
@@ -229,5 +214,4 @@ static void config_changed(GConfClient * gconf,
     else if(!strcmp(entry->key, REPEAT_TRACK))
         main_repeat_track = gconf_value_get_bool(entry->value);
 }
-#endif
 

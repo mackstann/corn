@@ -37,28 +37,9 @@ PKG_CHECK_MODULES(DBUS_GLIB, [dbus-glib-1])
 AC_SUBST(DBUS_GLIB_CFLAGS)
 AC_SUBST(DBUS_GLIB_LIBS)
 
-AC_ARG_ENABLE(gconf,
-  [  --disable-gconf         disable use of gconf (for embedded targets)],
-  [], [enable_gconf="yes"])
-
-if test "$enable_gconf" = "yes"; then
-  PKG_CHECK_MODULES(GCONF, [gconf-2.0])
-
-  AC_PATH_PROG(GCONFTOOL, gconftool-2, no)
-  if test x"$GCONFTOOL" = xno; then
-    AC_MSG_ERROR([gconftool-2 executable not found in your path - should be installed with GConf])
-  fi
-  AM_GCONF_SOURCE_2
-
-  AC_SUBST(GCONF_CFLAGS)
-  AC_SUBST(GCONF_LIBS)
-  AC_DEFINE(USE_GCONF, [1], [Use GConf for configuration])
-else
-  AM_CONDITIONAL(GCONF_SCHEMAS_INSTALL, false)
-
-  AC_MSG_WARN([Not building with GConf])
-fi
-AM_CONDITIONAL(USE_GCONF, test "$enable_gconf" = "yes")
+PKG_CHECK_MODULES(GCONF, [gconf-2.0])
+AC_SUBST(GCONF_CFLAGS)
+AC_SUBST(GCONF_LIBS)
 
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
@@ -75,7 +56,7 @@ AC_ARG_ENABLE([debug],
   [  --enable-debug          enable debugging],
   [], [enable_debug="no"])
 
-CFLAGS="-std=gnu99 -Wall -pedantic -Wsign-compare -Waggregate-return -Wcast-qual -Wbad-function-cast -Wpointer-arith"
+CFLAGS="-std=gnu99 -Wall -pedantic"
 
 if test "$enable_debug" = "yes"; then
   CFLAGS="$CFLAGS -g -fno-inline"
