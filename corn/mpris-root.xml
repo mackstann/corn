@@ -6,6 +6,7 @@
             <arg type="s" direction="out"/>
         </method>
         <method name="Quit">
+            <annotation name="org.freedesktop.DBus.Method.NoReply" value="true"/>
         </method>
         <method name="MprisVersion">
             <arg type="(qq)" direction="out"/>

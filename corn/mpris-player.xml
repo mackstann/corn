@@ -3,14 +3,19 @@
 <node name="/">
     <interface name="org.freedesktop.MediaPlayer">
         <method name="Next">
+            <annotation name="org.freedesktop.DBus.Method.NoReply" value="true"/>
         </method>
         <method name="Prev">
+            <annotation name="org.freedesktop.DBus.Method.NoReply" value="true"/>
         </method>
         <method name="Pause">
+            <annotation name="org.freedesktop.DBus.Method.NoReply" value="true"/>
         </method>
         <method name="Stop">
+            <annotation name="org.freedesktop.DBus.Method.NoReply" value="true"/>
         </method>
         <method name="Play">
+            <annotation name="org.freedesktop.DBus.Method.NoReply" value="true"/>
         </method>
 
         <method name="GetCaps">
@@ -18,6 +23,7 @@
         </method>
 
         <method name="VolumeSet">
+            <annotation name="org.freedesktop.DBus.Method.NoReply" value="true"/>
             <arg type="i"/>
         </method>
         <method name="VolumeGet">
@@ -25,6 +31,7 @@
         </method>
 
         <method name="PositionSet">
+            <annotation name="org.freedesktop.DBus.Method.NoReply" value="true"/>
             <arg type="i"/>
         </method>
         <method name="PositionGet">
@@ -32,6 +39,7 @@
         </method>
 
         <method name="Repeat">
+            <annotation name="org.freedesktop.DBus.Method.NoReply" value="true"/>
             <arg type="b" />
         </method>
 

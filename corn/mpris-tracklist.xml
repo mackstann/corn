@@ -3,6 +3,7 @@
 <node name="/">
     <interface name="org.freedesktop.MediaPlayer">
         <method name="DelTrack">
+            <annotation name="org.freedesktop.DBus.Method.NoReply" value="true"/>
             <arg type="i" />
         </method>
         <method name="AddTrack">
@@ -17,9 +18,11 @@
             <arg type="i" direction="out" />
         </method>
         <method name="SetLoop">
+            <annotation name="org.freedesktop.DBus.Method.NoReply" value="true"/>
             <arg type="b" />
         </method>
         <method name="SetRandom">
+            <annotation name="org.freedesktop.DBus.Method.NoReply" value="true"/>
             <arg type="b" />
         </method>
         <method name="GetMetadata">
