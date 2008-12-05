@@ -33,8 +33,6 @@ void music_events(void *data, const xine_event_t *e)
 
     if(main_status == CORN_RUNNING)
     {
-        g_message("XINE EVENT %d", e->type);
-
         switch(e->type)
         {
         case XINE_EVENT_UI_PLAYBACK_FINISHED:
@@ -151,22 +149,8 @@ void music_play()
         time = stream_time;
         stream_time = 0;
         if(xine_play(stream, 0, time))
-        {
-            const gchar * meta;
-            meta = xine_get_meta_info(stream, XINE_META_INFO_TITLE);          g_message("XINE_META_INFO_TITLE:          %s", meta);
-            meta = xine_get_meta_info(stream, XINE_META_INFO_COMMENT);        g_message("XINE_META_INFO_COMMENT:        %s", meta);
-            meta = xine_get_meta_info(stream, XINE_META_INFO_ARTIST);         g_message("XINE_META_INFO_ARTIST:         %s", meta);
-            meta = xine_get_meta_info(stream, XINE_META_INFO_GENRE);          g_message("XINE_META_INFO_GENRE:          %s", meta);
-            meta = xine_get_meta_info(stream, XINE_META_INFO_ALBUM);          g_message("XINE_META_INFO_ALBUM:          %s", meta);
-            meta = xine_get_meta_info(stream, XINE_META_INFO_YEAR);           g_message("XINE_META_INFO_YEAR:           %s", meta);
-            meta = xine_get_meta_info(stream, XINE_META_INFO_VIDEOCODEC);     g_message("XINE_META_INFO_VIDEOCODEC:     %s", meta);
-            meta = xine_get_meta_info(stream, XINE_META_INFO_AUDIOCODEC);     g_message("XINE_META_INFO_AUDIOCODEC:     %s", meta);
-            meta = xine_get_meta_info(stream, XINE_META_INFO_SYSTEMLAYER);    g_message("XINE_META_INFO_SYSTEMLAYER:    %s", meta);
-            meta = xine_get_meta_info(stream, XINE_META_INFO_INPUT_PLUGIN);   g_message("XINE_META_INFO_INPUT_PLUGIN:   %s", meta);
-            meta = xine_get_meta_info(stream, XINE_META_INFO_CDINDEX_DISCID); g_message("XINE_META_INFO_CDINDEX_DISCID: %s", meta);
-            meta = xine_get_meta_info(stream, XINE_META_INFO_TRACK_NUMBER);   g_message("XINE_META_INFO_TRACK_NUMBER:   %s", meta);
             music_playing = TRUE;
-        } else
+        else
         {
             music_playing = FALSE;
             playlist_fail();
