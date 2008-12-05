@@ -10,7 +10,7 @@
 #include <glib.h>
 #include <glib-object.h>
 
-G_DEFINE_TYPE(CprisRoot, cpris_root, G_TYPE_OBJECT);
+G_DEFINE_TYPE(CprisRoot, cpris_root, G_TYPE_OBJECT)
 
 static void
 cpris_root_init(CprisRoot * obj)
