@@ -10,17 +10,6 @@ GList *playlist_current = NULL;
 
 static GList *playlist_random = NULL;
 
-void
-playlist_init ()
-{
-}
-
-void
-playlist_destroy ()
-{
-    playlist_clear ();
-}
-
 static struct PlaylistItem*
 listitem_new(gchar *path, gchar **p, guint nalts)
 {

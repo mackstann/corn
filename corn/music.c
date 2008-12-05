@@ -31,7 +31,7 @@ void music_events(void *data, const xine_event_t *e)
     xine_mrl_reference_data_t *mrl;
     static gboolean mrl_change = FALSE;
 
-    thread_lock();
+    g_static_mutex_lock(&main_mutex);
 
     if(main_status == CORN_RUNNING)
     {
@@ -58,17 +58,17 @@ void music_events(void *data, const xine_event_t *e)
         }
     }
 
-    thread_unlock();
+    g_static_mutex_unlock(&main_mutex);
 }
 
-void music_init()
+int music_init()
 {
     char *configfile;
 
     if(!xine_check_version(XINE_MAJOR_VERSION, XINE_MINOR_VERSION, XINE_SUB_VERSION))
     {
         g_critical(_("Incompatible version of Xine-lib found."));
-        exit(EXIT_FAILURE);
+        return 10;
     }
 
     xine = xine_new();
@@ -88,13 +88,13 @@ void music_init()
     if(!(ao = xine_open_audio_driver(xine, driver.str_value, NULL)))
     {
         g_critical(_("Unable to open audio driver from Xine."));
-        exit(EXIT_FAILURE);
+        return 11;
     }
 
     if(!(stream = xine_stream_new(xine, ao, NULL)))
     {
         g_critical(_("Unable to open a Xine stream."));
-        exit(EXIT_FAILURE);
+        return 12;
     }
 
     // hey, everyone else is doing it
@@ -112,10 +112,13 @@ void music_init()
 #endif
 
     music_volume = xine_get_param(stream, XINE_PARAM_AUDIO_VOLUME);
+
+    return 0;
 }
 
 void music_destroy()
 {
+    music_stop();
     xine_event_dispose_queue(events);
     xine_dispose(stream);
     xine_close_audio_driver(xine, ao);

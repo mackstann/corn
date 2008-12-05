@@ -20,8 +20,6 @@ typedef struct PlaylistItem {
 
 #define LISTITEM(it) ((PlaylistItem*)(it->data))
 
-void  playlist_init                 ();
-void  playlist_destroy              ();
 void  playlist_append_single        (const gchar *path);
 void  playlist_append_alternatives  (const gchar *path, gchar *const* alts);
 void  playlist_replace_path         (guint num, const gchar *path);

@@ -23,7 +23,6 @@ gboolean main_repeat_track = FALSE; /* repeat same track continuously */
 CornStatus main_status;
 
 GStaticMutex main_mutex        = G_STATIC_MUTEX_INIT;
-GStaticMutex main_signal_mutex = G_STATIC_MUTEX_INIT;
 
 static GMainLoop * loop;
 
@@ -47,12 +46,7 @@ static void config_changed(GConfClient * gconf,
 
 void main_quit() { g_main_loop_quit(loop); }
 
-void signal_handler_quit(int signal)
-{
-    g_static_mutex_lock(&main_signal_mutex);
-    main_quit();
-    g_static_mutex_unlock(&main_signal_mutex);
-}
+void signal_handler_quit(int signal) { main_quit(); }
 
 void init_locale(void)
 {
@@ -68,6 +62,17 @@ void init_signals(void)
     sigset_t sigset;
     sigemptyset(&sigset);
 
+    struct sigaction ignore_action = {
+        .sa_handler = SIG_IGN,
+        .sa_mask = sigset,
+        .sa_flags = SA_NOCLDSTOP
+    };
+
+    sigaction(SIGHUP, &ignore_action, (struct sigaction *)NULL);
+
+    sigaddset(&sigset, SIGTERM);
+    sigaddset(&sigset, SIGINT);
+
     struct sigaction quit_action = {
         .sa_handler = signal_handler_quit,
         .sa_mask = sigset,
@@ -77,13 +82,6 @@ void init_signals(void)
     sigaction(SIGTERM, &quit_action, (struct sigaction *)NULL);
     sigaction(SIGINT,  &quit_action, (struct sigaction *)NULL);
 
-    struct sigaction ignore_action = {
-        .sa_handler = SIG_IGN,
-        .sa_mask = sigset,
-        .sa_flags = SA_NOCLDSTOP
-    };
-
-    sigaction(SIGHUP, &ignore_action, (struct sigaction *)NULL);
 }
 
 int main(int argc, char ** argv)
@@ -95,49 +93,47 @@ int main(int argc, char ** argv)
     init_signals();
 
     g_type_init();
-    gnome_vfs_init();
+
+    /* make sure the config directory exists */
+    const gchar * dir = g_build_filename(g_get_user_config_dir(), PACKAGE, NULL);
+    g_mkdir_with_parents(dir, S_IRWXU|S_IRWXG|S_IRWXO);
 
     GConfClient * gconf = gconf_client_get_default();
     gconf_client_add_dir(gconf, CORN_GCONF_ROOT, GCONF_CLIENT_PRELOAD_RECURSIVE, NULL);
     gconf_client_notify_add(gconf, CORN_GCONF_ROOT, config_changed, NULL, NULL, NULL);
 
-    /* make sure the config directory exists */
-    const gchar * dir = g_build_filename(g_get_user_config_dir(), PACKAGE, NULL);
-    g_mkdir_with_parents(dir, S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH);
+    int failed = 0;
 
     loop = g_main_loop_new(NULL, FALSE);
-
-    music_init();
-    if(!mpris_init())
+    if(!(failed = gnome_vfs_init() ? 0 : 5))
     {
-        g_critical(_("Failed to initialize D-BUS."));
-        return 2;
+        if(!(failed = music_init()))
+        {
+            if(!(failed = mpris_init()))
+            {
+                config_load(gconf);
+
+                main_status = CORN_RUNNING;
+
+                g_main_loop_run(loop);
+
+                main_status = CORN_EXITING;
+
+                mpris_destroy();
+
+                g_static_mutex_lock(&main_mutex);
+                config_save(gconf);
+                g_static_mutex_unlock(&main_mutex);
+
+            }
+            music_destroy();
+        }
+        gnome_vfs_shutdown();
     }
-
-    g_static_mutex_lock(&main_mutex);
-    playlist_init();
-    config_load(gconf);
-    main_status = CORN_RUNNING;
-    g_static_mutex_unlock(&main_mutex);
-
-    g_message("ready");
-    g_main_loop_run(loop);
-
-    g_static_mutex_lock(&main_mutex);
-
-    config_save(gconf);
-    playlist_destroy();
-    g_static_mutex_unlock(&main_mutex);
-
-    music_destroy();
-    mpris_destroy();
-
     g_main_loop_unref(loop);
     g_object_unref(G_OBJECT(gconf));
 
-    gnome_vfs_shutdown();
-
-    return 0;
+    return failed;
 }
 
 static void config_load(GConfClient * gconf)
@@ -161,7 +157,7 @@ static void config_load(GConfClient * gconf)
         }
         if(e)
         {
-            g_warning("Error loading playlist: %s", e->message);
+            g_warning("%s (%s).", _("Error loading playlist"), e->message);
             g_error_free(e);
         }
         g_free(it->data);
@@ -178,7 +174,10 @@ static void config_load(GConfClient * gconf)
 
     if(gconf_client_get_bool(gconf, PLAYING, NULL) &&
       !gconf_client_get_bool(gconf, PAUSED, NULL))
-        music_play(); // should probably set a flag instead
+    {
+        music_play();
+        // should handle all 3 states
+    }
 }
 
 static void
@@ -190,9 +189,13 @@ config_save(GConfClient * gconf)
     gconf_client_set_bool(gconf, LOOP_PLAYLIST, main_loop_at_end, NULL);
     gconf_client_set_bool(gconf, RANDOM_ORDER, main_random_order, NULL);
     gconf_client_set_bool(gconf, REPEAT_TRACK, main_repeat_track, NULL);
+    g_message("saving playing as %d", music_playing == MUSIC_PLAYING ? TRUE : FALSE);
+    g_message("saving paused as %d", music_playing == MUSIC_PAUSED ? TRUE : FALSE);
     gconf_client_set_bool(gconf, PLAYING, music_playing == MUSIC_PLAYING ? TRUE : FALSE, NULL);
     gconf_client_set_bool(gconf, PAUSED, music_playing == MUSIC_PAUSED ? TRUE : FALSE, NULL);
 
+    g_message("save position as %d",
+                          g_list_position(playlist, playlist_current));
     gconf_client_set_int(gconf, PLAYLIST_POSITION,
                           g_list_position(playlist, playlist_current), NULL);
 

@@ -1,5 +1,7 @@
 #include "config.h"
 
+#include "gettext.h"
+
 // BUG: i shouldn't have to include mpris-root before mpris-root-glue --
 // dbus-glib-tool seems to be broken
 #include "cpris-root.h"
@@ -28,20 +30,19 @@
 
 static DBusGConnection * bus = NULL;
 
-static gboolean mpris_register_objects(DBusGConnection *);
+static int mpris_register_objects(DBusGConnection *);
 
-gboolean
-mpris_init(void)
+int mpris_init(void)
 {
     dbus_g_thread_init();
 
     GError * error = NULL;
     if(!(bus = dbus_g_bus_get(DBUS_BUS_SESSION, &error)))
     {
-        g_printerr("Failed to open connection to D-BUS session bus (%s).\n",
+        g_printerr("%s (%s).\n", _("Failed to open connection to D-BUS session bus"),
                 error->message);
         g_error_free(error);
-        return FALSE;
+        return 30;
     }
 
     DBusConnection * dbus_conn = dbus_g_connection_get_connection(bus);
@@ -52,16 +53,14 @@ mpris_init(void)
     return mpris_register_objects(bus);
 }
 
-void
-mpris_destroy(void)
+void mpris_destroy(void)
 {
     if(bus)
         dbus_g_connection_unref(bus);
     bus = NULL;
 }
 
-static gboolean
-mpris_register_objects(DBusGConnection * bus)
+static int mpris_register_objects(DBusGConnection * bus)
 {
     DBusGProxy * bus_proxy = dbus_g_proxy_new_for_name(bus,
         "org.freedesktop.DBus",
@@ -85,13 +84,13 @@ mpris_register_objects(DBusGConnection * bus)
     {
         g_printerr("Error during RequestName proxy call (%s).\n", error->message);
         g_error_free(error);
-        return FALSE;
+        return 31;
     }
 
     if(!request_name_result)
     {
         g_printerr("Failed to acquire %s service.\n", CORN_BUS_SERVICE);
-        return FALSE;
+        return 32;
     }
 
     CprisRoot * croot = g_object_new(CORN_TYPE_CPRIS_ROOT, NULL);
@@ -112,6 +111,6 @@ mpris_register_objects(DBusGConnection * bus)
     dbus_g_connection_register_g_object(bus, CORN_BUS_PLAYER_PATH, G_OBJECT(player));
     dbus_g_connection_register_g_object(bus, CORN_BUS_TRACKLIST_PATH, G_OBJECT(tracklist));
 
-    return TRUE;
+    return 0;
 }
 

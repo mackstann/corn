@@ -12,7 +12,7 @@ enum {
 extern gint music_playing;
 extern gint music_volume;
 
-void music_init(void);
+int music_init(void);
 void music_destroy(void);
 void music_play(void);
 void music_pause(void);
