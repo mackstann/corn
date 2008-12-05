@@ -209,6 +209,8 @@ static GHashTable * get_stream_metadata(xine_stream_t * strm)
             NULL, // our keys are all static -- no free function for them
             free_gvalue_and_its_value);
 
+    add_metadata_from_string(meta, "mrl", PATH(LISTITEM(playlist_current)));
+
     add_metadata_from_string(meta, "title", xine_get_meta_info(strm, XINE_META_INFO_TITLE));
     add_metadata_from_string(meta, "artist", xine_get_meta_info(strm, XINE_META_INFO_ARTIST));
     add_metadata_from_string(meta, "album", xine_get_meta_info(strm, XINE_META_INFO_ALBUM));
