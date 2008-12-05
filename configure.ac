@@ -1,5 +1,5 @@
 AC_PREREQ([2.54])
-AC_INIT([corn], [3.21], [http://bugs.com/])
+AC_INIT([corn], [0.0.0], [nick@incise.org])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([corn/main.c])
 

@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include "main.h"
 
 #include "mpris-root.h"
@@ -22,7 +24,7 @@ mpris_root_class_init(MprisRootClass * klass)
 
 gboolean mpris_root_identity(MprisRoot * obj, gchar ** identity, GError ** error)
 {
-    *identity = g_strdup("corn");
+    *identity = g_strdup(PACKAGE_STRING);
     return TRUE;
 }
 
