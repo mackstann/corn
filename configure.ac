@@ -43,7 +43,6 @@ AC_SUBST(GCONF_LIBS)
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
   Makefile
-  m4/Makefile 
   po/Makefile.in
   corn/Makefile
 ])

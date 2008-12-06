@@ -1,5 +1,3 @@
-SUBDIRS = m4 po corn
-
-ACLOCAL_AMFLAGS = -I m4
+SUBDIRS = po corn
 
 EXTRA_DIST = config.rpath config.guess config.sub
