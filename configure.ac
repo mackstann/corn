@@ -46,7 +46,6 @@ AC_CONFIG_FILES([
   m4/Makefile 
   po/Makefile.in
   corn/Makefile
-  pixmaps/Makefile
 ])
 
 AM_MAINTAINER_MODE

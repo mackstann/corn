@@ -1,4 +1,4 @@
-SUBDIRS = m4 po corn pixmaps
+SUBDIRS = m4 po corn
 
 ACLOCAL_AMFLAGS = -I m4
 
