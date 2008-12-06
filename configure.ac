@@ -14,8 +14,7 @@ AC_PROG_INSTALL
 AM_GNU_GETTEXT_VERSION(0.11.5)
 AM_GNU_GETTEXT([external])
 
-#AC_CHECK_HEADERS(ctype.h fcntl.h locale.h signal.h string.h stdio.h stdlib.h)
-#AC_CHECK_HEADERS(unistd.h sys/stat.h sys/select.h sys/time.h sys/wait.h)
+AC_CHECK_HEADERS(errno.h locale.h signal.h stdarg.h stdlib.h string.h sys/stat.h sys/types.h)
 
 PKG_CHECK_MODULES(XINE, [libxine >= 1.0.0])
 AC_SUBST(XINE_CFLAGS)
