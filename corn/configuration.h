@@ -12,7 +12,6 @@ extern gboolean config_repeat_track;
 
 void config_load(GConfClient * gconf);
 void config_save(GConfClient * gconf);
-void config_changed(GConfClient * gconf, guint cnxn_id, GConfEntry * entry, gpointer data);
 
 #endif
 

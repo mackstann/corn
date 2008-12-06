@@ -86,14 +86,3 @@ void config_save(GConfClient * gconf)
     gconf_client_suggest_sync(gconf, NULL);
 }
 
-void config_changed(GConfClient * gconf,
-        guint cnxn_id, GConfEntry * entry, gpointer data)
-{
-    if(!g_strcmp0(entry->key, LOOP_PLAYLIST))
-        config_loop_at_end = gconf_value_get_bool(entry->value);
-    else if(!g_strcmp0(entry->key, RANDOM_ORDER))
-        config_random_order = gconf_value_get_bool(entry->value);
-    else if(!g_strcmp0(entry->key, REPEAT_TRACK))
-        config_repeat_track = gconf_value_get_bool(entry->value);
-}
-

@@ -79,7 +79,6 @@ int main(int argc, char ** argv)
 
     GConfClient * gconf = gconf_client_get_default();
     gconf_client_add_dir(gconf, CORN_GCONF_ROOT, GCONF_CLIENT_PRELOAD_RECURSIVE, NULL);
-    gconf_client_notify_add(gconf, CORN_GCONF_ROOT, config_changed, NULL, NULL, NULL);
 
     int failed = 0;
 
