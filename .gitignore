@@ -23,3 +23,5 @@ stamp-h1
 *~
 config.rpath
 *-glue.h
+core
+core.*
