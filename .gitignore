@@ -25,3 +25,4 @@ config.rpath
 *-glue.h
 core
 core.*
+m4
