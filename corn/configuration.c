@@ -1,94 +1,101 @@
+#include "config.h"
+
 #include "gettext.h"
 
 #include "music.h"
 #include "playlist.h"
 #include "configuration.h"
+#include "parsefile.h"
 
-#include <gconf/gconf-client.h>
+#include <glib/gstdio.h>
 #include <glib.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
 
 gboolean config_loop_at_end  = FALSE;
 gboolean config_random_order = FALSE;
 gboolean config_repeat_track = FALSE;
 
-#define LOOP_PLAYLIST     CORN_GCONF_ROOT "/loop_playlist"
-#define RANDOM_ORDER      CORN_GCONF_ROOT "/random_order"
-#define REPEAT_TRACK      CORN_GCONF_ROOT "/repeat_track"
-#define PLAYING           CORN_GCONF_ROOT "/playing"
-#define PAUSED            CORN_GCONF_ROOT "/paused"
-#define PLAYLIST_POSITION CORN_GCONF_ROOT "/playlist/position"
-#define PLAYLIST          CORN_GCONF_ROOT "/playlist/playlist"
+static FILE * open_config_file(const char * name, const char * mode)
+{
+    gchar * path = g_build_filename(g_get_user_config_dir(), PACKAGE, name, NULL);
+    FILE * f = g_fopen(path, mode);
+    g_free(path);
+    return f;
+}
 
-static GConfClient * gconf;
+static void save_int_to_config_file(const char * name, gint num)
+{
+    FILE * f = open_config_file(name, "w");
+    if(f)
+    {
+        fprintf(f, "%d", num);
+        fclose(f);
+    } else
+        g_printerr("%s %s (%s).\n", _("Couldn't save to config file"), name, g_strerror(errno));
+}
+
+static gint read_int_from_config_file(const char * name, gint min, gint max, gint default_value)
+{
+    FILE * f = open_config_file(name, "r");
+    if(f)
+    {
+        gchar mrl[20];
+        if(fgets(mrl, 20, f))
+        {
+            mrl[19] = '\0';
+            fclose(f);
+            gchar * end;
+            errno = 0;
+            glong val = strtol(mrl, &end, 10);
+
+            if(!errno && end != mrl && val >= min && val <= max)
+                return (gint)val;
+        }
+    }
+    return default_value;
+}
 
 void config_load(void)
 {
-    gconf = gconf_client_get_default();
-    gconf_client_add_dir(gconf, CORN_GCONF_ROOT, GCONF_CLIENT_PRELOAD_RECURSIVE, NULL);
+    gchar * playlist_filename = g_build_filename(g_get_user_config_dir(), PACKAGE, "playlist", NULL);
+    parse_m3u(playlist_filename);
+    g_free(playlist_filename);
 
-    GSList * paths, * it;
+    config_loop_at_end =  read_int_from_config_file("state.loop",   0, 1, 0);
+    config_random_order = read_int_from_config_file("state.random", 0, 1, 0);
+    config_repeat_track = read_int_from_config_file("state.repeat", 0, 1, 0);
 
-    config_loop_at_end = gconf_client_get_bool(gconf, LOOP_PLAYLIST, NULL);
-    config_random_order = gconf_client_get_bool(gconf, RANDOM_ORDER, NULL);
-    config_repeat_track = gconf_client_get_bool(gconf, REPEAT_TRACK, NULL);
+    playlist_seek(read_int_from_config_file("state.list_position", 0, G_MAXINT, 0));
 
-    paths = gconf_client_get_list(gconf, PLAYLIST, GCONF_VALUE_STRING, NULL);
-    for(it = paths; it; it = g_slist_next(it))
-    {
-        // consolidate with code in playlist.c
-        GError * e = NULL;
-        gchar * p = g_filename_from_utf8(it->data, -1, NULL, NULL, &e);
-        if(p)
-        {
-            playlist_append_single(p);
-            g_free(p);
-        }
-        if(e)
-        {
-            g_warning("%s (%s).", _("Error loading playlist"), e->message);
-            g_error_free(e);
-        }
-        g_free(it->data);
-    }
-    g_slist_free(paths);
-
-    /* don't need another copy of the playlist in memory, and
-       gconf_client_clear_cache makes a nice segfault when I try save stuff
-       later. This value can't be edited while corn is running anyways.
-    */
-    gconf_client_unset(gconf, PLAYLIST, NULL);
-
-    playlist_seek(gconf_client_get_int(gconf, PLAYLIST_POSITION, NULL));
-
-    if(gconf_client_get_bool(gconf, PLAYING, NULL) &&
-      !gconf_client_get_bool(gconf, PAUSED, NULL))
+    gint playing = read_int_from_config_file("state.playing", 0, 2, MUSIC_STOPPED);
+    if(playing != MUSIC_STOPPED)
     {
         music_play();
-        // should handle all 3 states
+        if(playing == MUSIC_PAUSED)
+            music_pause(); // not sure if this works
     }
 }
 
 void config_save(void)
 {
-    GList * it;
-    GSList * paths = NULL;
+    save_int_to_config_file("state.loop", config_loop_at_end ? 1 : 0);
+    save_int_to_config_file("state.random", config_random_order ? 1 : 0);
+    save_int_to_config_file("state.repeat", config_repeat_track ? 1 : 0);
+    save_int_to_config_file("state.playing", music_playing);
+    save_int_to_config_file("state.list_position", g_list_position(playlist, playlist_current));
 
-    gconf_client_set_bool(gconf, LOOP_PLAYLIST, config_loop_at_end, NULL);
-    gconf_client_set_bool(gconf, RANDOM_ORDER, config_random_order, NULL);
-    gconf_client_set_bool(gconf, REPEAT_TRACK, config_repeat_track, NULL);
-    gconf_client_set_bool(gconf, PLAYING, music_playing == MUSIC_PLAYING ? TRUE : FALSE, NULL);
-    gconf_client_set_bool(gconf, PAUSED, music_playing == MUSIC_PAUSED ? TRUE : FALSE, NULL);
-
-    gconf_client_set_int(gconf, PLAYLIST_POSITION,
-                          g_list_position(playlist, playlist_current), NULL);
-
-    for(it = playlist; it; it = g_list_next(it))
-        paths = g_slist_append(paths, MAIN_PATH(it->data));
-
-    gconf_client_set_list(gconf, PLAYLIST, GCONF_VALUE_STRING, paths, NULL);
-    g_slist_free(paths);
-
-    gconf_client_suggest_sync(gconf, NULL);
-    g_object_unref(G_OBJECT(gconf));
+    FILE * f = open_config_file("playlist", "w");
+    if(f)
+    {
+        for(GList * it = playlist; it; it = g_list_next(it))
+        {
+            fputs(MAIN_PATH(it->data), f);
+            fputc('\n', f);
+        }
+        fclose(f);
+    }
 }
 

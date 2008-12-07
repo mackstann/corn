@@ -11,7 +11,6 @@
 
 #include <libgnomevfs/gnome-vfs.h>
 #include <glib.h>
-#include <gconf/gconf-client.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <signal.h>
@@ -91,6 +90,7 @@ int main(int argc, char ** argv)
 
                 main_status = CORN_RUNNING;
 
+                g_message("ready");
                 g_main_loop_run(loop);
 
                 main_status = CORN_EXITING;

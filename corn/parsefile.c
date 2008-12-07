@@ -177,19 +177,17 @@ parse_m3u (const gchar *path)
     if ((lines = read_file (path))) {
         for (i = 0; lines[i]; ++i) {
             lines[i] = g_strstrip(lines[i]);
-            if (strlen (lines[i])) {
-                gchar *dir, *fullpath;
-
-                /* comment */
-                if (lines[i][0] == '#') continue;
-
-                dir = g_path_get_dirname (path);
-                fullpath = add_relative_dir (lines[i], dir);
-
-                playlist_append_single (fullpath);
-
-                g_free (fullpath);
-                g_free (dir);
+            if (strlen (lines[i]) && lines[i][0] != '#') {
+                if(lines[i][0] == '/')
+                    playlist_append_single(lines[i]);
+                else
+                {
+                    gchar * dir = g_path_get_dirname (path);
+                    gchar * fullpath = add_relative_dir (lines[i], dir);
+                    playlist_append_single (fullpath);
+                    g_free (dir);
+                    g_free (fullpath);
+                }
             }
         }
         g_strfreev (lines);

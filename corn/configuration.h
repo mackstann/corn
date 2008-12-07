@@ -1,10 +1,7 @@
-#ifndef __corn_confiuration_h__
-#define __main_corn_confiuration_h__
+#ifndef __corn_configuration_h__
+#define __corn_configuration_h__
 
-#include <gconf/gconf-client.h>
 #include <glib.h>
-
-#define CORN_GCONF_ROOT "/apps/corn"
 
 extern gboolean config_loop_at_end;
 extern gboolean config_random_order;

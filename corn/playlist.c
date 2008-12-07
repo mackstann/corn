@@ -75,15 +75,19 @@ playlist_append (PlaylistItem *item)
 void
 playlist_append_single (const gchar *path)
 {
-    gchar **paths;
-
     g_return_if_fail (path != NULL);
     g_return_if_fail (g_utf8_validate (path, -1, NULL));
 
     if (!parse_file (path)) /* XXX PASS A GERROR**? .. and shit @ client */
         return;
 
-    paths = g_new (gchar*, 2);
+#if 0
+#include <xine/compat.h>
+    // check against this
+        XINE_PATH_MAX
+#endif
+
+    gchar ** paths = g_new (gchar*, 2);
     paths[0] = g_strdup (path);
     paths[1] = NULL;
 
@@ -98,7 +102,6 @@ playlist_append_alternatives (const gchar *path, gchar *const* alts)
 
     g_return_if_fail (alts != NULL && alts[0] != NULL);
 
-    /* count 'em */
     while (alts[nalts]) ++nalts;
 
     paths = g_new (gchar*, nalts + 1);

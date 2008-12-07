@@ -1,14 +1,13 @@
 localedir=$(datadir)/locale
 
 AM_CPPFLAGS=$(GLIB_CFLAGS) $(GTHREAD_CFLAGS) \
-    $(DBUS_GLIB_CFLAGS) $(GNOMEVFS_CFLAGS) $(GCONF_CFLAGS) $(XINE_CFLAGS) \
-    -DG_DISABLE_DEPRECATED -DGCONF_DISABLE_DEPRECATED \
-    -DLOCALEDIR=\"$(localedir)\"
+    $(DBUS_GLIB_CFLAGS) $(GNOMEVFS_CFLAGS) $(XINE_CFLAGS) \
+    -DG_DISABLE_DEPRECATED -DLOCALEDIR=\"$(localedir)\"
 
 bin_PROGRAMS = corn
 
 corn_LDADD = $(GLIB_LIBS) $(GTHREAD_LIBS) $(DBUS_GLIB_CFLAGS) \
-    $(GNOMEVFS_LIBS) $(GCONF_LIBS) $(XINE_LIBS)
+    $(GNOMEVFS_LIBS) $(XINE_LIBS)
 
 corn_SOURCES = \
   gettext.h \
@@ -52,13 +51,4 @@ mpris-player-glue.h: mpris-player.xml
 
 mpris-tracklist-glue.h: mpris-tracklist.xml
 	$(LIBTOOL) --mode=execute dbus-binding-tool --prefix=mpris_tracklist --mode=glib-server --output=mpris-tracklist-glue.h $(srcdir)/mpris-tracklist.xml
-
-install-data-local: corn.schemas
-	GCONF_CONFIG_SOURCE=$(GCONF_SCHEMA_CONFIG_SOURCE) \
-	gconftool-2 --makefile-install-rule $<
-	$(INSTALL) -d $(DESTDIR)$(GCONF_SCHEMA_FILE_DIR)
-	$(INSTALL) $< $(DESTDIR)$(GCONF_SCHEMA_FILE_DIR)
-
-uninstall-local:
-	$(RM) $(DESTDIR)$(GCONF_SCHEMA_FILE_DIR)/corn.schemas
 
