@@ -74,8 +74,9 @@ int main(int argc, char ** argv)
     g_type_init();
 
     /* make sure the config directory exists */
-    const gchar * dir = g_build_filename(g_get_user_config_dir(), PACKAGE, NULL);
+    gchar * dir = g_build_filename(g_get_user_config_dir(), PACKAGE, NULL);
     g_mkdir_with_parents(dir, S_IRWXU|S_IRWXG|S_IRWXO);
+    g_free(dir);
 
     int failed = 0;
 
