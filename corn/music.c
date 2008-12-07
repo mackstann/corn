@@ -14,10 +14,10 @@
 #include <stdlib.h>
 #include <errno.h>
 
-static xine_t             *xine;
-static xine_stream_t      *stream;
-static xine_audio_port_t  *ao;
-static xine_event_queue_t *events;
+static xine_t             *xine = NULL;
+static xine_stream_t      *stream = NULL;
+static xine_audio_port_t  *ao = NULL;
+static xine_event_queue_t *events = NULL;
 
 static GHashTable * current_song_meta;
 
@@ -43,6 +43,7 @@ void music_events(void *data, const xine_event_t *e)
             if(music_gapless)
                 xine_set_param(stream, XINE_PARAM_GAPLESS_SWITCH, 1);
 #endif
+            // XXX should lock playlist
             playlist_advance((mrl_change ? 0 : 1), config_loop_at_end);
             mrl_change = FALSE;
             break;
@@ -247,7 +248,9 @@ static GHashTable * get_stream_metadata(xine_stream_t * strm)
 
 GHashTable * music_get_metadata(void)
 {
-    return get_stream_metadata(stream);
+    if(stream && music_playing == MUSIC_PLAYING) // eventually the latter shouldn't be required
+        return get_stream_metadata(stream);
+    return g_hash_table_new(NULL, NULL);
 }
 
 GHashTable * music_get_track_metadata(gint track)
