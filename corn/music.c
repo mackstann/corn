@@ -209,8 +209,6 @@ static GHashTable * get_stream_metadata(xine_stream_t * strm)
             NULL, // our keys are all static -- no free function for them
             free_gvalue_and_its_value);
 
-    add_metadata_from_string(meta, "mrl", PATH(LISTITEM(playlist_current)));
-
     add_metadata_from_string(meta, "title", xine_get_meta_info(strm, XINE_META_INFO_TITLE));
     add_metadata_from_string(meta, "artist", xine_get_meta_info(strm, XINE_META_INFO_ARTIST));
     add_metadata_from_string(meta, "album", xine_get_meta_info(strm, XINE_META_INFO_ALBUM));
@@ -248,7 +246,11 @@ static GHashTable * get_stream_metadata(xine_stream_t * strm)
 GHashTable * music_get_metadata(void)
 {
     if(stream && music_playing == MUSIC_PLAYING) // eventually the latter shouldn't be required
-        return get_stream_metadata(stream);
+    {
+        GHashTable * meta = get_stream_metadata(stream);
+        add_metadata_from_string(meta, "mrl", PATH(LISTITEM(playlist_current)));
+        return meta;
+    }
     return g_hash_table_new(NULL, NULL);
 }
 
@@ -288,6 +290,7 @@ GHashTable * music_get_track_metadata(gint track)
     }
 
     GHashTable * meta = get_stream_metadata(strm);
+    add_metadata_from_string(meta, "mrl", PATH(item));
 
     xine_dispose(strm);
     xine_close_audio_driver(xine, audio);
