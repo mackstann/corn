@@ -8,6 +8,7 @@
 
 GList *playlist = NULL;
 GList *playlist_current = NULL;
+GList *playlist_last = NULL;
 
 static GList *playlist_random = NULL;
 
@@ -59,7 +60,13 @@ playlist_append (PlaylistItem *item)
 {
     gint p;
 
-    playlist = g_list_append (playlist, item);
+    if(!playlist && !playlist_last)
+    {
+        playlist = g_list_append(playlist, item);
+        playlist_last = playlist;
+    }
+    else
+        playlist_last = g_list_next(g_list_append(playlist_last, item));
 
     if (!playlist_current)
         playlist_current = playlist;
