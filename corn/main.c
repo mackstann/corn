@@ -77,9 +77,6 @@ int main(int argc, char ** argv)
     const gchar * dir = g_build_filename(g_get_user_config_dir(), PACKAGE, NULL);
     g_mkdir_with_parents(dir, S_IRWXU|S_IRWXG|S_IRWXO);
 
-    GConfClient * gconf = gconf_client_get_default();
-    gconf_client_add_dir(gconf, CORN_GCONF_ROOT, GCONF_CLIENT_PRELOAD_RECURSIVE, NULL);
-
     int failed = 0;
 
     loop = g_main_loop_new(NULL, FALSE);
@@ -89,7 +86,7 @@ int main(int argc, char ** argv)
         {
             if(!(failed = mpris_init()))
             {
-                config_load(gconf);
+                config_load();
 
                 main_status = CORN_RUNNING;
 
@@ -98,7 +95,7 @@ int main(int argc, char ** argv)
                 main_status = CORN_EXITING;
 
                 g_static_mutex_lock(&main_mutex);
-                config_save(gconf);
+                config_save();
                 g_static_mutex_unlock(&main_mutex);
 
                 mpris_destroy();
@@ -108,7 +105,6 @@ int main(int argc, char ** argv)
         gnome_vfs_shutdown();
     }
     g_main_loop_unref(loop);
-    g_object_unref(G_OBJECT(gconf));
 
     return failed;
 }

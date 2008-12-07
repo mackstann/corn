@@ -19,8 +19,13 @@ gboolean config_repeat_track = FALSE;
 #define PLAYLIST_POSITION CORN_GCONF_ROOT "/playlist/position"
 #define PLAYLIST          CORN_GCONF_ROOT "/playlist/playlist"
 
-void config_load(GConfClient * gconf)
+static GConfClient * gconf;
+
+void config_load(void)
 {
+    gconf = gconf_client_get_default();
+    gconf_client_add_dir(gconf, CORN_GCONF_ROOT, GCONF_CLIENT_PRELOAD_RECURSIVE, NULL);
+
     GSList * paths, * it;
 
     config_loop_at_end = gconf_client_get_bool(gconf, LOOP_PLAYLIST, NULL);
@@ -63,7 +68,7 @@ void config_load(GConfClient * gconf)
     }
 }
 
-void config_save(GConfClient * gconf)
+void config_save(void)
 {
     GList * it;
     GSList * paths = NULL;
@@ -84,5 +89,6 @@ void config_save(GConfClient * gconf)
     g_slist_free(paths);
 
     gconf_client_suggest_sync(gconf, NULL);
+    g_object_unref(G_OBJECT(gconf));
 }
 

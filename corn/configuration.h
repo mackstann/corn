@@ -10,8 +10,8 @@ extern gboolean config_loop_at_end;
 extern gboolean config_random_order;
 extern gboolean config_repeat_track;
 
-void config_load(GConfClient * gconf);
-void config_save(GConfClient * gconf);
+void config_load(void);
+void config_save(void);
 
 #endif
 
