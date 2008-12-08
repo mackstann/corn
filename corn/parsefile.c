@@ -292,14 +292,35 @@ parse_dir (const gchar *path)
 gboolean
 parse_file (const gchar *path)
 {
+    static GRegex * ext_re = NULL;
+    if(!ext_re)
+        ext_re = g_regex_new(
+            ".\\.(mp3|ogg|flac|m4a|ape|mpc|wav|aiff|pcm|wma|ram)$",
+            G_REGEX_CASELESS|G_REGEX_OPTIMIZE, 0, NULL);
+
     GnomeVFSFileInfo *info;
+
+    gint len = strlen(path);
+
+    if(!strncmp(path, "file://", MIN(len, 7)))
+    {
+        path += 7;
+        len -= 7;
+    }
+
+    if(g_file_test(path, G_FILE_TEST_IS_REGULAR) &&
+       g_regex_match(ext_re, path, 0, NULL))
+    {
+        return TRUE;
+    }
 
     info = gnome_vfs_file_info_new ();
 
     if (gnome_vfs_get_file_info (path, info,
                                  GNOME_VFS_FILE_INFO_GET_MIME_TYPE |
                                  GNOME_VFS_FILE_INFO_FORCE_FAST_MIME_TYPE |
-                                 GNOME_VFS_FILE_INFO_FOLLOW_LINKS)) {
+                                 GNOME_VFS_FILE_INFO_FOLLOW_LINKS))
+    {
         gnome_vfs_file_info_unref (info);
         return FALSE;
     }
