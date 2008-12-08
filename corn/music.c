@@ -180,7 +180,7 @@ void music_play()
 
     if(music_playing != MUSIC_PLAYING && playlist_current)
     {
-        item = LISTITEM(playlist_current);
+        item = playlist_current;
 
         if(!(path = g_filename_from_utf8(PATH(item), -1, NULL, NULL, NULL)))
         {
@@ -292,7 +292,7 @@ GHashTable * music_get_metadata(void)
     if(stream && music_playing == MUSIC_PLAYING) // eventually the latter shouldn't be required
     {
         GHashTable * meta = get_stream_metadata(stream);
-        add_metadata_from_string(meta, "mrl", PATH(LISTITEM(playlist_current)));
+        add_metadata_from_string(meta, "mrl", PATH(playlist_current));
         return meta;
     }
     return g_hash_table_new(NULL, NULL);
@@ -302,7 +302,7 @@ GHashTable * music_get_track_metadata(gint track)
 {
     GHashTable * empty = g_hash_table_new(NULL, NULL);
 
-    if(track >= g_list_length(playlist) || track < 0)
+    if(track >= g_queue_get_length(playlist) || track < 0)
         return empty;
 
     xine_audio_port_t * audio = xine_open_audio_driver(xine, "none", NULL);
@@ -317,7 +317,7 @@ GHashTable * music_get_track_metadata(gint track)
     }
 
     gchar * path;
-    PlaylistItem * item = LISTITEM(g_list_nth(playlist, track));
+    PlaylistItem * item = g_queue_peek_nth(playlist, track);
     if(!(path = g_filename_from_utf8(PATH(item), -1, NULL, NULL, NULL)))
     {
         g_critical(_("Skipping getting track metadata for '%s'. "

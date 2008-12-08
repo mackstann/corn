@@ -85,12 +85,12 @@ void config_save(void)
     save_int_to_config_file("state.random", config_random_order ? 1 : 0);
     save_int_to_config_file("state.repeat", config_repeat_track ? 1 : 0);
     save_int_to_config_file("state.playing", music_playing);
-    save_int_to_config_file("state.list_position", g_list_position(playlist, playlist_current));
+    save_int_to_config_file("state.list_position", playlist_position);
 
     FILE * f = open_config_file("playlist", "w");
     if(f)
     {
-        for(GList * it = playlist; it; it = g_list_next(it))
+        for(GList * it = g_queue_peek_head_link(playlist); it; it = g_list_next(it))
         {
             fputs(MAIN_PATH(it->data), f);
             fputc('\n', f);

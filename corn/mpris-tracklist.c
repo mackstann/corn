@@ -39,7 +39,7 @@ gboolean mpris_tracklist_add_track(MprisTrackList * obj, const gchar * uri,
         playlist_append_single (u);
         g_free (u);
         if(playnow)
-            playlist_seek(g_list_length(playlist) - 1);
+            playlist_seek(g_queue_get_length(playlist) - 1);
         *failed = 0;
     }
     return TRUE;
@@ -48,7 +48,7 @@ gboolean mpris_tracklist_add_track(MprisTrackList * obj, const gchar * uri,
 gboolean mpris_tracklist_get_length
 (MprisTrackList * obj, gint * len, GError ** error)
 {
-    *len = g_list_length(playlist);
+    *len = g_queue_get_length(playlist);
     return TRUE;
 }
 
@@ -57,7 +57,7 @@ gboolean mpris_tracklist_get_current_track
 {
     // will be -1 when list is empty, but that's ok because the spec says
     // behavior is undefined when calling this on an empty tracklist.
-    *track = g_list_position(playlist, playlist_current);
+    *track = playlist_position;
     return TRUE;
 }
 

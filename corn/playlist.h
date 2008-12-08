@@ -3,9 +3,6 @@
 
 #include <glib.h>
 
-extern GList *playlist;
-extern GList *playlist_current;
-
 typedef struct PlaylistItem {
     guint use_path;
 
@@ -14,11 +11,13 @@ typedef struct PlaylistItem {
     gchar **paths;
 } PlaylistItem;
 
+extern GQueue * playlist;
+extern PlaylistItem * playlist_current;
+extern gint playlist_position;
+
 #define MAIN_PATH(item) (((PlaylistItem*)(item))->main_path)
 #define PATH(item) (((PlaylistItem*)(item))->paths \
                     [((PlaylistItem*)(item))->use_path])
-
-#define LISTITEM(it) ((PlaylistItem*)(it->data))
 
 void  playlist_append_single        (const gchar *path);
 void  playlist_append_alternatives  (const gchar *path, gchar *const* alts);
