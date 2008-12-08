@@ -319,9 +319,13 @@ playlist_remove (gint num)
     else if (was_playing == MUSIC_PLAYING)
         music_play ();
 
-    // if we just removed the last index while pointing to it, then maintain a
-    // valid position at the end
-    playlist_position = MIN(g_queue_get_length(playlist)-1, playlist_position);
+    // if we just removed the last song while pointing
+    // to it, then point to new end
+    if(playlist_position > g_queue_get_length(playlist)-2)
+    {
+        playlist_position--;
+        playlist_current = g_queue_peek_tail(playlist);
+    }
 
     listitem_free(g_queue_pop_nth(playlist, num));
 }
@@ -338,5 +342,8 @@ playlist_move (gint num, gint before)
     if (before > num) ++before;
     g_queue_push_nth (playlist, item, before);
     g_queue_delete_link (playlist, it);
+
+    if(before <= playlist_current)
+        playlist_current = g_queue_peek_nth(playlist, playlist_position);
 }
 
