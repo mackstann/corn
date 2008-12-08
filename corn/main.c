@@ -66,6 +66,7 @@ int main(int argc, char ** argv)
 
     init_locale();
 
+    loop = g_main_loop_new(NULL, FALSE);
     init_signals();
 
     g_type_init();
@@ -77,7 +78,6 @@ int main(int argc, char ** argv)
 
     int failed = 0;
 
-    loop = g_main_loop_new(NULL, FALSE);
     if(!(failed = gnome_vfs_init() ? 0 : 5))
     {
         if(!(failed = music_init()))
