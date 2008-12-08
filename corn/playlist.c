@@ -8,7 +8,6 @@
 
 GList *playlist = NULL;
 GList *playlist_current = NULL;
-GList *playlist_last = NULL;
 
 static GList *playlist_random = NULL;
 
@@ -58,20 +57,13 @@ get_file_utf8 (const gchar *path, gchar **f, gchar **u)
 static void
 playlist_append (PlaylistItem *item)
 {
-    gint p;
-
-    if(!playlist && !playlist_last)
-    {
-        playlist = g_list_append(playlist, item);
-        playlist_last = playlist;
-    }
-    else
-        playlist_last = g_list_next(g_list_append(playlist_last, item));
+    // definitely change to deque, also possibly create an index
+    playlist = g_list_append(playlist, item);
 
     if (!playlist_current)
         playlist_current = playlist;
 
-    p = g_list_position (playlist_random,
+    gint p = g_list_position (playlist_random,
                          g_list_find (playlist_random,
                                       playlist_current->data));
     playlist_random = g_list_insert
