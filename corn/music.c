@@ -170,49 +170,51 @@ void music_destroy()
     while(close(event_sockets.writer) == -1 && errno == EINTR);
 }
 
-void music_play()
+static gboolean try_to_play(void)
 {
-    PlaylistItem *item;
-    gint state, time;
+    if(music_playing == MUSIC_PLAYING)
+        return TRUE;
+
+    if(!playlist_current)
+        return TRUE;
+
+    PlaylistItem * item = playlist_current;
+
     gchar *path;
-
-    state = xine_get_status(stream);
-
-    if(music_playing != MUSIC_PLAYING && playlist_current)
+    if(!(path = g_filename_from_utf8(PATH(item), -1, NULL, NULL, NULL)))
     {
-        item = playlist_current;
+        g_critical(_("Skipping '%s'. Could not convert from UTF-8. Bug?"), PATH(item));
+        return FALSE;
+    }
 
-        if(!(path = g_filename_from_utf8(PATH(item), -1, NULL, NULL, NULL)))
-        {
-            g_critical(_("Skipping '%s'. Could not convert from UTF-8. Bug?"), PATH(item));
-            playlist_fail();
-            return;
-        }
+    if(xine_get_status(stream) != XINE_STATUS_IDLE)
+        xine_close(stream);
 
-        if(state != XINE_STATUS_IDLE)
-            xine_close(stream);
-
-        if(!xine_open(stream, path))
-        {
-            playlist_fail();
-            return;
-        }
+    if(!xine_open(stream, path))
+        return FALSE;
 
 #if defined(XINE_PARAM_GAPLESS_SWITCH) && defined(XINE_PARAM_EARLY_FINISHED_EVENT)
-        if(music_gapless)
-            xine_set_param(stream, XINE_PARAM_EARLY_FINISHED_EVENT, 1);
+    if(music_gapless)
+        xine_set_param(stream, XINE_PARAM_EARLY_FINISHED_EVENT, 1);
 #endif
-        
-        time = stream_time;
+
+    if(xine_play(stream, 0, stream_time))
+    {
         stream_time = 0;
-        if(xine_play(stream, 0, time))
-            music_playing = MUSIC_PLAYING;
-        else
-        {
-            music_playing = MUSIC_STOPPED;
-            playlist_fail();
-        }
+        music_playing = MUSIC_PLAYING;
+        return TRUE;
     }
+    music_playing = MUSIC_STOPPED;
+    return FALSE;
+}
+
+void music_play(void)
+{
+    gint orig_pos = playlist_position;
+    while(!try_to_play() && playlist_fail() && playlist_position != orig_pos);
+    // if we keep failing to load files, and loop/repeat are on, we don't want
+    // to infinitely keep trying to play the same file(s) that won't play.  so
+    // once we fail and eventually get back to the same song, stop.
 }
 
 static void free_gvalue_and_its_value(gpointer value)

@@ -31,7 +31,7 @@ void  playlist_remove               (gint num);
 /* before = -1 to move to the end of the list */
 void  playlist_move                 (gint num, gint before);
 void  playlist_next_alternative     ();
-void  playlist_fail                 ();
 void  playlist_dump                 ();
+gboolean playlist_fail              ();
 
 #endif

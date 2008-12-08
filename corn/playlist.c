@@ -162,33 +162,26 @@ playlist_replace_path (guint num, const gchar *path)
             g_renew (gchar*, playlist_current->paths, num + 2);
 }
 
-void
-playlist_fail ()
+gboolean playlist_fail(void)
 {
     PlaylistItem *item;
     guint nalts = 0;
-    static gint cur = -1;
 
-    g_return_if_fail (playlist_current != NULL);
+    g_return_val_if_fail(playlist_current != NULL, FALSE);
 
     item = playlist_current;
-    while (item->paths[nalts]) ++nalts;
-    if (nalts - 1 > item->use_path) {
+    while(item->paths[nalts])
+        ++nalts;
+    if(nalts - 1 > item->use_path) {
         ++item->use_path;
         /* try again */
-        music_play ();
+        return TRUE;
     } else {
-        if (cur == -1)
-            cur = playlist_position;
-
         /*playlist_remove (g_list_position (playlist, playlist_current));*/
-        playlist_advance (1, config_loop_at_end);
-        if (cur != playlist_position)
-            music_play (); /* because this can recurse back here, the cur
-                              checks prevent an infinate loop, and only allow
-                              one loop through the playlist */
-        cur = -1;
+        playlist_advance(1, config_loop_at_end);
+        return TRUE;
     }
+    return FALSE;
 }
 
 void
