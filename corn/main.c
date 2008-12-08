@@ -18,8 +18,6 @@
 
 CornStatus main_status;
 
-GStaticMutex main_mutex        = G_STATIC_MUTEX_INIT;
-
 static GMainLoop * loop;
 
 void main_quit() { g_main_loop_quit(loop); }
@@ -89,16 +87,11 @@ int main(int argc, char ** argv)
                 config_load();
 
                 main_status = CORN_RUNNING;
-
                 g_message("ready");
                 g_main_loop_run(loop);
-
                 main_status = CORN_EXITING;
 
-                g_static_mutex_lock(&main_mutex);
                 config_save();
-                g_static_mutex_unlock(&main_mutex);
-
                 mpris_destroy();
             }
             music_destroy();

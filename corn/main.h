@@ -15,8 +15,6 @@ extern gboolean main_repeat_track;
 
 extern CornStatus main_status;
 
-extern GStaticMutex main_mutex;
-
 void main_quit(void);
 
 #endif
