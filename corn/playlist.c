@@ -343,7 +343,7 @@ playlist_move (gint num, gint before)
     g_queue_push_nth (playlist, item, before);
     g_queue_delete_link (playlist, it);
 
-    if(before <= playlist_current)
+    if(before <= playlist_position)
         playlist_current = g_queue_peek_nth(playlist, playlist_position);
 }
 
