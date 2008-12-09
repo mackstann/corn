@@ -343,7 +343,8 @@ void playlist_move(gint num, gint before)
     GList * it = g_queue_peek_nth_link(playlist, num);
     PlaylistItem * item;
 
-    if(!it || num == before) return;
+    if(!it || num == before)
+        return;
 
     item = it->data;
     if(before > num)
