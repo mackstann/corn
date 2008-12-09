@@ -193,9 +193,9 @@ void playlist_rerandomize(void)
     g_queue_clear(playlist_random);
 
     GList * it = g_queue_peek_head_link(playlist);
-    for(gint i = 1; it != NULL; it = g_list_next(it), ++i)
+    for(gint i = 0; it != NULL; it = g_list_next(it), ++i)
         g_queue_push_nth(playlist_random, it->data,
-                                         g_random_int_range(0, i));
+                i == 0 ? 0 : g_random_int_range(0, i));
 }
 
 void playlist_advance(gint num, gboolean loop)
