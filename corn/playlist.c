@@ -76,10 +76,12 @@ static void playlist_append(PlaylistItem * item)
         rand_pos_after_current = 0;
     }
     else
+    {
         rand_pos_after_current = g_random_int_range(
             playlist_position,
             g_queue_get_length(playlist)+1 // +1 because we're about to add a song
         ) + 1; // +1 to put it after the chosen index
+    }
 
     //LOG_TIME("before append");
     g_queue_push_tail(playlist, item);
@@ -297,6 +299,7 @@ void playlist_advance(gint num, gboolean loop)
 void playlist_seek(gint track)
 {
     if(track < 0) return;
+    if(!playlist) return;
     if(track >= g_queue_get_length(playlist)) return;
 
     gint was_playing = music_playing;
@@ -317,6 +320,8 @@ void playlist_seek(gint track)
 
 void playlist_clear(void)
 {
+    if(!playlist) return;
+
     music_stop();
 
     gint len = g_queue_get_length(playlist); // O(1)
@@ -335,6 +340,7 @@ void playlist_clear(void)
 void playlist_remove(gint track)
 {
     if(track < 0) return;
+    if(!playlist) return;
     if(track >= g_queue_get_length(playlist)) return; // O(1)
 
     if(track == playlist_position)
@@ -343,8 +349,8 @@ void playlist_remove(gint track)
     // if we're still in the same spot, there was no track to advance to
     if(track == playlist_position)
     {
-        playlist_current = NULL;
-        playlist_position = -1;
+        playlist_current = g_queue_peek_head(playlist);
+        playlist_position = 0;
     }
 
     if(track < playlist_position)
@@ -353,12 +359,21 @@ void playlist_remove(gint track)
     PlaylistItem * item = g_queue_pop_nth(playlist, track); // O(n)
     g_queue_remove(playlist_random, item); // O(n)
     listitem_free(item);
+
+    if(!g_queue_get_length(playlist))
+    {
+        g_queue_free(playlist);
+        playlist = playlist_random = NULL;
+        playlist_current = NULL;
+        playlist_position = -1;
+    }
 }
 
 void playlist_move(gint track, gint dest)
 {
     if(track == dest) return;
     if(track < 0) return;
+    if(!playlist) return;
     if(track >= g_queue_get_length(playlist)) return;
 
     GList * it = g_queue_peek_nth_link(playlist, track);

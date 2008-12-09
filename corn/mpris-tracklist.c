@@ -49,7 +49,7 @@ gboolean mpris_tracklist_add_track(MprisTrackList * obj, const gchar * uri,
 gboolean mpris_tracklist_get_length
 (MprisTrackList * obj, gint * len, GError ** error)
 {
-    *len = g_queue_get_length(playlist);
+    *len = playlist ? g_queue_get_length(playlist) : 0;
     return TRUE;
 }
 
