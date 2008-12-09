@@ -2,6 +2,7 @@
 
 #include "playlist.h"
 #include "music.h"
+#include "music-control.h"
 #include "main.h"
 #include "parsefile.h"
 #include "configuration.h"

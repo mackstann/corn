@@ -22,18 +22,17 @@ typedef struct _music_socket_pair_t {
     gint writer;
 } music_socket_pair_t;
 
-static xine_t             *xine = NULL;
-static xine_stream_t      *stream = NULL;
+xine_t * xine = NULL;
+xine_stream_t * music_stream = NULL;
+
 static xine_audio_port_t  *ao = NULL;
 static xine_event_queue_t *events = NULL;
 
-static GHashTable * current_song_meta;
-
-static gint stream_time;
-
-gboolean music_gapless = FALSE;
+gint music_stream_time;
 gint music_playing = MUSIC_STOPPED;
 gint music_volume;
+
+static gboolean music_gapless = FALSE;
 
 music_socket_pair_t event_sockets;
 
@@ -73,7 +72,7 @@ gboolean music_event_handle(GIOChannel *source, GIOCondition condition, gpointer
         case XINE_EVENT_UI_PLAYBACK_FINISHED:
 #if defined(XINE_PARAM_GAPLESS_SWITCH) && defined(XINE_PARAM_EARLY_FINISHED_EVENT)
             if(music_gapless)
-                xine_set_param(stream, XINE_PARAM_GAPLESS_SWITCH, 1);
+                xine_set_param(music_stream, XINE_PARAM_GAPLESS_SWITCH, 1);
 #endif
             // XXX should lock playlist
             playlist_advance((mrl_change ? 0 : 1), config_loop_at_end);
@@ -124,7 +123,7 @@ int music_init()
         return 11;
     }
 
-    if(!(stream = xine_stream_new(xine, ao, NULL)))
+    if(!(music_stream = xine_stream_new(xine, ao, NULL)))
     {
         g_critical(_("Unable to open a Xine stream."));
         return 12;
@@ -132,10 +131,10 @@ int music_init()
 
     // hey, everyone else is doing it
     // http://www.google.com/codesearch?q=xine_set_param\(.*%2C\s*XINE_PARAM_METRONOM_PREBUFFER%2C\s*6000
-    xine_set_param(stream, XINE_PARAM_METRONOM_PREBUFFER, 6000);
+    xine_set_param(music_stream, XINE_PARAM_METRONOM_PREBUFFER, 6000);
 
-    xine_set_param(stream, XINE_PARAM_IGNORE_VIDEO, 1);
-    xine_set_param(stream, XINE_PARAM_IGNORE_SPU, 1);
+    xine_set_param(music_stream, XINE_PARAM_IGNORE_VIDEO, 1);
+    xine_set_param(music_stream, XINE_PARAM_IGNORE_SPU, 1);
 
     if(socketpair(AF_UNIX, SOCK_STREAM, 0, (int *)&event_sockets))
     {
@@ -143,7 +142,7 @@ int music_init()
         return 13;
     }
 
-    events = xine_event_new_queue(stream);
+    events = xine_event_new_queue(music_stream);
     xine_event_create_listener_thread(events, music_event_send, NULL);
 
     GIOChannel * chan = g_io_channel_unix_new(event_sockets.reader);
@@ -154,23 +153,24 @@ int music_init()
     music_gapless = !!xine_check_version(1, 1, 1);
 #endif
 
-    music_volume = xine_get_param(stream, XINE_PARAM_AUDIO_VOLUME);
+    music_volume = xine_get_param(music_stream, XINE_PARAM_AUDIO_VOLUME);
 
     return 0;
 }
 
 void music_destroy()
 {
-    music_stop();
+    if(xine_get_status(music_stream) != XINE_STATUS_IDLE)
+        xine_close(music_stream);
     xine_event_dispose_queue(events);
-    xine_dispose(stream);
+    xine_dispose(music_stream);
     xine_close_audio_driver(xine, ao);
     xine_exit(xine);
     while(close(event_sockets.reader) == -1 && errno == EINTR);
     while(close(event_sockets.writer) == -1 && errno == EINTR);
 }
 
-static gboolean try_to_play(void)
+gboolean music_try_to_play(void)
 {
     if(music_playing == MUSIC_PLAYING)
         return TRUE;
@@ -185,20 +185,20 @@ static gboolean try_to_play(void)
         return FALSE;
     }
 
-    if(xine_get_status(stream) != XINE_STATUS_IDLE)
-        xine_close(stream);
+    if(xine_get_status(music_stream) != XINE_STATUS_IDLE)
+        xine_close(music_stream);
 
-    if(!xine_open(stream, path))
+    if(!xine_open(music_stream, path))
         return FALSE;
 
 #if defined(XINE_PARAM_GAPLESS_SWITCH) && defined(XINE_PARAM_EARLY_FINISHED_EVENT)
     if(music_gapless)
-        xine_set_param(stream, XINE_PARAM_EARLY_FINISHED_EVENT, 1);
+        xine_set_param(music_stream, XINE_PARAM_EARLY_FINISHED_EVENT, 1);
 #endif
 
-    if(xine_play(stream, 0, stream_time))
+    if(xine_play(music_stream, 0, music_stream_time))
     {
-        stream_time = 0;
+        music_stream_time = 0;
         music_playing = MUSIC_PLAYING;
         return TRUE;
     }
@@ -337,9 +337,9 @@ GHashTable * music_get_track_metadata(gint track)
 GHashTable * music_get_metadata(void)
 {
     // try to do it cheaply, using the already loaded stream
-    if(stream && xine_get_status(stream) != XINE_STATUS_IDLE)
+    if(music_stream && xine_get_status(music_stream) != XINE_STATUS_IDLE)
     {
-        GHashTable * meta = get_stream_metadata(stream);
+        GHashTable * meta = get_stream_metadata(music_stream);
         add_metadata_from_string(meta, "mrl", PATH(playlist_current));
         return meta;
     }
@@ -347,62 +347,5 @@ GHashTable * music_get_metadata(void)
         return music_get_playlist_item_metadata(playlist_current);
 
     return g_hash_table_new(NULL, NULL);
-}
-
-////////////////////////////////////////////////////////////////////////
-//                             CONTROL
-////////////////////////////////////////////////////////////////////////
-
-void music_play(void)
-{
-    gint orig_pos = playlist_position;
-    while(!try_to_play() && playlist_fail() && playlist_position != orig_pos);
-    // if we keep failing to load files, and loop/repeat are on, we don't want
-    // to infinitely keep trying to play the same file(s) that won't play.  so
-    // once we fail and eventually get back to the same song, stop.
-}
-
-void music_seek(gint ms)
-{
-    music_pause();
-    stream_time = MAX(0, ms); // xine is smart.  no need to check upper bound.
-    music_play();
-}
-
-// position within current song, in ms
-gint music_get_position(void)
-{
-    if(xine_get_status(stream) == XINE_STATUS_IDLE)
-        return stream_time;
-    gint pos, time, length;
-    if(xine_get_pos_length(stream, &pos, &time, &length))
-        return time;
-    return 0;
-}
-
-static void _do_pause(void)
-{
-    stream_time = music_get_position();
-    if(xine_get_status(stream) != XINE_STATUS_IDLE)
-        xine_close(stream);
-}
-
-void music_pause()
-{
-    _do_pause();
-    music_playing = MUSIC_PAUSED;
-}
-
-void music_stop()
-{
-    _do_pause();
-    music_playing = MUSIC_STOPPED;
-    stream_time = 0;
-}
-
-void music_set_volume(gint vol)
-{
-    music_volume = CLAMP(vol, 0, 100);
-    xine_set_param(stream, XINE_PARAM_AUDIO_VOLUME, music_volume);
 }
 

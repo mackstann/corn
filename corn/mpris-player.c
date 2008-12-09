@@ -1,5 +1,6 @@
 #include "main.h"
 #include "music.h"
+#include "music-control.h"
 #include "playlist.h"
 #include "configuration.h"
 

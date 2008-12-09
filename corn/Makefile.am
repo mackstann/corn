@@ -17,6 +17,8 @@ corn_SOURCES = \
   dbus.c \
   music.h \
   music.c \
+  music-control.h \
+  music-control.c \
   playlist.h \
   playlist.c \
   parsefile.h \

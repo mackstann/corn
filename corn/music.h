@@ -2,6 +2,7 @@
 #define __music_h
 
 #include <glib.h>
+#include <xine.h>
 
 enum {
     MUSIC_PLAYING = 0,
@@ -9,17 +10,18 @@ enum {
     MUSIC_STOPPED = 2
 } MusicPlayingStatus;
 
+extern xine_t * xine;
+extern xine_stream_t * music_stream;
+
 extern gint music_playing;
 extern gint music_volume;
+extern gint music_stream_time;
 
 int music_init(void);
 void music_destroy(void);
-void music_play(void);
-void music_pause(void);
-void music_stop(void);
-void music_set_volume(gint vol);
-void music_seek(gint ms);
-gint music_get_position(void);
+
+gboolean music_try_to_play(void);
+
 GHashTable * music_get_metadata(void);
 GHashTable * music_get_track_metadata(gint track);
 

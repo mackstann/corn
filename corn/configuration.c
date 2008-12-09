@@ -3,6 +3,7 @@
 #include "gettext.h"
 
 #include "music.h"
+#include "music-control.h"
 #include "playlist.h"
 #include "configuration.h"
 #include "parsefile.h"
@@ -73,9 +74,10 @@ void config_load(void)
     gint playing = read_int_from_config_file("state.playing", 0, 2, MUSIC_STOPPED);
     if(playing != MUSIC_STOPPED)
     {
+        // maybe save the song position too, but only if paused
         music_play();
         if(playing == MUSIC_PAUSED)
-            music_pause(); // not sure if this works
+            music_pause();
     }
 }
 
