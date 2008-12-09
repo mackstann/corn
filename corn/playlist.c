@@ -188,14 +188,34 @@ gboolean playlist_fail(void)
     return FALSE;
 }
 
-void playlist_rerandomize(void)
+void playlist_rerandomize(void) // O(3n)
 {
     g_queue_clear(playlist_random);
 
+    // http://en.wikipedia.org/wiki/Fisher-Yates_shuffle
+
+    gint len = g_queue_get_length(playlist);
+    PlaylistItem ** ar = g_new(PlaylistItem *, len);
+
+    // copy playlist to array
     GList * it = g_queue_peek_head_link(playlist);
-    for(gint i = 0; it != NULL; it = g_list_next(it), ++i)
-        g_queue_push_nth(playlist_random, it->data,
-                i == 0 ? 0 : g_random_int_range(0, i));
+    for(gint i = 0; it != NULL; it = g_list_next(it), i++) // O(n)
+        ar[i] = it->data;
+
+    for(gint n = len; n > 1;) // O(n)
+    {
+        gint k = g_random_int_range(0, n);
+        n--;
+        PlaylistItem * temp = ar[n];
+        ar[n] = ar[k];
+        ar[k] = temp;
+    }
+
+    // copy now-randomized array to playlist_random
+    for(gint i = 0; i < len; i++) // O(n)
+        g_queue_push_tail(playlist_random, ar[i]);
+
+    g_free(ar);
 }
 
 void playlist_advance(gint num, gboolean loop)
