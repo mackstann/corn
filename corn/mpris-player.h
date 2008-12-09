@@ -2,6 +2,7 @@
 #define __corn_mpris_player_h__
 
 #include <glib-object.h>
+#include <dbus/dbus-glib.h>
 
 #define CORN_TYPE_MPRIS_PLAYER                  (mpris_player_get_type ())
 #define CORN_MPRIS_PLAYER(obj)                  (G_TYPE_CHECK_INSTANCE_CAST ((obj), CORN_TYPE_MPRIS_PLAYER, MprisPlayer))
@@ -16,6 +17,7 @@ typedef struct _MprisPlayerClass MprisPlayerClass;
 struct _MprisPlayer
 {
     GObject parent;
+    DBusGProxy *proxy;
 };
 
 struct _MprisPlayerClass
@@ -50,6 +52,12 @@ gboolean mpris_player_position_get(MprisPlayer * obj, gint * ms, GError ** error
 gboolean mpris_player_repeat(MprisPlayer * obj, gboolean on, GError ** error);
 gboolean mpris_player_get_metadata(MprisPlayer * obj, GHashTable ** meta, GError ** error);
 gboolean mpris_player_get_status(MprisPlayer * obj, GValue ** status, GError ** error);
+
+gboolean mpris_player_emit_caps_change(MprisPlayer *obj);
+gboolean mpris_player_emit_track_change(MprisPlayer *obj);
+gboolean mpris_player_emit_status_change(MprisPlayer *obj);
+
+extern gint mpris_player_capabilities;
 
 #endif
 

@@ -9,16 +9,57 @@
 #include <glib.h>
 #include <glib-object.h>
 
+#include <string.h>
+
+gint mpris_player_capabilities = 0;
+
+// much thanks to audacious developers -- some code is inherited from them.
+
+guint track_change_signal;
+guint status_change_signal;
+guint caps_change_signal;
+
 G_DEFINE_TYPE(MprisPlayer, mpris_player, G_TYPE_OBJECT)
+
+#define DBUS_TYPE_G_STRING_VALUE_HASHTABLE (dbus_g_type_get_map ("GHashTable", G_TYPE_STRING, G_TYPE_VALUE))
 
 static void
 mpris_player_init(MprisPlayer * obj)
 {
+    // set caps!
+    //CAN_GO_NEXT | CAN_GO_PREV | CAN_PAUSE | CAN_PLAY;
+    //CAN_SEEK
+    //CAN_PROVIDE_METADATA
+    //CAN_HAS_TRACKLIST
 }
 
 static void
 mpris_player_class_init(MprisPlayerClass * klass)
 {
+    caps_change_signal =
+        g_signal_new("caps_change",
+                G_OBJECT_CLASS_TYPE(klass),
+                G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+                0,
+                NULL, NULL,
+                g_cclosure_marshal_VOID__INT,
+                G_TYPE_NONE, 1, G_TYPE_INT);
+    track_change_signal =
+        g_signal_new("track_change",
+                G_OBJECT_CLASS_TYPE(klass),
+                G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+                0,
+                NULL, NULL,
+                g_cclosure_marshal_VOID__BOXED,
+                G_TYPE_NONE, 1, DBUS_TYPE_G_STRING_VALUE_HASHTABLE);
+    status_change_signal =
+        g_signal_new("status_change",
+                G_OBJECT_CLASS_TYPE(klass),
+                G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+                0,
+                NULL, NULL,
+                g_cclosure_marshal_VOID__INT,
+                G_TYPE_NONE, 1, G_TYPE_INT);
 }
 
 // TODO:
@@ -106,14 +147,14 @@ gboolean mpris_player_get_metadata(MprisPlayer * obj, GHashTable ** meta, GError
     return TRUE;
 }
 
-#define DBUS_STRUCT_INT_INT_INT_INT (dbus_g_type_get_struct ("GValueArray", G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INVALID))
+#define DBUS_STRUCT_INT_INT_INT_INT (dbus_g_type_get_struct("GValueArray", G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INVALID))
 
-gboolean mpris_player_get_status(MprisPlayer * obj, GValue ** status, GError ** error)
+gpointer get_status_struct(void)
 {
-    GValue value = {0};
+    static GValue value;
+    memset(&value, 0, sizeof(GValue));
     g_value_init(&value, DBUS_STRUCT_INT_INT_INT_INT);
     g_value_take_boxed(&value, dbus_g_type_specialized_construct(DBUS_STRUCT_INT_INT_INT_INT));
-    // index, value, ... G_MAXUINT at the end
     dbus_g_type_struct_set(&value,
         0, music_playing,
         1, config_random_order ? 1 : 0,
@@ -121,7 +162,29 @@ gboolean mpris_player_get_status(MprisPlayer * obj, GValue ** status, GError ** 
         3, config_loop_at_end ? 1 : 0,
         G_MAXUINT
     );
-    *status = g_value_get_boxed(&value);
+    return g_value_get_boxed(&value);
+}
+
+gboolean mpris_player_get_status(MprisPlayer * obj, GValue ** status, GError ** error)
+{
+    *status = get_status_struct();
+    return TRUE;
+}
+
+gboolean mpris_player_emit_caps_change(MprisPlayer *obj) {
+    g_signal_emit(obj, caps_change_signal, 0, mpris_player_capabilities);
+    return TRUE;
+}
+
+gboolean mpris_player_emit_track_change(MprisPlayer *obj) {
+    GHashTable * meta = music_get_metadata();
+    g_signal_emit(obj, track_change_signal, 0, meta);
+    g_hash_table_destroy(meta);
+    return TRUE;
+}
+
+gboolean mpris_player_emit_status_change(MprisPlayer *obj) {
+    g_signal_emit(obj, status_change_signal, 0, get_status_struct());
     return TRUE;
 }
 

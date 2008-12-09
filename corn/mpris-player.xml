@@ -50,6 +50,16 @@
         <method name="GetStatus">
             <arg type="(iiii)" direction="out"/>
         </method>
+
+        <signal name="TrackChange">
+            <arg type="a{sv}"/>
+        </signal>
+        <signal name="StatusChange">
+            <arg type="(iiii)"/>
+        </signal>
+        <signal name="CapsChange">
+            <arg type="i" />
+        </signal>
     </interface>
 </node>
 
