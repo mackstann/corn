@@ -150,7 +150,7 @@ int music_init()
     g_io_channel_unref(chan);
 
 #if defined(XINE_PARAM_GAPLESS_SWITCH) && defined(XINE_PARAM_EARLY_FINISHED_EVENT)
-    music_gapless = !!xine_check_version(1, 1, 1);
+    music_gapless = xine_check_version(1, 1, 1);
 #endif
 
     music_volume = xine_get_param(music_stream, XINE_PARAM_AUDIO_VOLUME);
