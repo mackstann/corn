@@ -1,5 +1,6 @@
 #include "gettext.h"
 #include "music.h"
+#include "music-metadata.h"
 #include "main.h"
 #include "playlist.h"
 #include "configuration.h"
