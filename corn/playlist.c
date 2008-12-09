@@ -5,6 +5,7 @@
 #include "main.h"
 #include "parsefile.h"
 #include "configuration.h"
+#include "dbus.h"
 
 GQueue * playlist = NULL;
 PlaylistItem * playlist_current = NULL;
@@ -258,6 +259,8 @@ playlist_advance (gint num, gboolean loop)
     music_stop ();
     if ((!looped || loop) && wasplaying == MUSIC_PLAYING)
         music_play ();
+
+    mpris_player_emit_track_change(mpris_player);
 }
 
 void playlist_seek(gint num)
@@ -275,6 +278,8 @@ void playlist_seek(gint num)
         // XXX only play if wasplaying
         music_play ();
     }
+
+    mpris_player_emit_track_change(mpris_player);
 }
 
 void
