@@ -279,17 +279,18 @@ void playlist_seek(gint track)
     if(track < 0) return;
     if(track >= g_queue_get_length(playlist)) return;
 
+    gint was_playing = music_playing;
+
     playlist_current = g_queue_peek_nth(playlist, track);
     playlist_position = track;
 
     /* this function is used during load, and we don't want to start
        playing necessarily */
-    if(main_status == CORN_RUNNING)
-    {
-        music_stop();
-        // XXX only play if wasplaying
+    music_stop();
+    if(wasplaying == MUSIC_PLAYING)
         music_play();
-    }
+    else if(wasplaying == MUSIC_PAUSED)
+        music_playing == MUSIC_PAUSED;
 
     mpris_player_emit_track_change(mpris_player);
 }
@@ -318,17 +319,14 @@ void playlist_remove(gint track)
     gint was_playing = music_playing;
 
     if(track == playlist_position)
-    {
-        music_stop();
         playlist_advance(1, config_loop_at_end);
-    }
+
+    // if we're still in the same spot, there was no track to advance to
     if(track == playlist_position)
     {
         playlist_current = NULL;
         playlist_position = -1;
     }
-    else if(was_playing == MUSIC_PLAYING)
-        music_play();
 
     if(track < playlist_position)
         playlist_position--;
