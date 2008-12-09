@@ -345,13 +345,6 @@ GHashTable * music_get_track_metadata(gint track)
     return meta;
 }
 
-static void _do_pause(void)
-{
-    stream_time = music_get_position();
-    if(xine_get_status(stream) != XINE_STATUS_IDLE)
-        xine_close(stream);
-}
-
 void music_seek(gint ms)
 {
     music_pause();
@@ -367,6 +360,13 @@ gint music_get_position(void)
     if(xine_get_pos_length(stream, &pos, &time, &length))
         return time;
     return 0;
+}
+
+static void _do_pause(void)
+{
+    stream_time = music_get_position();
+    if(xine_get_status(stream) != XINE_STATUS_IDLE)
+        xine_close(stream);
 }
 
 void music_pause()
