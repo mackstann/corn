@@ -19,6 +19,8 @@ extern gint playlist_position;
 #define PATH(item) (((PlaylistItem*)(item))->paths \
                     [((PlaylistItem*)(item))->use_path])
 
+void playlist_init(void);
+void playlist_destroy(void);
 void  playlist_append_single        (const gchar *path);
 void  playlist_append_alternatives  (const gchar *path, gchar *const* alts);
 void  playlist_replace_path         (guint track, const gchar *path);

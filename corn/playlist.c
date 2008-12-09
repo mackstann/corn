@@ -9,10 +9,10 @@
 #include "dbus.h"
 
 GQueue * playlist = NULL;
+static GQueue * playlist_random = NULL;
+
 PlaylistItem * playlist_current = NULL;
 gint playlist_position = -1;
-
-static GQueue * playlist_random = NULL;
 
 static PlaylistItem * listitem_new
 (gchar * path, gchar ** p, guint nalts)
@@ -59,14 +59,20 @@ get_file_utf8 (const gchar * path, gchar ** f, gchar ** u)
 }
 */
 
+void playlist_init(void)
+{
+    playlist = g_queue_new();
+    playlist_random = g_queue_new();
+}
+
+void playlist_destroy(void)
+{
+    g_queue_free(playlist);
+    g_queue_free(playlist_random);
+}
+
 static void playlist_append(PlaylistItem * item)
 {
-    if(!playlist)
-    {
-        playlist = g_queue_new();
-        playlist_random = g_queue_new();
-    }
-
     gint rand_pos_after_current;
 
     if(!playlist_current)
@@ -226,7 +232,7 @@ void playlist_advance(gint num, gboolean loop)
     gboolean looped = FALSE;
     gint wasplaying = music_playing;
 
-    if(!playlist || !num)
+    if(g_queue_is_empty(playlist) || G_UNLIKELY(!num))
         return;
 
     if(!config_repeat_track)
@@ -298,9 +304,8 @@ void playlist_advance(gint num, gboolean loop)
 
 void playlist_seek(gint track)
 {
-    if(track < 0) return;
-    if(!playlist) return;
-    if(track >= g_queue_get_length(playlist)) return;
+    if G_UNLIKELY(track < 0) return;
+    if G_UNLIKELY(track >= g_queue_get_length(playlist)) return;
 
     gint was_playing = music_playing;
 
@@ -320,8 +325,6 @@ void playlist_seek(gint track)
 
 void playlist_clear(void)
 {
-    if(!playlist) return;
-
     music_stop();
 
     gint len = g_queue_get_length(playlist); // O(1)
@@ -329,19 +332,14 @@ void playlist_clear(void)
     while(len--) // O(n)
         listitem_free(g_queue_pop_head(playlist));
 
-    g_queue_free(playlist);
-    g_queue_free(playlist_random);
-
-    playlist = playlist_random = NULL;
     playlist_current = NULL;
     playlist_position = -1;
 }
 
 void playlist_remove(gint track)
 {
-    if(track < 0) return;
-    if(!playlist) return;
-    if(track >= g_queue_get_length(playlist)) return; // O(1)
+    if G_UNLIKELY(track < 0) return;
+    if G_UNLIKELY(track >= g_queue_get_length(playlist)) return; // O(1)
 
     if(track == playlist_position)
         playlist_advance(1, config_loop_at_end);
@@ -362,8 +360,6 @@ void playlist_remove(gint track)
 
     if(!g_queue_get_length(playlist))
     {
-        g_queue_free(playlist);
-        playlist = playlist_random = NULL;
         playlist_current = NULL;
         playlist_position = -1;
     }
@@ -371,10 +367,9 @@ void playlist_remove(gint track)
 
 void playlist_move(gint track, gint dest)
 {
-    if(track == dest) return;
-    if(track < 0) return;
-    if(!playlist) return;
-    if(track >= g_queue_get_length(playlist)) return;
+    if G_UNLIKELY(track == dest) return;
+    if G_UNLIKELY(track < 0) return;
+    if G_UNLIKELY(track >= g_queue_get_length(playlist)) return;
 
     GList * it = g_queue_peek_nth_link(playlist, track);
     PlaylistItem * item = it->data;

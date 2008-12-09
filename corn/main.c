@@ -84,6 +84,7 @@ int main(int argc, char ** argv)
         {
             if(!(failed = mpris_init()))
             {
+                playlist_init();
                 config_load();
 
                 main_status = CORN_RUNNING;
@@ -92,6 +93,7 @@ int main(int argc, char ** argv)
                 main_status = CORN_EXITING;
 
                 config_save();
+                playlist_destroy();
                 mpris_destroy();
             }
             music_destroy();
