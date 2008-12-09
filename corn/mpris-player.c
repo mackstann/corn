@@ -1,6 +1,7 @@
 #include "main.h"
-#include "music.h"
 #include "music-control.h"
+#include "music-metadata.h"
+#include "music.h"
 #include "playlist.h"
 #include "configuration.h"
 
@@ -144,7 +145,7 @@ gboolean mpris_player_repeat(MprisPlayer * obj, gboolean on, GError ** error)
 
 gboolean mpris_player_get_metadata(MprisPlayer * obj, GHashTable ** meta, GError ** error)
 {
-    *meta = music_get_metadata();
+    *meta = music_get_current_track_metadata();
     return TRUE;
 }
 
@@ -179,7 +180,7 @@ gboolean mpris_player_emit_caps_change(MprisPlayer *obj) {
 
 gboolean mpris_player_emit_track_change(MprisPlayer *obj) {
     g_return_val_if_fail(playlist_position != -1, TRUE);
-    GHashTable * meta = music_get_metadata();
+    GHashTable * meta = music_get_current_track_metadata();
     g_signal_emit(obj, track_change_signal, 0, meta);
     g_hash_table_destroy(meta);
     return TRUE;

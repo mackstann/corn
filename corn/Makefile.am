@@ -19,6 +19,8 @@ corn_SOURCES = \
   music.c \
   music-control.h \
   music-control.c \
+  music-metadata.h \
+  music-metadata.c \
   playlist.h \
   playlist.c \
   parsefile.h \
