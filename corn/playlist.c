@@ -211,7 +211,7 @@ void playlist_advance(gint num, gboolean loop)
     {
         if(config_random_order)
         {
-            rand_cur = g_queue_find(playlist_random, playlist_current);
+            rand_cur = g_queue_find(playlist_random, playlist_current); // O(n)
 
             while(rand_cur && num > 0)
             {
@@ -238,7 +238,7 @@ void playlist_advance(gint num, gboolean loop)
             playlist_position = g_queue_index(playlist, rand_cur->data);
             playlist_current = g_queue_peek_nth(playlist, playlist_position);
         } else {
-            GList * cur = g_queue_peek_nth_link(playlist, playlist_position);
+            GList * cur = g_queue_peek_nth_link(playlist, playlist_position); // O(n)
             while(cur && num > 0)
             {
                 cur = g_list_next(cur);
@@ -299,8 +299,9 @@ void playlist_clear(void)
 {
     music_stop();
 
-    gint len = g_queue_get_length(playlist);
-    while(len--)
+    gint len = g_queue_get_length(playlist); // O(1)
+
+    while(len--) // O(n)
         listitem_free(g_queue_pop_head(playlist));
 
     g_queue_free(playlist);
@@ -314,7 +315,7 @@ void playlist_clear(void)
 void playlist_remove(gint track)
 {
     if(track < 0) return;
-    if(track >= g_queue_get_length(playlist)) return;
+    if(track >= g_queue_get_length(playlist)) return; // O(1)
 
     gint was_playing = music_playing;
 
@@ -331,8 +332,8 @@ void playlist_remove(gint track)
     if(track < playlist_position)
         playlist_position--;
 
-    PlaylistItem * item = g_queue_pop_nth(playlist, track);
-    g_queue_remove(playlist_random, item);
+    PlaylistItem * item = g_queue_pop_nth(playlist, track); // O(n)
+    g_queue_remove(playlist_random, item); // O(n)
     listitem_free(item);
 }
 
