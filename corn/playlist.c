@@ -200,7 +200,7 @@ playlist_advance (gint num, gboolean loop)
 {
     static GList *rand_cur = NULL;
     gboolean looped = FALSE;
-    gint playing = music_playing;
+    gint wasplaying = music_playing;
 
     if (!playlist) return;
 
@@ -251,11 +251,12 @@ playlist_advance (gint num, gboolean loop)
                 }
                 ++num;
             }
+            playlist_current = cur->data;
         }
     }
 
     music_stop ();
-    if ((!looped || loop) && playing == MUSIC_PLAYING)
+    if ((!looped || loop) && wasplaying == MUSIC_PLAYING)
         music_play ();
 }
 
@@ -271,6 +272,7 @@ void playlist_seek(gint num)
        playing necessarily */
     if (main_status == CORN_RUNNING) {
         music_stop ();
+        // XXX only play if wasplaying
         music_play ();
     }
 }
