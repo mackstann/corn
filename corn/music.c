@@ -354,11 +354,8 @@ static void _do_pause(void)
 
 void music_seek(gint ms)
 {
-    // if it goes past end of song, xine will just end the song
-    ms = MAX(0, ms);
-    _do_pause();
-    music_playing = MUSIC_PAUSED;
-    stream_time = ms;
+    music_pause();
+    stream_time = MAX(0, ms); // xine is smart.  no need to check upper bound.
     music_play();
 }
 
