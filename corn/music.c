@@ -34,7 +34,7 @@ gint music_volume;
 
 static gboolean music_gapless = FALSE;
 
-music_socket_pair_t event_sockets;
+static music_socket_pair_t event_sockets;
 
 typedef ssize_t (* fd_rw_op_func)(int fd, void * data, size_t len);
 
