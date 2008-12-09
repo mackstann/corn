@@ -276,8 +276,8 @@ void playlist_advance(gint num, gboolean loop)
 
 void playlist_seek(gint track)
 {
-    g_return_if_fail(track >= 0);
-    g_return_if_fail(track < g_queue_get_length(playlist));
+    if(track < 0) return;
+    if(track >= g_queue_get_length(playlist)) return;
 
     playlist_current = g_queue_peek_nth(playlist, track);
     playlist_position = track;
@@ -312,8 +312,8 @@ void playlist_clear(void)
 
 void playlist_remove(gint track)
 {
-    g_return_if_fail(track >= 0);
-    g_return_if_fail(track < g_queue_get_length(playlist));
+    if(track < 0) return;
+    if(track >= g_queue_get_length(playlist)) return;
 
     gint was_playing = music_playing;
 
@@ -340,11 +340,9 @@ void playlist_remove(gint track)
 
 void playlist_move(gint track, gint dest)
 {
-    if(track == dest)
-        return;
-
-    g_return_if_fail(track >= 0);
-    g_return_if_fail(track < g_queue_get_length(playlist));
+    if(track == dest) return;
+    if(track < 0) return;
+    if(track >= g_queue_get_length(playlist)) return;
 
     GList * it = g_queue_peek_nth_link(playlist, track);
     PlaylistItem * item = it->data;
