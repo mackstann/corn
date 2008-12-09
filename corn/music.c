@@ -357,6 +357,7 @@ void music_seek(gint ms)
     // if it goes past end of song, xine will just end the song
     ms = MAX(0, ms);
     _do_pause();
+    music_playing = MUSIC_PAUSED;
     stream_time = ms;
     music_play();
 }
