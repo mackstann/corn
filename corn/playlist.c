@@ -304,8 +304,8 @@ playlist_clear ()
 void
 playlist_remove (gint num)
 {
-    if(num < 0 || num >= g_queue_get_length(playlist))
-        return;
+    g_return_if_fail(num >= 0);
+    g_return_if_fail(num < g_queue_get_length(playlist));
 
     gint was_playing = music_playing;
 
@@ -321,15 +321,12 @@ playlist_remove (gint num)
     else if (was_playing == MUSIC_PLAYING)
         music_play ();
 
-    // if we just removed the last song while pointing
-    // to it, then point to new end
-    if(playlist_position > g_queue_get_length(playlist)-2)
-    {
+    if(num < playlist_position)
         playlist_position--;
-        playlist_current = g_queue_peek_tail(playlist);
-    }
 
-    listitem_free(g_queue_pop_nth(playlist, num));
+    PlaylistItem * item = g_queue_pop_nth(playlist, num);
+    g_queue_remove(playlist_random, item);
+    listitem_free(item);
 }
 
 void
