@@ -22,7 +22,4 @@ void music_destroy(void);
 
 gboolean music_try_to_play(void);
 
-GHashTable * music_get_metadata(void);
-GHashTable * music_get_track_metadata(gint track);
-
 #endif
