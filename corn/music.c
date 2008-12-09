@@ -178,12 +178,10 @@ static gboolean try_to_play(void)
     if(!playlist_current)
         return TRUE;
 
-    PlaylistItem * item = playlist_current;
-
     gchar *path;
-    if(!(path = g_filename_from_utf8(PATH(item), -1, NULL, NULL, NULL)))
+    if(!(path = g_filename_from_utf8(PATH(playlist_current), -1, NULL, NULL, NULL)))
     {
-        g_critical(_("Skipping '%s'. Could not convert from UTF-8. Bug?"), PATH(item));
+        g_critical(_("Skipping '%s'. Could not convert from UTF-8. Bug?"), PATH(playlist_current));
         return FALSE;
     }
 
@@ -208,14 +206,9 @@ static gboolean try_to_play(void)
     return FALSE;
 }
 
-void music_play(void)
-{
-    gint orig_pos = playlist_position;
-    while(!try_to_play() && playlist_fail() && playlist_position != orig_pos);
-    // if we keep failing to load files, and loop/repeat are on, we don't want
-    // to infinitely keep trying to play the same file(s) that won't play.  so
-    // once we fail and eventually get back to the same song, stop.
-}
+////////////////////////////////////////////////////////////////////////
+//                             METADATA
+////////////////////////////////////////////////////////////////////////
 
 static void free_gvalue_and_its_value(gpointer value)
 {
@@ -223,7 +216,7 @@ static void free_gvalue_and_its_value(gpointer value)
     g_free((GValue*)value);
 }
 
-void add_metadata_from_string(GHashTable * meta, const gchar * name, const gchar * str)
+static void add_metadata_from_string(GHashTable * meta, const gchar * name, const gchar * str)
 {
     if(!str)
         return;
@@ -241,7 +234,7 @@ void add_metadata_from_string(GHashTable * meta, const gchar * name, const gchar
     g_hash_table_insert(meta, name, val);
 }
 
-void add_metadata_from_int(GHashTable * meta, const gchar * name, gint num)
+static void add_metadata_from_int(GHashTable * meta, const gchar * name, gint num)
 {
     GValue * val = g_new0(GValue, 1);
     g_value_init(val, G_TYPE_INT);
@@ -252,8 +245,8 @@ void add_metadata_from_int(GHashTable * meta, const gchar * name, gint num)
 static GHashTable * get_stream_metadata(xine_stream_t * strm)
 {
     GHashTable * meta = g_hash_table_new_full(g_str_hash, g_str_equal,
-            NULL, // our keys are all static -- no free function for them
-            free_gvalue_and_its_value);
+        NULL, // our keys are all static -- no free function for them
+        free_gvalue_and_its_value);
 
     add_metadata_from_string(meta, "title", xine_get_meta_info(strm, XINE_META_INFO_TITLE));
     add_metadata_from_string(meta, "artist", xine_get_meta_info(strm, XINE_META_INFO_ARTIST));
@@ -289,37 +282,24 @@ static GHashTable * get_stream_metadata(xine_stream_t * strm)
     return meta;
 }
 
-GHashTable * music_get_metadata(void)
-{
-    if(stream && music_playing == MUSIC_PLAYING) // eventually the latter shouldn't be required
-    {
-        GHashTable * meta = get_stream_metadata(stream);
-        add_metadata_from_string(meta, "mrl", PATH(playlist_current));
-        return meta;
-    }
-    return g_hash_table_new(NULL, NULL);
-}
-
-GHashTable * music_get_track_metadata(gint track)
+GHashTable * music_get_playlist_item_metadata(PlaylistItem * item)
 {
     GHashTable * empty = g_hash_table_new(NULL, NULL);
 
-    if(track >= g_queue_get_length(playlist) || track < 0)
-        return empty;
+    g_return_val_if_fail(item != NULL, empty);
 
     xine_audio_port_t * audio = xine_open_audio_driver(xine, "none", NULL);
-    if(!audio)
-        return empty;
+
+    g_return_val_if_fail(audio != NULL, empty);
 
     xine_stream_t * strm = xine_stream_new(xine, audio, NULL);
     if(!strm)
     {
         xine_close_audio_driver(xine, audio);
-        return empty;
+        g_return_val_if_fail(strm != NULL, empty);
     }
 
     gchar * path;
-    PlaylistItem * item = g_queue_peek_nth(playlist, track);
     if(!(path = g_filename_from_utf8(PATH(item), -1, NULL, NULL, NULL)))
     {
         g_critical(_("Skipping getting track metadata for '%s'. "
@@ -345,6 +325,43 @@ GHashTable * music_get_track_metadata(gint track)
     return meta;
 }
 
+GHashTable * music_get_track_metadata(gint track)
+{
+    GHashTable * empty = g_hash_table_new(NULL, NULL);
+    g_return_val_if_fail(track >= 0, empty);
+    g_return_val_if_fail(track < g_queue_get_length(playlist), empty);
+    g_hash_table_unref(empty);
+    return music_get_playlist_item_metadata(g_queue_peek_nth(playlist, track));
+}
+
+GHashTable * music_get_metadata(void)
+{
+    // try to do it cheaply, using the already loaded stream
+    if(stream && xine_get_status(stream) != XINE_STATUS_IDLE)
+    {
+        GHashTable * meta = get_stream_metadata(stream);
+        add_metadata_from_string(meta, "mrl", PATH(playlist_current));
+        return meta;
+    }
+    else if(playlist_position != -1) // or do it the hard way
+        return music_get_playlist_item_metadata(playlist_current);
+
+    return g_hash_table_new(NULL, NULL);
+}
+
+////////////////////////////////////////////////////////////////////////
+//                             CONTROL
+////////////////////////////////////////////////////////////////////////
+
+void music_play(void)
+{
+    gint orig_pos = playlist_position;
+    while(!try_to_play() && playlist_fail() && playlist_position != orig_pos);
+    // if we keep failing to load files, and loop/repeat are on, we don't want
+    // to infinitely keep trying to play the same file(s) that won't play.  so
+    // once we fail and eventually get back to the same song, stop.
+}
+
 void music_seek(gint ms)
 {
     music_pause();
@@ -352,6 +369,7 @@ void music_seek(gint ms)
     music_play();
 }
 
+// position within current song, in ms
 gint music_get_position(void)
 {
     if(xine_get_status(stream) == XINE_STATUS_IDLE)

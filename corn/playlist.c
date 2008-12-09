@@ -203,7 +203,8 @@ playlist_advance (gint num, gboolean loop)
     gboolean looped = FALSE;
     gint wasplaying = music_playing;
 
-    if (!playlist) return;
+    if (!playlist || !num)
+        return;
 
     if(!config_repeat_track)
     {
