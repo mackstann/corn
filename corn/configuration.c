@@ -70,14 +70,16 @@ void config_load(void)
     config_repeat_track = read_int_from_config_file("state.repeat", 0, 1, 0);
 
     playlist_seek(read_int_from_config_file("state.list_position", 0, G_MAXINT, 0));
+    gint pos = read_int_from_config_file("state.track_position", 0, G_MAXINT, 0);
 
     gint playing = read_int_from_config_file("state.playing", 0, 2, MUSIC_STOPPED);
-    if(playing != MUSIC_STOPPED)
-    {
-        // maybe save the song position too, but only if paused
+
+    if(playing == MUSIC_PLAYING)
         music_play();
-        if(playing == MUSIC_PAUSED)
-            music_pause();
+    else if(playing == MUSIC_PAUSED)
+    {
+        music_pause();
+        music_stream_time = pos;
     }
 }
 
@@ -88,6 +90,7 @@ void config_save(void)
     save_int_to_config_file("state.repeat", config_repeat_track ? 1 : 0);
     save_int_to_config_file("state.playing", music_playing);
     save_int_to_config_file("state.list_position", playlist_position);
+    save_int_to_config_file("state.track_position", music_get_position());
 
     FILE * f = open_config_file("playlist", "w");
     if(f)
