@@ -307,10 +307,10 @@ void playlist_seek(gint track)
     /* this function is used during load, and we don't want to start
        playing necessarily */
     music_stop();
-    if(wasplaying == MUSIC_PLAYING)
+    if(was_playing == MUSIC_PLAYING)
         music_play();
-    else if(wasplaying == MUSIC_PAUSED)
-        music_playing == MUSIC_PAUSED;
+    else if(was_playing == MUSIC_PAUSED)
+        music_playing = MUSIC_PAUSED;
 
     mpris_player_emit_track_change(mpris_player);
 }
