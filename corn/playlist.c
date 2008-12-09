@@ -337,8 +337,6 @@ void playlist_remove(gint track)
     if(track < 0) return;
     if(track >= g_queue_get_length(playlist)) return; // O(1)
 
-    gint was_playing = music_playing;
-
     if(track == playlist_position)
         playlist_advance(1, config_loop_at_end);
 
