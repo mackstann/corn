@@ -131,7 +131,7 @@ void playlist_append_alternatives(const gchar * path, gchar * const * alts)
     playlist_append(listitem_new(g_strdup(path), paths, nalts));
 }
 
-void playlist_replace_path(guint num, const gchar * path)
+void playlist_replace_path(guint track, const gchar * path)
 {
     guint i, nalts = 0;
     gchar ** p, ** alts;
@@ -142,16 +142,16 @@ void playlist_replace_path(guint num, const gchar * path)
 
     while(alts[nalts]) ++nalts;
 
-    if(num > nalts - 1)
+    if(track > nalts - 1)
     {
-        g_assert(num == nalts); /* cant be more than one past the end! */
+        g_assert(track == nalts); /* cant be more than one past the end! */
         playlist_current->paths =
-            g_renew(gchar*, playlist_current->paths, num + 2);
+            g_renew(gchar*, playlist_current->paths, track + 2);
         alts[nalts - 1] = NULL;
         nalts++;
     }
 
-    for(i = 0; i < num; ++i) ++p;
+    for(i = 0; i < track; ++i) ++p;
     g_free(*p);
     *p = g_strdup(path);
     for(++p; *p; ++p)
@@ -160,9 +160,9 @@ void playlist_replace_path(guint num, const gchar * path)
         *p = NULL;
     }
 
-    if(num < nalts - 1)
+    if(track < nalts - 1)
         playlist_current->paths =
-            g_renew(gchar*, playlist_current->paths, num + 2);
+            g_renew(gchar*, playlist_current->paths, track + 2);
 }
 
 gboolean playlist_fail(void)
@@ -188,7 +188,7 @@ gboolean playlist_fail(void)
     return FALSE;
 }
 
-void playlist_rerandomize()
+void playlist_rerandomize(void)
 {
     g_queue_clear(playlist_random);
 
@@ -274,13 +274,13 @@ void playlist_advance(gint num, gboolean loop)
     mpris_player_emit_track_change(mpris_player);
 }
 
-void playlist_seek(gint num)
+void playlist_seek(gint track)
 {
-    if(num < 0 || num >= g_queue_get_length(playlist))
-        return;
+    g_return_if_fail(track >= 0);
+    g_return_if_fail(track < g_queue_get_length(playlist));
 
-    playlist_current = g_queue_peek_nth(playlist, num);
-    playlist_position = num;
+    playlist_current = g_queue_peek_nth(playlist, track);
+    playlist_position = track;
 
     /* this function is used during load, and we don't want to start
        playing necessarily */
@@ -294,7 +294,7 @@ void playlist_seek(gint num)
     mpris_player_emit_track_change(mpris_player);
 }
 
-void playlist_clear()
+void playlist_clear(void)
 {
     music_stop();
 
@@ -310,19 +310,19 @@ void playlist_clear()
     playlist_position = -1;
 }
 
-void playlist_remove(gint num)
+void playlist_remove(gint track)
 {
-    g_return_if_fail(num >= 0);
-    g_return_if_fail(num < g_queue_get_length(playlist));
+    g_return_if_fail(track >= 0);
+    g_return_if_fail(track < g_queue_get_length(playlist));
 
     gint was_playing = music_playing;
 
-    if(num == playlist_position)
+    if(track == playlist_position)
     {
         music_stop();
         playlist_advance(1, config_loop_at_end);
     }
-    if(num == playlist_position)
+    if(track == playlist_position)
     {
         playlist_current = NULL;
         playlist_position = -1;
@@ -330,29 +330,36 @@ void playlist_remove(gint num)
     else if(was_playing == MUSIC_PLAYING)
         music_play();
 
-    if(num < playlist_position)
+    if(track < playlist_position)
         playlist_position--;
 
-    PlaylistItem * item = g_queue_pop_nth(playlist, num);
+    PlaylistItem * item = g_queue_pop_nth(playlist, track);
     g_queue_remove(playlist_random, item);
     listitem_free(item);
 }
 
-void playlist_move(gint num, gint before)
+void playlist_move(gint track, gint dest)
 {
-    GList * it = g_queue_peek_nth_link(playlist, num);
-    PlaylistItem * item;
-
-    if(!it || num == before)
+    if(track == dest)
         return;
 
-    item = it->data;
-    if(before > num)
-        ++before;
-    g_queue_push_nth(playlist, item, before);
+    g_return_if_fail(track >= 0);
+    g_return_if_fail(track < g_queue_get_length(playlist));
+
+    GList * it = g_queue_peek_nth_link(playlist, track);
+    PlaylistItem * item = it->data;
+
+    if(dest > track)
+        ++dest;
+
+    g_queue_push_nth(playlist, item, dest);
     g_queue_delete_link(playlist, it);
 
-    if(before <= playlist_position)
-        playlist_current = g_queue_peek_nth(playlist, playlist_position);
+    if(track == playlist_position)
+        playlist_position = dest;
+    else if(track < playlist_position && dest > playlist_position)
+        playlist_position--;
+    else if(track > playlist_position && dest <= playlist_position)
+        playlist_position++;
 }
 
