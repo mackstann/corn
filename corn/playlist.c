@@ -8,6 +8,9 @@
 #include "configuration.h"
 #include "dbus.h"
 
+// annotations of algorithmic complexity use 'n' to refer
+// to the length of the playlist (unless otherwise noted)
+
 GQueue * playlist = NULL;
 static GQueue * playlist_random = NULL;
 
@@ -89,12 +92,8 @@ static void playlist_append(PlaylistItem * item)
         ) + 1; // +1 to put it after the chosen index
     }
 
-    //LOG_TIME("before append");
-    g_queue_push_tail(playlist, item);
-    //LOG_TIME("after append");
-    //LOG_TIME("before rand append");
-    g_queue_push_nth(playlist_random, item, rand_pos_after_current);
-    //LOG_TIME("after rand append");
+    g_queue_push_tail(playlist, item); // O(1)
+    g_queue_push_nth(playlist_random, item, rand_pos_after_current); // O(n)
 }
 
 void playlist_append_single(const gchar * path)
