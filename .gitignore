@@ -26,3 +26,4 @@ config.rpath
 core
 core.*
 m4
+tests/mpris-remote
