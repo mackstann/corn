@@ -308,7 +308,7 @@ void playlist_seek(gint track)
 
     gint was_playing = music_playing;
 
-    playlist_current = g_queue_peek_nth(playlist, track);
+    playlist_current = g_queue_peek_nth(playlist, track); // O(n)
     playlist_position = track;
 
     /* this function is used during load, and we don't want to start
@@ -346,7 +346,7 @@ void playlist_remove(gint track)
     // if we're still in the same spot, there was no track to advance to
     if(track == playlist_position)
     {
-        playlist_current = g_queue_peek_head(playlist);
+        playlist_current = g_queue_peek_head(playlist); // O(1)
         playlist_position = 0;
     }
 
