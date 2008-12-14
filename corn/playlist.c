@@ -71,6 +71,16 @@ void playlist_destroy(void)
     g_array_free(playlist_random, TRUE);
 }
 
+static inline void reset_playlist_position(void)
+{
+    if(!playlist || !playlist->len)
+        playlist_position = -1;
+    else if(playlist->len > 1 && config_random_order)
+        playlist_position = g_random_int_range(0, playlist->len);
+    else
+        playlist_position = 0;
+}
+
 static void playlist_append(PlaylistItem * item)
 {
     gint rand_pos_after_current = g_random_int_range(
@@ -84,7 +94,7 @@ static void playlist_append(PlaylistItem * item)
     g_array_insert_val(playlist_random, rand_pos_after_current, last_song_index); // O(n)
 
     if(playlist_position == -1)
-        playlist_position = 0;
+        reset_playlist_position();
 }
 
 void playlist_append_single(const gchar * path)
@@ -322,11 +332,6 @@ void playlist_remove(gint track)
     if(track == playlist_position)
         playlist_advance(1, config_loop_at_end);
 
-    // if we're still in the same spot, there was no track to advance to.  set
-    // to track 0, or if we're removing last song, set to -1.
-    if(track == playlist_position)
-        playlist_position = playlist->len > 1 ? 0 : -1;
-
     if(track < playlist_position)
         playlist_position--;
 
@@ -343,6 +348,12 @@ void playlist_remove(gint track)
     listitem_destroy(&g_array_index(playlist, PlaylistItem, track));
 
     g_array_remove_index(playlist, track); // O(n)
+
+    // if we're still in the same spot, there was no track to advance to.  set
+    // to track 0, or if we're removing last song, set to -1.
+    if(track == playlist_position)
+        reset_playlist_position();
+
 }
 
 void playlist_move(gint track, gint dest)
