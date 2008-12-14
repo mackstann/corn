@@ -8,32 +8,28 @@
 #include "configuration.h"
 #include "dbus.h"
 
+#include "string.h"
+
 // annotations of algorithmic complexity use 'n' to refer
 // to the length of the playlist (unless otherwise noted)
 
-GQueue * playlist = NULL;
-static GQueue * playlist_random = NULL;
+GArray * playlist = NULL;
+static GArray * playlist_random = NULL;
 
 PlaylistItem * playlist_current = NULL;
 gint playlist_position = -1;
 
-static PlaylistItem * listitem_new
-(gchar * path, gchar ** p, guint nalts)
+static void listitem_init(PlaylistItem * item, gchar * path, gchar ** p, guint nalts)
 {
-    PlaylistItem * item;
-
-    item = g_new(struct PlaylistItem, 1);
     item->main_path = path;
     item->paths = p;
     item->use_path = 0; /*they cycle to the end.. g_random_int_range(0, nalts);*/
-    return item;
 }
 
-static void listitem_free(struct PlaylistItem * item)
+static void listitem_destroy(PlaylistItem * item)
 {
     g_strfreev(item->paths);
     g_free(item->main_path);
-    g_free(item);
 }
 
 /*
@@ -64,36 +60,35 @@ get_file_utf8 (const gchar * path, gchar ** f, gchar ** u)
 
 void playlist_init(void)
 {
-    playlist = g_queue_new();
-    playlist_random = g_queue_new();
+    playlist = g_array_new(FALSE, FALSE, sizeof(PlaylistItem));
+    playlist_random = g_array_new(FALSE, FALSE, sizeof(gint));
 }
 
 void playlist_destroy(void)
 {
-    g_queue_free(playlist);
-    g_queue_free(playlist_random);
+    // TODO delete elements
+    g_array_free(playlist, TRUE);
+    g_array_free(playlist_random, TRUE);
 }
 
 static void playlist_append(PlaylistItem * item)
 {
-    gint rand_pos_after_current;
+    gint rand_pos_after_current = g_random_int_range(
+        playlist_position+1,
+        playlist_random->len+1
+    ); // +1 to put it after the chosen index
+
+    g_array_append_val(playlist, *item); // O(1)
+
+    gint last_song_index = playlist->len-1; // need lvalue for insert_val
+    g_array_insert_val(playlist_random, rand_pos_after_current, last_song_index); // O(n)
 
     if(!playlist_current)
     {
-        playlist_current = item;
+        playlist_current = &g_array_index(playlist, PlaylistItem, playlist->len-1);
         playlist_position = 0;
-        rand_pos_after_current = 0;
-    }
-    else
-    {
-        rand_pos_after_current = g_random_int_range(
-            playlist_position,
-            g_queue_get_length(playlist)+1 // +1 because we're about to add a song
-        ) + 1; // +1 to put it after the chosen index
     }
 
-    g_queue_push_tail(playlist, item); // O(1)
-    g_queue_push_nth(playlist_random, item, rand_pos_after_current); // O(n)
 }
 
 void playlist_append_single(const gchar * path)
@@ -114,7 +109,9 @@ void playlist_append_single(const gchar * path)
     paths[0] = g_strdup(path);
     paths[1] = NULL;
 
-    playlist_append(listitem_new(g_strdup(path), paths, 1));
+    PlaylistItem item;
+    listitem_init(&item, g_strdup(path), paths, 1);
+    playlist_append(&item);
 }
 
 void playlist_append_alternatives(const gchar * path, gchar * const * alts)
@@ -135,7 +132,9 @@ void playlist_append_alternatives(const gchar * path, gchar * const * alts)
         paths[i] = g_strdup(alts[i]);
     }
 
-    playlist_append(listitem_new(g_strdup(path), paths, nalts));
+    PlaylistItem item;
+    listitem_init(&item, g_strdup(path), paths, nalts);
+    playlist_append(&item);
 }
 
 void playlist_replace_path(guint track, const gchar * path)
@@ -195,102 +194,89 @@ gboolean playlist_fail(void)
     return FALSE;
 }
 
-void playlist_rerandomize(void) // O(3n)
+#define swap(type, a, b) do { \
+        type tmp = a; \
+        a = b; \
+        b = tmp; \
+    } while(0)
+
+void playlist_rerandomize(void) // O(n)
 {
-    g_queue_clear(playlist_random);
-
     // http://en.wikipedia.org/wiki/Fisher-Yates_shuffle
-
-    gint len = g_queue_get_length(playlist);
-    PlaylistItem ** ar = g_new(PlaylistItem *, len);
-
-    // copy playlist to array
-    GList * it = g_queue_peek_head_link(playlist);
-    for(gint i = 0; it != NULL; it = g_list_next(it), i++) // O(n)
-        ar[i] = it->data;
-
-    for(gint n = len; n > 1;) // O(n)
+    for(gint n = playlist->len; n > 1;) // O(n)
     {
-        gint k = g_random_int_range(0, n);
-        n--;
-        PlaylistItem * temp = ar[n];
-        ar[n] = ar[k];
-        ar[k] = temp;
+        gint k = g_random_int_range(0, n--);
+        swap(gint,
+            g_array_index(playlist_random, gint, n),
+            g_array_index(playlist_random, gint, k));
     }
-
-    // copy now-randomized array to playlist_random
-    for(gint i = 0; i < len; i++) // O(n)
-        g_queue_push_tail(playlist_random, ar[i]);
-
-    g_free(ar);
 }
+
+#define array_index_of_value(arr, typ, val) (__extension__({ \
+    g_assert(sizeof(val) == sizeof(typ)); \
+    gint index = -1; \
+    for(gint i = 0; i < arr->len; i++) \
+        if(!memcmp(&g_array_index(arr, typ, i), &val, sizeof(val))) { \
+            index = i; \
+            break; \
+        } \
+    index; }))
 
 void playlist_advance(gint num, gboolean loop)
 {
-    static GList * rand_cur = NULL;
+    static gint rand_cur = -1;
     gboolean looped = FALSE;
     gint wasplaying = music_playing;
 
-    if(g_queue_is_empty(playlist) || G_UNLIKELY(!num))
+    if(!playlist->len || G_UNLIKELY(!num))
         return;
 
     if(!config_repeat_track)
     {
         if(config_random_order)
         {
-            rand_cur = g_queue_find(playlist_random, playlist_current); // O(n)
+            rand_cur = array_index_of_value(playlist_random, gint, playlist_position); // O(n)
 
-            while(rand_cur && num > 0)
+            while(num > 0)
             {
-                rand_cur = g_list_next(rand_cur);
-                if(!rand_cur)
+                num--;
+                if(++rand_cur >= playlist_random->len)
                 {
                     playlist_rerandomize();
-                    rand_cur = g_queue_peek_head_link(playlist_random);
+                    rand_cur = 0;
                     looped = TRUE;
                 }
-                --num;
             }
-            while(rand_cur && num < 0)
+            while(num < 0)
             {
-                rand_cur = g_list_previous(rand_cur);
-                if(!rand_cur)
+                num++;
+                if(--rand_cur < 0)
                 {
                     playlist_rerandomize();
-                    rand_cur = g_queue_peek_tail_link(playlist_random);
+                    rand_cur = playlist_random->len - 1;
                     looped = TRUE;
                 }
-                ++num;
             }
-            playlist_position = g_queue_index(playlist, rand_cur->data);
-            playlist_current = g_queue_peek_nth(playlist, playlist_position);
+            playlist_position = g_array_index(playlist_random, gint, rand_cur);
+            playlist_current = &g_array_index(playlist, PlaylistItem, playlist_position);
         } else {
-            GList * cur = g_queue_peek_nth_link(playlist, playlist_position); // O(n)
-            while(cur && num > 0)
+            while(num-- > 0)
             {
-                cur = g_list_next(cur);
-                playlist_position++;
-                if(!cur)
+                if(++playlist_position >= playlist->len)
                 {
-                    cur = g_queue_peek_head_link(playlist);
                     playlist_position = 0;
                     looped = TRUE;
                 }
-                --num;
             }
-            while(cur && num < 0)
+            while(num++ < 0)
             {
-                cur = g_list_previous(cur);
-                playlist_position--;
-                if(!cur)
+                if(--playlist_position < 0)
                 {
-                    cur = g_queue_peek_tail_link(playlist);
-                    playlist_position = g_queue_get_length(playlist)-1;
+                    playlist_position = playlist->len - 1;
                     looped = TRUE;
                 }
-                ++num;
             }
-            playlist_current = cur->data;
+            playlist_current = &g_array_index(playlist, PlaylistItem, playlist_position);
         }
     }
 
@@ -304,11 +290,11 @@ void playlist_advance(gint num, gboolean loop)
 void playlist_seek(gint track)
 {
     if G_UNLIKELY(track < 0) return;
-    if G_UNLIKELY(track >= g_queue_get_length(playlist)) return;
+    if G_UNLIKELY(track >= playlist->len) return;
 
     gint was_playing = music_playing;
 
-    playlist_current = g_queue_peek_nth(playlist, track); // O(n)
+    playlist_current = &g_array_index(playlist, PlaylistItem, track);
     playlist_position = track;
 
     /* this function is used during load, and we don't want to start
@@ -326,11 +312,11 @@ void playlist_clear(void)
 {
     music_stop();
 
-    gint len = g_queue_get_length(playlist); // O(1)
+    while(playlist->len--)
+        listitem_destroy(&g_array_index(playlist, PlaylistItem, playlist->len));
 
-    while(len--) // O(n)
-        listitem_free(g_queue_pop_head(playlist));
-
+    g_array_remove_range(playlist, 0, playlist->len);
+    g_array_remove_range(playlist_random, 0, playlist_random->len);
     playlist_current = NULL;
     playlist_position = -1;
 }
@@ -338,46 +324,56 @@ void playlist_clear(void)
 void playlist_remove(gint track)
 {
     if G_UNLIKELY(track < 0) return;
-    if G_UNLIKELY(track >= g_queue_get_length(playlist)) return; // O(1)
+    if G_UNLIKELY(track >= playlist->len) return;
 
     if(track == playlist_position)
         playlist_advance(1, config_loop_at_end);
 
     // if we're still in the same spot, there was no track to advance to
     if(track == playlist_position)
-    {
-        playlist_current = g_queue_peek_head(playlist); // O(1)
         playlist_position = 0;
-    }
 
     if(track < playlist_position)
         playlist_position--;
 
-    PlaylistItem * item = g_queue_pop_nth(playlist, track); // O(n)
-    g_queue_remove(playlist_random, item); // O(n)
-    listitem_free(item);
+    PlaylistItem * item = &g_array_index(playlist, PlaylistItem, track); // O(1)
 
-    if(!g_queue_get_length(playlist))
+    // this takes the last item in the array, puts it in x's place, and
+    // decrements the array size.
+    g_array_remove_index_fast(playlist_random, // O(n)
+        array_index_of_value(playlist_random, gint, track)
+    );
+
+    for(gint i = 0; i < playlist_random->len; i++)
+        if(g_array_index(playlist_random, gint, i) > track)
+            g_array_index(playlist_random, gint, i)--;
+
+    listitem_destroy(item);
+
+    g_array_remove_index(playlist, track); // O(n)
+
+    if(!playlist->len)
     {
         playlist_current = NULL;
         playlist_position = -1;
     }
+    else
+        playlist_current = &g_array_index(playlist, PlaylistItem, 0); // O(1)
 }
 
 void playlist_move(gint track, gint dest)
 {
     if G_UNLIKELY(track == dest) return;
     if G_UNLIKELY(track < 0) return;
-    if G_UNLIKELY(track >= g_queue_get_length(playlist)) return;
+    if G_UNLIKELY(track >= playlist->len) return;
 
-    GList * it = g_queue_peek_nth_link(playlist, track);
-    PlaylistItem * item = it->data;
+    PlaylistItem * item = &g_array_index(playlist, PlaylistItem, track);
 
     if(dest > track)
         ++dest;
 
-    g_queue_push_nth(playlist, item, dest);
-    g_queue_delete_link(playlist, it);
+    g_array_insert_val(playlist, dest, *item); // O(n)
+    g_array_remove_index(playlist, track); // O(n)
 
     if(track == playlist_position)
         playlist_position = dest;

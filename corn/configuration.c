@@ -95,9 +95,9 @@ void config_save(void)
     FILE * f = open_config_file("playlist", "w");
     if(f)
     {
-        for(GList * it = g_queue_peek_head_link(playlist); it; it = g_list_next(it))
+        for(gint i = 0; i < playlist->len; i++)
         {
-            fputs(MAIN_PATH(it->data), f);
+            fputs(MAIN_PATH(&g_array_index(playlist, PlaylistItem, i)), f);
             fputc('\n', f);
         }
         fclose(f);

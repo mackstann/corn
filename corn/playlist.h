@@ -5,13 +5,11 @@
 
 typedef struct PlaylistItem {
     guint use_path;
-
     gchar *main_path;
-
     gchar **paths;
 } PlaylistItem;
 
-extern GQueue * playlist;
+extern GArray * playlist;
 extern PlaylistItem * playlist_current;
 extern gint playlist_position;
 

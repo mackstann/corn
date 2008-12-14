@@ -52,7 +52,7 @@ AC_ARG_ENABLE([debug],
 CFLAGS="-std=gnu99 -Wall -pedantic"
 
 if test "$enable_debug" = "yes"; then
-  CFLAGS="$CFLAGS -g -fno-inline"
+  CFLAGS="$CFLAGS -ggdb -fno-inline"
 else
   CFLAGS="$CFLAGS -Os"
 fi

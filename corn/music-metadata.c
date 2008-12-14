@@ -129,9 +129,9 @@ GHashTable * music_get_track_metadata(gint track)
 {
     GHashTable * empty = g_hash_table_new(NULL, NULL);
     g_return_val_if_fail(track >= 0, empty);
-    g_return_val_if_fail(track < g_queue_get_length(playlist), empty);
+    g_return_val_if_fail(track < playlist->len, empty);
     g_hash_table_unref(empty);
-    return music_get_playlist_item_metadata(g_queue_peek_nth(playlist, track));
+    return music_get_playlist_item_metadata(&g_array_index(playlist, PlaylistItem, track));
 }
 
 GHashTable * music_get_current_track_metadata(void)
