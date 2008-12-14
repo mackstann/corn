@@ -83,12 +83,8 @@ static void playlist_append(PlaylistItem * item)
     gint last_song_index = playlist->len-1; // need lvalue for insert_val
     g_array_insert_val(playlist_random, rand_pos_after_current, last_song_index); // O(n)
 
-    if(!playlist_current)
-    {
-        playlist_current = &g_array_index(playlist, PlaylistItem, playlist->len-1);
+    if(playlist_position == -1)
         playlist_position = 0;
-    }
-
 }
 
 void playlist_append_single(const gchar * path)
@@ -142,17 +138,17 @@ void playlist_replace_path(guint track, const gchar * path)
     guint i, nalts = 0;
     gchar ** p, ** alts;
 
-    g_return_if_fail(playlist_current != NULL);
+    g_return_if_fail(PLAYLIST_CURRENT_ITEM() != NULL);
 
-    alts = p = playlist_current->paths;
+    alts = p = PLAYLIST_CURRENT_ITEM()->paths;
 
     while(alts[nalts]) ++nalts;
 
     if(track > nalts - 1)
     {
         g_assert(track == nalts); /* cant be more than one past the end! */
-        playlist_current->paths =
-            g_renew(gchar*, playlist_current->paths, track + 2);
+        PLAYLIST_CURRENT_ITEM()->paths =
+            g_renew(gchar*, PLAYLIST_CURRENT_ITEM()->paths, track + 2);
         alts[nalts - 1] = NULL;
         nalts++;
     }
@@ -167,8 +163,8 @@ void playlist_replace_path(guint track, const gchar * path)
     }
 
     if(track < nalts - 1)
-        playlist_current->paths =
-            g_renew(gchar*, playlist_current->paths, track + 2);
+        PLAYLIST_CURRENT_ITEM()->paths =
+            g_renew(gchar*, PLAYLIST_CURRENT_ITEM()->paths, track + 2);
 }
 
 gboolean playlist_fail(void)
@@ -176,9 +172,9 @@ gboolean playlist_fail(void)
     PlaylistItem * item;
     guint nalts = 0;
 
-    g_return_val_if_fail(playlist_current != NULL, FALSE);
+    g_return_val_if_fail(PLAYLIST_CURRENT_ITEM() != NULL, FALSE);
 
-    item = playlist_current;
+    item = PLAYLIST_CURRENT_ITEM();
     while(item->paths[nalts])
         ++nalts;
     if(nalts - 1 > item->use_path)
@@ -187,7 +183,7 @@ gboolean playlist_fail(void)
         /* try again */
         return TRUE;
     } else {
-        /*playlist_remove(g_list_position(playlist, playlist_current));*/
+        /*playlist_remove(g_list_position(playlist, PLAYLIST_CURRENT_ITEM()));*/
         playlist_advance(1, config_loop_at_end);
         return TRUE;
     }
@@ -258,7 +254,6 @@ void playlist_advance(gint num, gboolean loop)
                 }
             }
             playlist_position = g_array_index(playlist_random, gint, rand_cur);
-            playlist_current = &g_array_index(playlist, PlaylistItem, playlist_position);
         } else {
             while(num-- > 0)
             {
@@ -276,7 +271,6 @@ void playlist_advance(gint num, gboolean loop)
                     looped = TRUE;
                 }
             }
-            playlist_current = &g_array_index(playlist, PlaylistItem, playlist_position);
         }
     }
 
@@ -294,7 +288,6 @@ void playlist_seek(gint track)
 
     gint was_playing = music_playing;
 
-    playlist_current = &g_array_index(playlist, PlaylistItem, track);
     playlist_position = track;
 
     /* this function is used during load, and we don't want to start
@@ -317,7 +310,7 @@ void playlist_clear(void)
 
     g_array_remove_range(playlist, 0, playlist->len);
     g_array_remove_range(playlist_random, 0, playlist_random->len);
-    playlist_current = NULL;
+
     playlist_position = -1;
 }
 
@@ -329,14 +322,13 @@ void playlist_remove(gint track)
     if(track == playlist_position)
         playlist_advance(1, config_loop_at_end);
 
-    // if we're still in the same spot, there was no track to advance to
+    // if we're still in the same spot, there was no track to advance to.  set
+    // to track 0, or if we're removing last song, set to -1.
     if(track == playlist_position)
-        playlist_position = 0;
+        playlist_position = playlist->len > 1 ? 0 : -1;
 
     if(track < playlist_position)
         playlist_position--;
-
-    PlaylistItem * item = &g_array_index(playlist, PlaylistItem, track); // O(1)
 
     // this takes the last item in the array, puts it in x's place, and
     // decrements the array size.
@@ -348,17 +340,9 @@ void playlist_remove(gint track)
         if(g_array_index(playlist_random, gint, i) > track)
             g_array_index(playlist_random, gint, i)--;
 
-    listitem_destroy(item);
+    listitem_destroy(&g_array_index(playlist, PlaylistItem, track));
 
     g_array_remove_index(playlist, track); // O(n)
-
-    if(!playlist->len)
-    {
-        playlist_current = NULL;
-        playlist_position = -1;
-    }
-    else
-        playlist_current = &g_array_index(playlist, PlaylistItem, 0); // O(1)
 }
 
 void playlist_move(gint track, gint dest)

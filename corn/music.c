@@ -81,7 +81,7 @@ gboolean music_event_handle(GIOChannel *source, GIOCondition condition, gpointer
         case XINE_EVENT_MRL_REFERENCE_EXT:
             mrl = e.data;
             g_message("MRL REFERENCE %s", mrl->mrl);
-            if(playlist_current)
+            if(PLAYLIST_CURRENT_ITEM())
             {
                 playlist_replace_path(mrl->alternative, mrl->mrl);
                 mrl_change = TRUE;
@@ -175,13 +175,13 @@ gboolean music_try_to_play(void)
     if(music_playing == MUSIC_PLAYING)
         return TRUE;
 
-    if(!playlist_current)
+    if(!PLAYLIST_CURRENT_ITEM())
         return TRUE;
 
     gchar *path;
-    if(!(path = g_filename_from_utf8(PATH(playlist_current), -1, NULL, NULL, NULL)))
+    if(!(path = g_filename_from_utf8(PATH(PLAYLIST_CURRENT_ITEM()), -1, NULL, NULL, NULL)))
     {
-        g_critical(_("Skipping '%s'. Could not convert from UTF-8. Bug?"), PATH(playlist_current));
+        g_critical(_("Skipping '%s'. Could not convert from UTF-8. Bug?"), PATH(PLAYLIST_CURRENT_ITEM()));
         return FALSE;
     }
 

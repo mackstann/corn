@@ -13,6 +13,10 @@ extern GArray * playlist;
 extern PlaylistItem * playlist_current;
 extern gint playlist_position;
 
+#define PLAYLIST_CURRENT_ITEM() \
+    (playlist->len ? &g_array_index(playlist, PlaylistItem, playlist_position) \
+                   : NULL)
+
 #define MAIN_PATH(item) (((PlaylistItem*)(item))->main_path)
 #define PATH(item) (((PlaylistItem*)(item))->paths \
                     [((PlaylistItem*)(item))->use_path])

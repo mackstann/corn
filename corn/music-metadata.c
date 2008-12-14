@@ -140,11 +140,11 @@ GHashTable * music_get_current_track_metadata(void)
     if(music_stream && xine_get_status(music_stream) != XINE_STATUS_IDLE)
     {
         GHashTable * meta = get_stream_metadata(music_stream);
-        add_metadata_from_string(meta, "mrl", PATH(playlist_current));
+        add_metadata_from_string(meta, "mrl", PATH(PLAYLIST_CURRENT_ITEM()));
         return meta;
     }
     else if(playlist_position != -1) // or do it the hard way
-        return music_get_playlist_item_metadata(playlist_current);
+        return music_get_playlist_item_metadata(PLAYLIST_CURRENT_ITEM());
 
     return g_hash_table_new(NULL, NULL);
 }
