@@ -114,6 +114,7 @@ GHashTable * music_get_playlist_item_metadata(PlaylistItem * item)
     {
         xine_dispose(strm);
         xine_close_audio_driver(xine, audio);
+        return empty;
     }
 
     GHashTable * meta = get_stream_metadata(strm);
