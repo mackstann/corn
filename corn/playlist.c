@@ -255,8 +255,8 @@ void playlist_clear(void)
 {
     music_stop();
 
-    while(playlist->len--)
-        listitem_destroy(&g_array_index(playlist, PlaylistItem, playlist->len));
+    for(gint i = 0; i < playlist->len; i++)
+        listitem_destroy(&g_array_index(playlist, PlaylistItem, i));
 
     g_array_remove_range(playlist, 0, playlist->len);
 
