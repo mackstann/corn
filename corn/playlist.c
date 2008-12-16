@@ -212,18 +212,16 @@ void playlist_advance(gint num, gboolean loop)
         if(0 && config_random_order)
         {
         } else {
-            while(num > 0)
+            for(; num > 0; num--)
             {
-                num--;
                 if(++playlist_position >= playlist->len)
                 {
                     playlist_position = 0;
                     looped = TRUE;
                 }
             }
-            while(num < 0)
+            for(; num < 0; num++)
             {
-                num++;
                 if(--playlist_position < 0)
                 {
                     playlist_position = playlist->len - 1;
