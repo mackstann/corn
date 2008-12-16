@@ -20,7 +20,7 @@ static gint read_ini_line_int(gchar ** lines, const gchar * key)
     {
         if(strncasecmp(lines[i], key, strlen(key)) == 0)
         {
-            gchar **bits;
+            gchar ** bits;
 
             bits = g_strsplit(lines[i], "=", 2);
             if(bits[0] == NULL || bits[1] == NULL)
@@ -49,7 +49,7 @@ static gchar * read_ini_line_string(gchar ** lines, const gchar * key)
     {
         if(strncasecmp(lines[i], key, strlen(key)) == 0)
         {
-            gchar **bits;
+            gchar ** bits;
 
             bits = g_strsplit(lines[i], "=", 2);
             if(bits[0] == NULL || bits[1] == NULL)
@@ -68,10 +68,10 @@ static gchar * read_ini_line_string(gchar ** lines, const gchar * key)
 }
 
 
-static gchar **read_file(const gchar * path)
+static gchar ** read_file(const gchar * path)
 {
     guint size;
-    gchar * buf, **lines;
+    gchar * buf, ** lines;
 
     if(gnome_vfs_read_entire_file(path, &size, &buf))
         return NULL;
@@ -88,7 +88,7 @@ static gchar **read_file(const gchar * path)
 
 static gchar * add_relative_dir(const gchar * name, const gchar * dir)
 {
-    gchar * slashdir, *ret;
+    gchar * slashdir, * ret;
 
     if(name[0] == G_DIR_SEPARATOR)
         return g_strdup(name);
@@ -104,7 +104,7 @@ static gchar * add_relative_dir(const gchar * name, const gchar * dir)
 
 gboolean parse_ram(const gchar * path)
 {
-    gchar **lines, **alternatives;
+    gchar ** lines, ** alternatives;
     guint i, nalt;
     GnomeVFSHandle * h;
     char buf[4];
@@ -178,7 +178,7 @@ gboolean parse_ram(const gchar * path)
 
 gboolean parse_m3u(const gchar * path)
 {
-    gchar **lines;
+    gchar ** lines;
     guint i;
     gchar * dir = g_path_get_dirname(path);
 
@@ -211,7 +211,7 @@ gboolean parse_m3u(const gchar * path)
 gboolean parse_pls(const gchar * path)
 {
     int entries, i, nalt;
-    gchar **lines, **alternatives;
+    gchar ** lines, ** alternatives;
 
     g_message("parsing pls: %s", path);
     if((lines = read_file(path)))
@@ -273,7 +273,7 @@ gboolean parse_dir(const gchar * path)
 {
     GnomeVFSDirectoryHandle * dirh;
     GnomeVFSFileInfo * info;
-    GSList * entries = NULL, *it;
+    GSList * entries = NULL, * it;
 
     g_message("adding dir: %s", path);
 
@@ -311,10 +311,9 @@ gboolean parse_file(const gchar * path)
 {
     static GRegex * ext_re = NULL;
     if(!ext_re)
-        ext_re =
-            g_regex_new
-            (".\\.(mp3|ogg|flac|m4a|ape|mpc|wav|aiff|pcm|wma|ram)$",
-             G_REGEX_CASELESS | G_REGEX_OPTIMIZE, 0, NULL);
+        ext_re = g_regex_new(
+            ".\\.(mp3|ogg|flac|m4a|ape|mpc|wav|aiff|pcm|wma|ram)$",
+            G_REGEX_CASELESS | G_REGEX_OPTIMIZE, 0, NULL);
 
     gint len = strlen(path);
 

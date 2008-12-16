@@ -110,6 +110,7 @@ void playlist_replace_path(guint track, const gchar * path)
 
     for(i = 0; i < track; ++i)
         ++p;
+
     g_free(*p);
     *p = g_strdup(path);
     for(++p; *p; ++p)
@@ -161,11 +162,9 @@ void playlist_advance(gint num, gboolean loop)
         if(config_random_order)
         {
             if(num > 0)
-                playlist_position =
-                    plrand_next(playlist_position, playlist->len);
+                playlist_position = plrand_next(playlist_position, playlist->len);
             else if(num < 0)
-                playlist_position =
-                    plrand_prev(playlist_position, playlist->len);
+                playlist_position = plrand_prev(playlist_position, playlist->len);
         }
         else
         {
@@ -225,8 +224,8 @@ void playlist_clear(void)
 
 void playlist_remove(gint track)
 {
-    if G_UNLIKELY(track < 0) return;
-    if G_UNLIKELY(track >= playlist->len) return;
+    if(G_UNLIKELY(track < 0)) return;
+    if(G_UNLIKELY(track >= playlist->len)) return;
 
     if(track == playlist_position)
         playlist_advance(1, config_loop_at_end);
@@ -250,19 +249,19 @@ void playlist_remove(gint track)
 
 void playlist_move(gint track, gint dest)
 {
-    if G_UNLIKELY(track == dest) return;
-    if G_UNLIKELY(track < 0) return;
-    if G_UNLIKELY(track >= playlist->len) return;
+    if(G_UNLIKELY(track == dest)) return;
+    if(G_UNLIKELY(track < 0)) return;
+    if(G_UNLIKELY(track >= playlist->len)) return;
 
     if(dest > track)
-        plrand_shift_track_numbers(track + 1, dest - 1, -1);
+        plrand_shift_track_numbers(track+1, dest-1, -1);
     else if(dest < track)
-        plrand_shift_track_numbers(dest, track - 1, +1);
+        plrand_shift_track_numbers(dest, track-1, +1);
 
     plrand_move_track(track, dest);
 
     PlaylistItem * item = &g_array_index(playlist, PlaylistItem, track);
-    g_array_insert_val(playlist, (dest > track ? dest + 1 : dest), *item); // O(n)
+    g_array_insert_val(playlist, (dest > track ? dest+1 : dest), *item); // O(n)
     g_array_remove_index(playlist, track); // O(n)
 
     if(track == playlist_position)

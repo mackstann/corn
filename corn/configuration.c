@@ -21,8 +21,7 @@ gboolean config_repeat_track = FALSE;
 
 static FILE * open_config_file(const char * name, const char * mode)
 {
-    gchar * path =
-        g_build_filename(g_get_user_config_dir(), PACKAGE, name, NULL);
+    gchar * path = g_build_filename(g_get_user_config_dir(), PACKAGE, name, NULL);
     FILE * f = g_fopen(path, mode);
     g_free(path);
     return f;

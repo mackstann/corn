@@ -2,6 +2,7 @@
 #define __corn_mpris_root_h__
 
 #include <glib-object.h>
+#include <glib.h>
 
 #define CORN_TYPE_MPRIS_ROOT                  (mpris_root_get_type ())
 #define CORN_MPRIS_ROOT(obj)                  (G_TYPE_CHECK_INSTANCE_CAST ((obj), CORN_TYPE_MPRIS_ROOT, MprisRoot))

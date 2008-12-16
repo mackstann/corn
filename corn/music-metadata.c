@@ -24,8 +24,7 @@ static void add_metadata_from_string(GHashTable * meta, const gchar * name, cons
     gchar * u = g_locale_to_utf8(str, strlen(str), NULL, NULL, NULL);
     if(!u)
     {
-        g_critical(_("Skipping %s value '%s'. Could not convert to UTF-8. Bug?"),
-                   name, str);
+        g_critical(_("Skipping %s value '%s'. Could not convert to UTF-8. Bug?"), name, str);
         return;
     }
 
@@ -63,8 +62,7 @@ static GHashTable * get_stream_metadata(xine_stream_t * strm)
         add_metadata_from_int(meta, "mtime", length);
     }
 
-    add_metadata_from_string(meta, "genre",
-                             xine_get_meta_info(strm, XINE_META_INFO_GENRE));
+    add_metadata_from_string(meta, "genre", xine_get_meta_info(strm, XINE_META_INFO_GENRE));
 
     // "comment"
     // "rating" int [1..5] or [0..5]?

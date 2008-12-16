@@ -62,9 +62,6 @@ static void mpris_player_class_init(MprisPlayerClass * klass)
                      G_TYPE_NONE, 1, G_TYPE_INT);
 }
 
-// TODO:
-// GetStatus
-
 // example for calling these on the command line:
 // $ dbus-send --session --type=method_call --dest=org.mpris.corn <backslash>
 //        /Player org.freedesktop.MediaPlayer.Next
@@ -154,8 +151,7 @@ gpointer get_status_struct(void)
     static GValue value;
     memset(&value, 0, sizeof(GValue));
     g_value_init(&value, DBUS_STRUCT_INT_INT_INT_INT);
-    g_value_take_boxed(&value,
-        dbus_g_type_specialized_construct(DBUS_STRUCT_INT_INT_INT_INT));
+    g_value_take_boxed(&value, dbus_g_type_specialized_construct(DBUS_STRUCT_INT_INT_INT_INT));
     dbus_g_type_struct_set(&value, 0, music_playing, 1,
                            config_random_order ? 1 : 0, 2,
                            config_repeat_track ? 1 : 0, 3,

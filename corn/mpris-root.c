@@ -18,8 +18,6 @@ static void mpris_root_class_init(MprisRootClass * klass)
 {
 }
 
-// TODO: MprisVersion
-
 gboolean mpris_root_identity(MprisRoot * obj, gchar ** identity, GError ** error)
 {
     *identity = g_strdup(PACKAGE_STRING);
