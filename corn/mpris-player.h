@@ -4,13 +4,6 @@
 #include <glib-object.h>
 #include <dbus/dbus-glib.h>
 
-#define CORN_TYPE_MPRIS_PLAYER                  (mpris_player_get_type ())
-#define CORN_MPRIS_PLAYER(obj)                  (G_TYPE_CHECK_INSTANCE_CAST ((obj), CORN_TYPE_MPRIS_PLAYER, MprisPlayer))
-#define CORN_IS_MPRIS_PLAYER(obj)               (G_TYPE_CHECK_INSTANCE_TYPE ((obj), CORN_TYPE_MPRIS_PLAYER))
-#define CORN_MPRIS_PLAYER_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST ((klass), CORN_TYPE_MPRIS_PLAYER, MprisPlayerClass))
-#define CORN_IS_MPRIS_PLAYER_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE ((klass), CORN_TYPE_MPRIS_PLAYER))
-#define CORN_MPRIS_PLAYER_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS ((obj), CORN_TYPE_MPRIS_PLAYER, MprisPlayerClass))
-
 typedef struct _MprisPlayer { GObject parent; DBusGProxy * proxy; } MprisPlayer;
 typedef struct _MprisPlayerClass { GObjectClass parent; } MprisPlayerClass;
 

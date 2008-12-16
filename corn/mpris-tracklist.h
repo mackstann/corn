@@ -4,13 +4,6 @@
 #include <glib-object.h>
 #include <glib.h>
 
-#define CORN_TYPE_MPRIS_TRACKLIST                  (mpris_tracklist_get_type ())
-#define CORN_MPRIS_TRACKLIST(obj)                  (G_TYPE_CHECK_INSTANCE_CAST ((obj), CORN_TYPE_MPRIS_TRACKLIST, MprisTrackList))
-#define CORN_IS_MPRIS_TRACKLIST(obj)               (G_TYPE_CHECK_INSTANCE_TYPE ((obj), CORN_TYPE_MPRIS_TRACKLIST))
-#define CORN_MPRIS_TRACKLIST_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST ((klass), CORN_TYPE_MPRIS_TRACKLIST, MprisTrackListClass))
-#define CORN_IS_MPRIS_TRACKLIST_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE ((klass), CORN_TYPE_MPRIS_TRACKLIST))
-#define CORN_MPRIS_TRACKLIST_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS ((obj), CORN_TYPE_MPRIS_TRACKLIST, MprisTrackListClass))
-
 typedef struct _MprisTrackList { GObject parent; } MprisTrackList;
 typedef struct _MprisTrackListClass { GObjectClass parent; } MprisTrackListClass;
 

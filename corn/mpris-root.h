@@ -4,13 +4,6 @@
 #include <glib-object.h>
 #include <glib.h>
 
-#define CORN_TYPE_MPRIS_ROOT                  (mpris_root_get_type ())
-#define CORN_MPRIS_ROOT(obj)                  (G_TYPE_CHECK_INSTANCE_CAST ((obj), CORN_TYPE_MPRIS_ROOT, MprisRoot))
-#define CORN_IS_MPRIS_ROOT(obj)               (G_TYPE_CHECK_INSTANCE_TYPE ((obj), CORN_TYPE_MPRIS_ROOT))
-#define CORN_MPRIS_ROOT_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST ((klass), CORN_TYPE_MPRIS_ROOT, MprisRootClass))
-#define CORN_IS_MPRIS_ROOT_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE ((klass), CORN_TYPE_MPRIS_ROOT))
-#define CORN_MPRIS_ROOT_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS ((obj), CORN_TYPE_MPRIS_ROOT, MprisRootClass))
-
 typedef struct _MprisRoot { GObject parent; } MprisRoot;
 typedef struct _MprisRootClass { GObjectClass parent; } MprisRootClass;
 
