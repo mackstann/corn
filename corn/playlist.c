@@ -65,9 +65,9 @@ void playlist_init(void)
 
 void playlist_destroy(void)
 {
-    // TODO delete elements
-    g_array_free(playlist, TRUE);
     plrand_destroy();
+    playlist_clear();
+    g_array_free(playlist, TRUE);
 }
 
 static inline void reset_playlist_position(void)
