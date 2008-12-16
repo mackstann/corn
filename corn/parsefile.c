@@ -67,7 +67,6 @@ static gchar * read_ini_line_string(gchar ** lines, const gchar * key)
     return retval;
 }
 
-
 static gchar ** read_file(const gchar * path)
 {
     gint size;
