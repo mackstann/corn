@@ -118,7 +118,8 @@ parse_ram (const gchar *path)
 
     gnome_vfs_close (h);
 
-    if (left) return FALSE;
+    if (left)
+        return FALSE;
 
     /* from gxine:
        if this is true, then its an actual stream, not a playlist file */
@@ -171,6 +172,7 @@ parse_m3u (const gchar *path)
 {
     gchar **lines;
     guint i;
+    gchar * dir = g_path_get_dirname (path);
 
     g_message ("parsing m3u: %s", path);
 
@@ -178,20 +180,19 @@ parse_m3u (const gchar *path)
         for (i = 0; lines[i]; ++i) {
             lines[i] = g_strstrip(lines[i]);
             if (strlen (lines[i]) && lines[i][0] != '#') {
-                if(lines[i][0] == '/')
+                if(lines[i][0] == '/') // absolute
                     playlist_append_single(lines[i]);
-                else
+                else // relative
                 {
-                    gchar * dir = g_path_get_dirname (path);
                     gchar * fullpath = add_relative_dir (lines[i], dir);
                     playlist_append_single (fullpath);
-                    g_free (dir);
                     g_free (fullpath);
                 }
             }
         }
         g_strfreev (lines);
     }
+    g_free (dir);
     return FALSE;
 }
 
@@ -298,8 +299,6 @@ parse_file (const gchar *path)
             ".\\.(mp3|ogg|flac|m4a|ape|mpc|wav|aiff|pcm|wma|ram)$",
             G_REGEX_CASELESS|G_REGEX_OPTIMIZE, 0, NULL);
 
-    GnomeVFSFileInfo *info;
-
     gint len = strlen(path);
 
     if(!strncmp(path, "file://", MIN(len, 7)))
@@ -310,33 +309,27 @@ parse_file (const gchar *path)
 
     if(g_file_test(path, G_FILE_TEST_IS_REGULAR) &&
        g_regex_match(ext_re, path, 0, NULL))
-    {
         return TRUE;
-    }
 
-    info = gnome_vfs_file_info_new ();
+    GnomeVFSFileInfo * info = gnome_vfs_file_info_new();
 
-    if (gnome_vfs_get_file_info (path, info,
+    gboolean ret = TRUE;
+
+    if (!gnome_vfs_get_file_info (path, info,
                                  GNOME_VFS_FILE_INFO_GET_MIME_TYPE |
                                  GNOME_VFS_FILE_INFO_FORCE_FAST_MIME_TYPE |
                                  GNOME_VFS_FILE_INFO_FOLLOW_LINKS))
     {
-        gnome_vfs_file_info_unref (info);
-        return FALSE;
+        if (strcmp ("x-directory/normal", info->mime_type) == 0)
+            ret = parse_dir (path);
+        else if (strcmp ("audio/x-scpls", info->mime_type) == 0)
+            ret = parse_pls (path);
+        else if (strcmp ("audio/x-mpegurl", info->mime_type) == 0)
+            ret = parse_m3u (path);
+        else if (strcmp ("audio/x-pn-realaudio", info->mime_type) == 0)
+            ret = parse_ram (path);
     }
 
-    //g_message ("mimetype: %s", info->mime_type);
-
-    if (strcmp ("x-directory/normal", info->mime_type) == 0)
-        return parse_dir (path);
-    if (strcmp ("audio/x-scpls", info->mime_type) == 0)
-        return parse_pls (path);
-    if (strcmp ("audio/x-mpegurl", info->mime_type) == 0)
-        return parse_m3u (path);
-    if (strcmp ("audio/x-pn-realaudio", info->mime_type) == 0)
-        return parse_ram (path);
-
     gnome_vfs_file_info_unref (info);
-
-    return TRUE;
+    return ret;
 }

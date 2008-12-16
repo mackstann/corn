@@ -70,7 +70,7 @@ void playlist_append_single(const gchar * path)
     g_return_if_fail(path != NULL);
     g_return_if_fail(g_utf8_validate(path, -1, NULL));
 
-    if(!parse_file(path)) /* XXX PASS A GERROR**? .. and shit @ client */
+    if(!parse_file(path))
         return;
 
 #if 0
