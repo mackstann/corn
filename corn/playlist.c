@@ -88,17 +88,16 @@ void playlist_append_single(const gchar * path)
 
 void playlist_append_alternatives(const gchar * path, gchar * const * alts)
 {
-    gchar ** paths;
-    guint i, nalts = 0;
-
     g_return_if_fail(alts != NULL && alts[0] != NULL);
+
+    gint nalts = 0;
 
     while(alts[nalts]) ++nalts;
 
-    paths = g_new(gchar*, nalts + 1);
+    gchar ** paths = g_new(gchar*, nalts + 1);
     paths[nalts] = NULL;
 
-    for(i = 0; i < nalts; ++i)
+    for(gint i = 0; i < nalts; ++i)
     {
         g_return_if_fail(g_utf8_validate(alts[i], -1, NULL));
         paths[i] = g_strdup(alts[i]);
