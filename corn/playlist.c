@@ -31,32 +31,6 @@ static void listitem_destroy(PlaylistItem * item)
     g_free(item->main_path);
 }
 
-/*
-static gboolean
-get_file_utf8 (const gchar * path, gchar ** f, gchar ** u)
-{
-    if(g_utf8_validate(path, -1, NULL))
-    {
-        if(!(*f = g_filename_from_utf8 (path, -1, NULL, NULL, NULL)))
-        {
-            g_critical(_("Skipping '%s'. Could not convert from UTF-8. "
-                          "Bug?"), path);
-            return FALSE;
-        }
-        *u = g_strdup(path);
-    } else {
-        if(!(*u = g_filename_to_utf8 (path, -1, NULL, NULL, NULL)))
-        {
-            g_warning(_("Skipping '%s'. Could not convert to UTF-8. "
-                         "See the README for a possible solution."), path);
-            return FALSE;
-        }
-        *f = g_strdup(path);
-    }
-    return TRUE;
-}
-*/
-
 void playlist_init(void)
 {
     playlist = g_array_new(FALSE, FALSE, sizeof(PlaylistItem));
