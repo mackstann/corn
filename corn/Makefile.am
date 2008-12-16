@@ -23,6 +23,8 @@ corn_SOURCES = \
   music-metadata.c \
   playlist.h \
   playlist.c \
+  playlist-random.h \
+  playlist-random.c \
   parsefile.h \
   parsefile.c \
   configuration.h \

@@ -1,6 +1,7 @@
 #include "config.h"
 
 #include "playlist.h"
+#include "playlist-random.h"
 #include "music.h"
 #include "music-control.h"
 #include "main.h"
@@ -60,12 +61,14 @@ get_file_utf8 (const gchar * path, gchar ** f, gchar ** u)
 void playlist_init(void)
 {
     playlist = g_array_new(FALSE, FALSE, sizeof(PlaylistItem));
+    plrand_init();
 }
 
 void playlist_destroy(void)
 {
     // TODO delete elements
     g_array_free(playlist, TRUE);
+    plrand_destroy();
 }
 
 static inline void reset_playlist_position(void)
@@ -212,9 +215,9 @@ void playlist_advance(gint num, gboolean loop)
         if(config_random_order)
         {
             if(num > 0)
-                playlist_position = g_random_int_range(0, playlist->len);
+                playlist_position = plrand_next(playlist_position, playlist->len);
             else
-                g_warning("prev when random -- unimplemented");
+                playlist_position = plrand_prev(playlist_position, playlist->len);
         }
         else
         {
