@@ -31,7 +31,7 @@ static void add_metadata_from_string(GHashTable * meta, const gchar * name, cons
     GValue * val = g_new0(GValue, 1);
     g_value_init(val, G_TYPE_STRING);
     g_value_set_string(val, u);
-    g_hash_table_insert(meta, name, val);
+    g_hash_table_insert(meta, (gchar *)name, val);
 }
 
 static void add_metadata_from_int(GHashTable * meta, const gchar * name, gint num)
@@ -39,7 +39,7 @@ static void add_metadata_from_int(GHashTable * meta, const gchar * name, gint nu
     GValue * val = g_new0(GValue, 1);
     g_value_init(val, G_TYPE_INT);
     g_value_set_int(val, num);
-    g_hash_table_insert(meta, name, val);
+    g_hash_table_insert(meta, (gchar *)name, val);
 }
 
 static GHashTable * get_stream_metadata(xine_stream_t * strm)
