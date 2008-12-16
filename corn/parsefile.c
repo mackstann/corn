@@ -300,7 +300,7 @@ gboolean parse_file(const gchar * path)
 
     gint len = strlen(path);
 
-    if(!strncmp(path, "file://", MIN(len, 7)))
+    if(g_str_has_prefix(path, "file://"))
     {
         path += 7;
         len -= 7;
