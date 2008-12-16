@@ -49,7 +49,7 @@ AC_ARG_ENABLE([debug],
   [  --enable-debug          enable debugging],
   [], [enable_debug="no"])
 
-CFLAGS="-std=gnu99 -Wall -pedantic"
+CFLAGS="-std=gnu99 -Wall"
 
 if test "$enable_debug" = "yes"; then
   CFLAGS="$CFLAGS -ggdb -fno-inline"
