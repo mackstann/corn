@@ -70,7 +70,7 @@ static gchar * read_ini_line_string(gchar ** lines, const gchar * key)
 
 static gchar ** read_file(const gchar * path)
 {
-    guint size;
+    gint size;
     gchar * buf, ** lines;
 
     if(gnome_vfs_read_entire_file(path, &size, &buf))
