@@ -54,45 +54,20 @@ static inline void reset_playlist_position(void)
         playlist_position = 0;
 }
 
-static void playlist_append(gchar * path, gchar ** alts)
+void playlist_append(gchar * path, gchar ** alts)
 {
-    PlaylistItem item;
-    listitem_init(&item, path, alts);
-
-    g_array_append_val(playlist, item); // O(1)
-
-    if(playlist_position == -1)
-        reset_playlist_position();
-}
-
-void playlist_append_single(const gchar * path)
-{
-    g_return_if_fail(path != NULL);
     g_return_if_fail(g_utf8_validate(path, -1, NULL));
 
     if(!parse_file(path))
         return;
 
-#if 0
-#include <xine/compat.h>
-    // check against this
-        XINE_PATH_MAX
-#endif
-
-    gchar ** paths = g_new(gchar*, 2);
-    paths[0] = g_strdup(path);
-    paths[1] = NULL;
-
-    playlist_append(g_strdup(path), paths);
-}
-
-void playlist_append_alternatives(const gchar * path, gchar * const * alts)
-{
-    g_return_if_fail(alts != NULL && alts[0] != NULL);
+    gchar * noalts[] = { path, NULL };
+    if(!alts)
+        alts = noalts;
 
     gint nalts = 0;
-
-    while(alts[nalts]) ++nalts;
+    while(alts && alts[nalts])
+        ++nalts;
 
     gchar ** paths = g_new(gchar*, nalts + 1);
     paths[nalts] = NULL;
@@ -103,7 +78,13 @@ void playlist_append_alternatives(const gchar * path, gchar * const * alts)
         paths[i] = g_strdup(alts[i]);
     }
 
-    playlist_append(g_strdup(path), paths);
+    PlaylistItem item;
+    listitem_init(&item, g_strdup(path), paths);
+
+    g_array_append_val(playlist, item);
+
+    if(playlist_position == -1)
+        reset_playlist_position();
 }
 
 void playlist_replace_path(guint track, const gchar * path)

@@ -159,7 +159,7 @@ parse_ram (const gchar *path)
         }
 
         if (nalt)
-            playlist_append_alternatives (path, alternatives);
+            playlist_append(path, alternatives);
 
         g_strfreev (lines);
         g_strfreev (alternatives);
@@ -181,11 +181,11 @@ parse_m3u (const gchar *path)
             lines[i] = g_strstrip(lines[i]);
             if (strlen (lines[i]) && lines[i][0] != '#') {
                 if(lines[i][0] == '/') // absolute
-                    playlist_append_single(lines[i]);
+                    playlist_append(lines[i], NULL);
                 else // relative
                 {
                     gchar * fullpath = add_relative_dir (lines[i], dir);
-                    playlist_append_single (fullpath);
+                    playlist_append(fullpath, NULL);
                     g_free (fullpath);
                 }
             }
@@ -244,7 +244,7 @@ parse_pls (const gchar *path)
         }
 
         if (nalt)
-            playlist_append_alternatives (path, alternatives);
+            playlist_append(path, alternatives);
         g_strfreev (alternatives);
     }
 pls_fail:
@@ -279,7 +279,7 @@ parse_dir (const gchar *path)
 
     entries = g_slist_sort (entries, (GCompareFunc) strcmp);
     for (it = entries; it; it = g_slist_next (it)) {
-        playlist_append_single (it->data);
+        playlist_append(it->data, NULL);
         g_free (it->data);
     }
     g_slist_free (entries);
