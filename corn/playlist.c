@@ -106,6 +106,7 @@ gboolean playlist_fail(void)
         return TRUE;
     else
     {
+        g_warning("Couldn't play %s", MAIN_PATH(item));
         item->use_path = item->paths;
         /*playlist_remove(g_list_position(playlist, PLAYLIST_CURRENT_ITEM())); */
         playlist_advance(1);

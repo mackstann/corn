@@ -292,23 +292,18 @@ gboolean parse_dir(const gchar * path)
 
 gboolean parse_file(const gchar * path)
 {
-    static GRegex * ext_re = NULL;
-    if(!ext_re)
-        ext_re = g_regex_new(
+    static GRegex * familiar_extensions = NULL;
+    if(!familiar_extensions)
+        familiar_extensions = g_regex_new(
             ".\\.(mp3|ogg|flac|m4a|ape|mpc|wav|aiff|pcm|wma|ram)$",
             G_REGEX_CASELESS | G_REGEX_OPTIMIZE, 0, NULL);
-
-    gint len = strlen(path);
 
     if(g_str_has_prefix(path, "file://"))
     {
         path += 7;
-        len -= 7;
+        if(g_regex_match(familiar_extensions, path, 0, NULL))
+            return TRUE; // looks like a boring local media file
     }
-
-    if(g_file_test(path, G_FILE_TEST_IS_REGULAR) &&
-       g_regex_match(ext_re, path, 0, NULL))
-        return TRUE;
 
     GnomeVFSFileInfo * info = gnome_vfs_file_info_new();
 
