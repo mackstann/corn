@@ -16,7 +16,6 @@
 
 GArray * playlist = NULL;
 
-PlaylistItem * playlist_current = NULL;
 gint playlist_position = -1;
 
 static void listitem_init(PlaylistItem * item, gchar * path, gchar ** p, guint nalts)

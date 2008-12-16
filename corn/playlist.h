@@ -10,7 +10,6 @@ typedef struct PlaylistItem {
 } PlaylistItem;
 
 extern GArray * playlist;
-extern PlaylistItem * playlist_current;
 extern gint playlist_position;
 
 #define PLAYLIST_CURRENT_ITEM() \
