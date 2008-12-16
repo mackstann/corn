@@ -60,13 +60,13 @@ void music_event_read_or_write(rw_func func, int fd, xine_event_t * e)
 
 void music_event_send(void *data, const xine_event_t *e)
 {
-    music_event_read_or_write((rw_func)&write, event_sockets.writer, (xine_event_t *)e);
+    music_event_read_or_write((rw_func)write, event_sockets.writer, (xine_event_t *)e);
 }
 
 gboolean music_event_handle(GIOChannel *source, GIOCondition condition, gpointer data)
 {
     xine_event_t e;
-    music_event_read_or_write((rw_func)&read, event_sockets.reader, &e);
+    music_event_read_or_write((rw_func)read, event_sockets.reader, &e);
 
     xine_mrl_reference_data_t *mrl;
     static gboolean mrl_change = FALSE;
