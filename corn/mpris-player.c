@@ -25,8 +25,7 @@ G_DEFINE_TYPE(MprisPlayer, mpris_player, G_TYPE_OBJECT)
 
 #define DBUS_TYPE_G_STRING_VALUE_HASHTABLE (dbus_g_type_get_map ("GHashTable", G_TYPE_STRING, G_TYPE_VALUE))
 
-static void
-mpris_player_init(MprisPlayer * obj)
+static void mpris_player_init(MprisPlayer * obj)
 {
     // set caps!
     //CAN_GO_NEXT | CAN_GO_PREV | CAN_PAUSE | CAN_PLAY;
@@ -35,33 +34,32 @@ mpris_player_init(MprisPlayer * obj)
     //CAN_HAS_TRACKLIST
 }
 
-static void
-mpris_player_class_init(MprisPlayerClass * klass)
+static void mpris_player_class_init(MprisPlayerClass * klass)
 {
     caps_change_signal =
         g_signal_new("caps_change",
-                G_OBJECT_CLASS_TYPE(klass),
-                G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
-                0,
-                NULL, NULL,
-                g_cclosure_marshal_VOID__INT,
-                G_TYPE_NONE, 1, G_TYPE_INT);
+                     G_OBJECT_CLASS_TYPE(klass),
+                     G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+                     0,
+                     NULL, NULL,
+                     g_cclosure_marshal_VOID__INT,
+                     G_TYPE_NONE, 1, G_TYPE_INT);
     track_change_signal =
         g_signal_new("track_change",
-                G_OBJECT_CLASS_TYPE(klass),
-                G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
-                0,
-                NULL, NULL,
-                g_cclosure_marshal_VOID__BOXED,
-                G_TYPE_NONE, 1, DBUS_TYPE_G_STRING_VALUE_HASHTABLE);
+                     G_OBJECT_CLASS_TYPE(klass),
+                     G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+                     0,
+                     NULL, NULL,
+                     g_cclosure_marshal_VOID__BOXED,
+                     G_TYPE_NONE, 1, DBUS_TYPE_G_STRING_VALUE_HASHTABLE);
     status_change_signal =
         g_signal_new("status_change",
-                G_OBJECT_CLASS_TYPE(klass),
-                G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
-                0,
-                NULL, NULL,
-                g_cclosure_marshal_VOID__INT,
-                G_TYPE_NONE, 1, G_TYPE_INT);
+                     G_OBJECT_CLASS_TYPE(klass),
+                     G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+                     0,
+                     NULL, NULL,
+                     g_cclosure_marshal_VOID__INT,
+                     G_TYPE_NONE, 1, G_TYPE_INT);
 }
 
 // TODO:
@@ -156,14 +154,12 @@ gpointer get_status_struct(void)
     static GValue value;
     memset(&value, 0, sizeof(GValue));
     g_value_init(&value, DBUS_STRUCT_INT_INT_INT_INT);
-    g_value_take_boxed(&value, dbus_g_type_specialized_construct(DBUS_STRUCT_INT_INT_INT_INT));
-    dbus_g_type_struct_set(&value,
-        0, music_playing,
-        1, config_random_order ? 1 : 0,
-        2, config_repeat_track ? 1 : 0,
-        3, config_loop_at_end ? 1 : 0,
-        G_MAXUINT
-    );
+    g_value_take_boxed(&value,
+        dbus_g_type_specialized_construct(DBUS_STRUCT_INT_INT_INT_INT));
+    dbus_g_type_struct_set(&value, 0, music_playing, 1,
+                           config_random_order ? 1 : 0, 2,
+                           config_repeat_track ? 1 : 0, 3,
+                           config_loop_at_end ? 1 : 0, G_MAXUINT);
     return g_value_get_boxed(&value);
 }
 
@@ -173,12 +169,14 @@ gboolean mpris_player_get_status(MprisPlayer * obj, GValue ** status, GError ** 
     return TRUE;
 }
 
-gboolean mpris_player_emit_caps_change(MprisPlayer *obj) {
+gboolean mpris_player_emit_caps_change(MprisPlayer * obj)
+{
     g_signal_emit(obj, caps_change_signal, 0, mpris_player_capabilities);
     return TRUE;
 }
 
-gboolean mpris_player_emit_track_change(MprisPlayer *obj) {
+gboolean mpris_player_emit_track_change(MprisPlayer * obj)
+{
     g_return_val_if_fail(playlist_position != -1, TRUE);
     GHashTable * meta = music_get_current_track_metadata();
     g_signal_emit(obj, track_change_signal, 0, meta);
@@ -186,8 +184,8 @@ gboolean mpris_player_emit_track_change(MprisPlayer *obj) {
     return TRUE;
 }
 
-gboolean mpris_player_emit_status_change(MprisPlayer *obj) {
+gboolean mpris_player_emit_status_change(MprisPlayer * obj)
+{
     g_signal_emit(obj, status_change_signal, 0, get_status_struct());
     return TRUE;
 }
-

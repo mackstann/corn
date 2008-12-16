@@ -45,7 +45,7 @@ int mpris_init(void)
     if(!(bus = dbus_g_bus_get(DBUS_BUS_SESSION, &error)))
     {
         g_printerr("%s (%s).\n", _("Failed to open connection to D-BUS session bus"),
-                error->message);
+                   error->message);
         g_error_free(error);
         return 30;
     }
@@ -70,8 +70,7 @@ static int mpris_register_objects(DBusGConnection * bus)
     DBusGProxy * bus_proxy = dbus_g_proxy_new_for_name(bus,
         "org.freedesktop.DBus",
         "/org/freedesktop/DBus",
-        "org.freedesktop.DBus"
-    );
+        "org.freedesktop.DBus");
 
     // TODO: it is possible to negotiate taking over a name.  this may or may
     // not be desirable.
@@ -79,11 +78,12 @@ static int mpris_register_objects(DBusGConnection * bus)
 
     GError * error = NULL;
     guint request_name_result;
-    dbus_g_proxy_call(
-        bus_proxy, "RequestName", &error,
-        G_TYPE_STRING, CORN_BUS_SERVICE, G_TYPE_UINT, 0, G_TYPE_INVALID,
-        G_TYPE_UINT, &request_name_result, G_TYPE_INVALID
-    );
+    dbus_g_proxy_call(bus_proxy, "RequestName", &error,
+        G_TYPE_STRING, CORN_BUS_SERVICE,
+        G_TYPE_UINT, 0,
+        G_TYPE_INVALID,
+        G_TYPE_UINT, &request_name_result,
+        G_TYPE_INVALID);
 
     if(error)
     {
@@ -123,12 +123,10 @@ static int mpris_register_objects(DBusGConnection * bus)
     DBusGProxy * mpris_proxy = dbus_g_proxy_new_for_name(bus,
         "org.mpris.corn",
         "/Player",
-        "org.freedesktop.MediaPlayer"
-    );
+        "org.freedesktop.MediaPlayer");
     dbus_g_proxy_add_signal(mpris_proxy, "StatusChange", G_TYPE_INT, G_TYPE_INVALID);
     dbus_g_proxy_add_signal(mpris_proxy, "CapsChange", G_TYPE_INT, G_TYPE_INVALID);
     dbus_g_proxy_add_signal(mpris_proxy, "TrackChange", DBUS_TYPE_G_STRING_VALUE_HASHTABLE, G_TYPE_INVALID);
 
     return 0;
 }
-

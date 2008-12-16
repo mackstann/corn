@@ -9,4 +9,3 @@ GHashTable * music_get_track_metadata(gint track);
 GHashTable * music_get_current_track_metadata(void);
 
 #endif
-

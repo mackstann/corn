@@ -14,24 +14,13 @@
 #define CORN_IS_CPRIS_ROOT_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE ((klass), CORN_TYPE_CPRIS_ROOT))
 #define CORN_CPRIS_ROOT_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS ((obj), CORN_TYPE_CPRIS_ROOT, CprisRootClass))
 
-typedef struct _CprisRoot CprisRoot;
-typedef struct _CprisRootClass CprisRootClass;
+typedef struct _CprisRoot { GObject parent; } CprisRoot;
+typedef struct _CprisRootClass { GObjectClass parent; } CprisRootClass;
 
-struct _CprisRoot
-{
-    GObject parent;
-};
-
-struct _CprisRootClass
-{
-    GObjectClass parent;
-};
-
-GType cpris_root_get_type (void);
+GType cpris_root_get_type(void);
 
 gboolean cpris_root_clear(CprisRoot * obj, GError ** error);
 gboolean cpris_root_play_track(CprisRoot * obj, gint track, GError ** error);
 gboolean cpris_root_move(CprisRoot * obj, gint from, gint to, GError ** error);
 
 #endif
-

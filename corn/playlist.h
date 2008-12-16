@@ -3,9 +3,10 @@
 
 #include <glib.h>
 
-typedef struct PlaylistItem {
+typedef struct PlaylistItem
+{
     guint use_path;
-    gchar *main_path;
+    gchar * main_path;
     gchar **paths;
 } PlaylistItem;
 
@@ -23,7 +24,7 @@ extern gint playlist_position;
 void playlist_init(void);
 void playlist_destroy(void);
 void playlist_append(gchar * path, gchar ** alts);
-void playlist_replace_path(guint track, const gchar *path);
+void playlist_replace_path(guint track, const gchar * path);
 /* re-create the random ordering */
 void playlist_rerandomize(void);
 void playlist_advance(gint num, gboolean loop);

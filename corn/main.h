@@ -3,7 +3,8 @@
 
 #include <glib.h>
 
-typedef enum {
+typedef enum
+{
     CORN_STARTING,
     CORN_RUNNING,
     CORN_EXITING

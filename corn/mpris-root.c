@@ -10,13 +10,11 @@
 
 G_DEFINE_TYPE(MprisRoot, mpris_root, G_TYPE_OBJECT)
 
-static void
-mpris_root_init(MprisRoot * obj)
+static void mpris_root_init(MprisRoot * obj)
 {
 }
 
-static void
-mpris_root_class_init(MprisRootClass * klass)
+static void mpris_root_class_init(MprisRootClass * klass)
 {
 }
 
@@ -39,15 +37,12 @@ gboolean mpris_root_quit(MprisRoot * obj, GError ** error)
 gboolean mpris_root_mpris_version(MprisRoot * obj, GValue ** version, GError ** error)
 {
 
-    GValue value = {0};
+    GValue value = { 0 };
     g_value_init(&value, DBUS_STRUCT_UINT_UINT);
-    g_value_take_boxed(&value, dbus_g_type_specialized_construct(DBUS_STRUCT_UINT_UINT));
+    g_value_take_boxed(&value,
+        dbus_g_type_specialized_construct(DBUS_STRUCT_UINT_UINT));
     // field number, value, G_MAXUINT at the end
-    dbus_g_type_struct_set(&value,
-        0, 1,
-        1, 0,
-        G_MAXUINT
-    );
+    dbus_g_type_struct_set(&value, 0, 1, 1, 0, G_MAXUINT);
     *version = g_value_get_boxed(&value);
 
     //GValueArray * arr = g_value_array_new(2);
@@ -68,6 +63,3 @@ gboolean mpris_root_mpris_version(MprisRoot * obj, GValue ** version, GError ** 
 
     return TRUE;
 }
-
-
-

@@ -12,8 +12,8 @@
 
 static void free_gvalue_and_its_value(gpointer value)
 {
-    g_value_unset((GValue*)value);
-    g_free((GValue*)value);
+    g_value_unset((GValue *)value);
+    g_free((GValue *)value);
 }
 
 static void add_metadata_from_string(GHashTable * meta, const gchar * name, const gchar * str)
@@ -24,7 +24,8 @@ static void add_metadata_from_string(GHashTable * meta, const gchar * name, cons
     gchar * u = g_locale_to_utf8(str, strlen(str), NULL, NULL, NULL);
     if(!u)
     {
-        g_critical(_("Skipping %s value '%s'. Could not convert to UTF-8. Bug?"), name, str);
+        g_critical(_("Skipping %s value '%s'. Could not convert to UTF-8. Bug?"),
+                   name, str);
         return;
     }
 
@@ -51,17 +52,19 @@ static GHashTable * get_stream_metadata(xine_stream_t * strm)
     add_metadata_from_string(meta, "title", xine_get_meta_info(strm, XINE_META_INFO_TITLE));
     add_metadata_from_string(meta, "artist", xine_get_meta_info(strm, XINE_META_INFO_ARTIST));
     add_metadata_from_string(meta, "album", xine_get_meta_info(strm, XINE_META_INFO_ALBUM));
-    add_metadata_from_string(meta, "tracknumber", xine_get_meta_info(strm, XINE_META_INFO_TRACK_NUMBER));
+    add_metadata_from_string(meta, "tracknumber", xine_get_meta_info(strm,
+                                                XINE_META_INFO_TRACK_NUMBER));
 
     gint pos, time, length;
     /* length = 0 for streams */
     if(xine_get_pos_length(strm, &pos, &time, &length) && length)
     {
-        add_metadata_from_int(meta, "time", length/1000);
+        add_metadata_from_int(meta, "time", length / 1000);
         add_metadata_from_int(meta, "mtime", length);
     }
 
-    add_metadata_from_string(meta, "genre", xine_get_meta_info(strm, XINE_META_INFO_GENRE));
+    add_metadata_from_string(meta, "genre",
+                             xine_get_meta_info(strm, XINE_META_INFO_GENRE));
 
     // "comment"
     // "rating" int [1..5] or [0..5]?
@@ -148,4 +151,3 @@ GHashTable * music_get_current_track_metadata(void)
 
     return g_hash_table_new(NULL, NULL);
 }
-

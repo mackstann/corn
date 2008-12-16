@@ -27,7 +27,7 @@ void signal_handler_quit(int signal) { main_quit(); }
 void init_locale(void)
 {
     if(!setlocale(LC_ALL, ""))
-	g_warning("Couldn't set locale from environment.\n");
+        g_warning("Couldn't set locale from environment.\n");
     bindtextdomain(PACKAGE_NAME, LOCALEDIR);
     bind_textdomain_codeset(PACKAGE_NAME, "UTF-8");
     textdomain(PACKAGE_NAME);
@@ -56,11 +56,11 @@ void init_signals(void)
     };
 
     sigaction(SIGTERM, &quit_action, (struct sigaction *)NULL);
-    sigaction(SIGINT,  &quit_action, (struct sigaction *)NULL);
+    sigaction(SIGINT, &quit_action, (struct sigaction *)NULL);
 
 }
 
-int main(int argc, char ** argv)
+int main(int argc, char **argv)
 {
     main_status = CORN_STARTING;
 
@@ -73,7 +73,7 @@ int main(int argc, char ** argv)
 
     /* make sure the config directory exists */
     gchar * dir = g_build_filename(g_get_user_config_dir(), PACKAGE, NULL);
-    g_mkdir_with_parents(dir, S_IRWXU|S_IRWXG|S_IRWXO);
+    g_mkdir_with_parents(dir, S_IRWXU | S_IRWXG | S_IRWXO);
     g_free(dir);
 
     int failed = 0;
@@ -104,4 +104,3 @@ int main(int argc, char ** argv)
 
     return failed;
 }
-

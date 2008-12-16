@@ -13,4 +13,3 @@ gint music_get_position(void); // position within current song, in ms
 void music_set_volume(gint vol);
 
 #endif
-

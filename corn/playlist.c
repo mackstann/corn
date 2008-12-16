@@ -69,7 +69,7 @@ void playlist_append(gchar * path, gchar ** alts)
     while(alts && alts[nalts])
         ++nalts;
 
-    gchar ** paths = g_new(gchar*, nalts + 1);
+    gchar **paths = g_new(gchar *, nalts + 1);
     paths[nalts] = NULL;
 
     for(gint i = 0; i < nalts; ++i)
@@ -90,24 +90,26 @@ void playlist_append(gchar * path, gchar ** alts)
 void playlist_replace_path(guint track, const gchar * path)
 {
     guint i, nalts = 0;
-    gchar ** p, ** alts;
+    gchar **p, **alts;
 
     g_return_if_fail(PLAYLIST_CURRENT_ITEM() != NULL);
 
     alts = p = PLAYLIST_CURRENT_ITEM()->paths;
 
-    while(alts[nalts]) ++nalts;
+    while(alts[nalts])
+        ++nalts;
 
     if(track > nalts - 1)
     {
         g_assert(track == nalts); /* cant be more than one past the end! */
         PLAYLIST_CURRENT_ITEM()->paths =
-            g_renew(gchar*, PLAYLIST_CURRENT_ITEM()->paths, track + 2);
+            g_renew(gchar *, PLAYLIST_CURRENT_ITEM()->paths, track + 2);
         alts[nalts - 1] = NULL;
         nalts++;
     }
 
-    for(i = 0; i < track; ++i) ++p;
+    for(i = 0; i < track; ++i)
+        ++p;
     g_free(*p);
     *p = g_strdup(path);
     for(++p; *p; ++p)
@@ -118,7 +120,7 @@ void playlist_replace_path(guint track, const gchar * path)
 
     if(track < nalts - 1)
         PLAYLIST_CURRENT_ITEM()->paths =
-            g_renew(gchar*, PLAYLIST_CURRENT_ITEM()->paths, track + 2);
+            g_renew(gchar *, PLAYLIST_CURRENT_ITEM()->paths, track + 2);
 }
 
 gboolean playlist_fail(void)
@@ -136,8 +138,10 @@ gboolean playlist_fail(void)
         ++item->use_path;
         /* try again */
         return TRUE;
-    } else {
-        /*playlist_remove(g_list_position(playlist, PLAYLIST_CURRENT_ITEM()));*/
+    }
+    else
+    {
+        /*playlist_remove(g_list_position(playlist, PLAYLIST_CURRENT_ITEM())); */
         playlist_advance(1, config_loop_at_end);
         return TRUE;
     }
@@ -157,9 +161,11 @@ void playlist_advance(gint num, gboolean loop)
         if(config_random_order)
         {
             if(num > 0)
-                playlist_position = plrand_next(playlist_position, playlist->len);
+                playlist_position =
+                    plrand_next(playlist_position, playlist->len);
             else if(num < 0)
-                playlist_position = plrand_prev(playlist_position, playlist->len);
+                playlist_position =
+                    plrand_prev(playlist_position, playlist->len);
         }
         else
         {
@@ -232,7 +238,7 @@ void playlist_remove(gint track)
 
     g_array_remove_index(playlist, track); // O(n)
 
-    plrand_shift_track_numbers(track+1, playlist->len-1, -1);
+    plrand_shift_track_numbers(track + 1, playlist->len - 1, -1);
     plrand_forget_track(track);
 
     // if we're still in the same spot, there was no track to advance to.  set
@@ -249,14 +255,14 @@ void playlist_move(gint track, gint dest)
     if G_UNLIKELY(track >= playlist->len) return;
 
     if(dest > track)
-        plrand_shift_track_numbers(track+1, dest-1, -1);
+        plrand_shift_track_numbers(track + 1, dest - 1, -1);
     else if(dest < track)
-        plrand_shift_track_numbers(dest, track-1, +1);
+        plrand_shift_track_numbers(dest, track - 1, +1);
 
     plrand_move_track(track, dest);
 
     PlaylistItem * item = &g_array_index(playlist, PlaylistItem, track);
-    g_array_insert_val(playlist, (dest > track ? dest+1 : dest), *item); // O(n)
+    g_array_insert_val(playlist, (dest > track ? dest + 1 : dest), *item); // O(n)
     g_array_remove_index(playlist, track); // O(n)
 
     if(track == playlist_position)
@@ -266,4 +272,3 @@ void playlist_move(gint track, gint dest)
     else if(track > playlist_position && dest <= playlist_position)
         playlist_position++;
 }
-

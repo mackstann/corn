@@ -17,7 +17,8 @@
 #include <sys/socket.h>
 #include <errno.h>
 
-typedef struct _music_socket_pair_t {
+typedef struct _music_socket_pair_t
+{
     gint reader;
     gint writer;
 } music_socket_pair_t;
@@ -25,8 +26,8 @@ typedef struct _music_socket_pair_t {
 xine_t * xine = NULL;
 xine_stream_t * music_stream = NULL;
 
-static xine_audio_port_t  *ao = NULL;
-static xine_event_queue_t *events = NULL;
+static xine_audio_port_t * ao = NULL;
+static xine_event_queue_t * events = NULL;
 
 gint music_stream_time;
 gint music_playing = MUSIC_STOPPED;
@@ -49,26 +50,27 @@ void music_event_read_or_write(rw_func func, int fd, xine_event_t * e)
     ssize_t ntransferred = 0;
     do {
         ssize_t ret = func(fd,
-                (void *)(((char *)e) + ntransferred),
+                (void *) (((char *) e) + ntransferred),
                 sizeof(xine_event_t) - ntransferred);
         if(ret == -1)
             g_assert(ret == EINTR || ret == EAGAIN);
         else
             ntransferred += ret;
-    } while(ntransferred < sizeof(xine_event_t));
+    }
+    while(ntransferred < sizeof(xine_event_t));
 }
 
-void music_event_send(void *data, const xine_event_t *e)
+void music_event_send(void * data, const xine_event_t * e)
 {
-    music_event_read_or_write((rw_func)write, event_sockets.writer, (xine_event_t *)e);
+    music_event_read_or_write((rw_func) write, event_sockets.writer, (xine_event_t *) e);
 }
 
-gboolean music_event_handle(GIOChannel *source, GIOCondition condition, gpointer data)
+gboolean music_event_handle(GIOChannel * source, GIOCondition condition, gpointer data)
 {
     xine_event_t e;
-    music_event_read_or_write((rw_func)read, event_sockets.reader, &e);
+    music_event_read_or_write((rw_func) read, event_sockets.reader, &e);
 
-    xine_mrl_reference_data_t *mrl;
+    xine_mrl_reference_data_t * mrl;
     static gboolean mrl_change = FALSE;
 
     if(main_status == CORN_RUNNING)
@@ -103,7 +105,7 @@ gboolean music_event_handle(GIOChannel *source, GIOCondition condition, gpointer
 
 int music_init()
 {
-    char *configfile;
+    char * configfile;
 
     if(!xine_check_version(XINE_MAJOR_VERSION, XINE_MINOR_VERSION, XINE_SUB_VERSION))
     {
@@ -113,14 +115,14 @@ int music_init()
 
     xine = xine_new();
 
-    xine_config_register_string(xine,
-        "audio.driver", "auto", "audio driver", NULL, 0, NULL, NULL);
+    xine_config_register_string(xine, "audio.driver", "auto", "audio driver",
+            NULL, 0, NULL, NULL);
 
     configfile = g_build_filename(g_get_user_config_dir(), PACKAGE, "xine_config", NULL);
     xine_config_load(xine, configfile);
     g_free(configfile);
 
-    xine_cfg_entry_t driver = {0};
+    xine_cfg_entry_t driver = { 0 };
     xine_config_lookup_entry(xine, "audio.driver", &driver);
 
     xine_init(xine);
@@ -144,7 +146,7 @@ int music_init()
     xine_set_param(music_stream, XINE_PARAM_IGNORE_VIDEO, 1);
     xine_set_param(music_stream, XINE_PARAM_IGNORE_SPU, 1);
 
-    if(socketpair(AF_UNIX, SOCK_STREAM, 0, (int *)&event_sockets))
+    if(socketpair(AF_UNIX, SOCK_STREAM, 0, (int *) &event_sockets))
     {
         g_critical("%s (%s).", _("Unable to open event socket pair"), g_strerror(errno));
         return 13;
@@ -186,10 +188,11 @@ gboolean music_try_to_play(void)
     if(!PLAYLIST_CURRENT_ITEM())
         return TRUE;
 
-    gchar *path;
+    gchar * path;
     if(!(path = g_filename_from_utf8(PATH(PLAYLIST_CURRENT_ITEM()), -1, NULL, NULL, NULL)))
     {
-        g_critical(_("Skipping '%s'. Could not convert from UTF-8. Bug?"), PATH(PLAYLIST_CURRENT_ITEM()));
+        g_critical(_("Skipping '%s'. Could not convert from UTF-8. Bug?"),
+                   PATH(PLAYLIST_CURRENT_ITEM()));
         return FALSE;
     }
 
@@ -213,4 +216,3 @@ gboolean music_try_to_play(void)
     music_playing = MUSIC_STOPPED;
     return FALSE;
 }
-

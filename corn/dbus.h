@@ -15,4 +15,3 @@ int mpris_init(void);
 void mpris_destroy(void);
 
 #endif
-

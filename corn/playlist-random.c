@@ -70,7 +70,7 @@ static void _shift_track_numbers(GQueue * queue, gint atleast, gint atmost, gint
         if(GPOINTER_TO_INT(it->data) >= atleast &&
            GPOINTER_TO_INT(it->data) <= atmost)
         {
-           it->data = GINT_TO_POINTER(GPOINTER_TO_INT(it->data) + inc);
+            it->data = GINT_TO_POINTER(GPOINTER_TO_INT(it->data) + inc);
         }
     }
 }
@@ -98,4 +98,3 @@ void plrand_clear(void)
     g_queue_clear(past);
     g_queue_clear(future);
 }
-

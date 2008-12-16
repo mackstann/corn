@@ -15,13 +15,14 @@
 #include <stdlib.h>
 #include <errno.h>
 
-gboolean config_loop_at_end  = FALSE;
+gboolean config_loop_at_end = FALSE;
 gboolean config_random_order = FALSE;
 gboolean config_repeat_track = FALSE;
 
 static FILE * open_config_file(const char * name, const char * mode)
 {
-    gchar * path = g_build_filename(g_get_user_config_dir(), PACKAGE, name, NULL);
+    gchar * path =
+        g_build_filename(g_get_user_config_dir(), PACKAGE, name, NULL);
     FILE * f = g_fopen(path, mode);
     g_free(path);
     return f;
@@ -34,11 +35,13 @@ static void save_int_to_config_file(const char * name, gint num)
     {
         fprintf(f, "%d", num);
         fclose(f);
-    } else
+    }
+    else
         g_printerr("%s %s (%s).\n", _("Couldn't save to config file"), name, g_strerror(errno));
 }
 
-static gint read_int_from_config_file(const char * name, gint min, gint max, gint default_value)
+static gint read_int_from_config_file(const char * name, gint min, gint max,
+                                      gint default_value)
 {
     FILE * f = open_config_file(name, "r");
     if(f)
@@ -53,7 +56,7 @@ static gint read_int_from_config_file(const char * name, gint min, gint max, gin
             glong val = strtol(mrl, &end, 10);
 
             if(!errno && end != mrl && val >= min && val <= max)
-                return (gint)val;
+                return (gint) val;
         }
     }
     return default_value;
@@ -65,11 +68,11 @@ void config_load(void)
     parse_m3u(playlist_filename);
     g_free(playlist_filename);
 
-    config_loop_at_end =  read_int_from_config_file("state.loop",   0, 1, 0);
+    config_loop_at_end = read_int_from_config_file("state.loop", 0, 1, 0);
     config_random_order = read_int_from_config_file("state.random", 0, 1, 0);
     config_repeat_track = read_int_from_config_file("state.repeat", 0, 1, 0);
 
-    playlist_seek(read_int_from_config_file("state.list_position", 0, G_MAXINT, 0));
+    playlist_seek(read_int_from_config_file ("state.list_position", 0, G_MAXINT, 0));
     gint pos = read_int_from_config_file("state.track_position", 0, G_MAXINT, 0);
 
     gint playing = read_int_from_config_file("state.playing", 0, 2, MUSIC_STOPPED);
@@ -103,4 +106,3 @@ void config_save(void)
         fclose(f);
     }
 }
-

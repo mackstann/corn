@@ -12,13 +12,11 @@
 
 G_DEFINE_TYPE(CprisRoot, cpris_root, G_TYPE_OBJECT)
 
-static void
-cpris_root_init(CprisRoot * obj)
+static void cpris_root_init(CprisRoot * obj)
 {
 }
 
-static void
-cpris_root_class_init(CprisRootClass * klass)
+static void cpris_root_class_init(CprisRootClass * klass)
 {
 }
 
@@ -43,4 +41,3 @@ gboolean cpris_root_move(CprisRoot * obj, gint from, gint to, GError ** error)
     playlist_move(to, from);
     return TRUE;
 }
-

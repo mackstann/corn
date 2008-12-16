@@ -14,4 +14,3 @@ void plrand_forget_track(gint track);
 void plrand_clear(void);
 
 #endif
-

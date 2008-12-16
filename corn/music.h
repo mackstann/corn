@@ -4,7 +4,8 @@
 #include <glib.h>
 #include <xine.h>
 
-enum {
+enum
+{
     MUSIC_PLAYING = 0,
     MUSIC_PAUSED = 1,
     MUSIC_STOPPED = 2
