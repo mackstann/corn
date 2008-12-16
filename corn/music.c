@@ -34,6 +34,12 @@ gint music_volume;
 
 static gboolean music_gapless = FALSE;
 
+/////// inter-thread i/o ///////
+//
+// an async queue would be a bit cleaner for this, but the only way to check it
+// for events is to poll it.  with a socket pair, we have file descriptors that
+// we can select().
+
 static music_socket_pair_t event_sockets;
 
 typedef ssize_t (* fd_rw_op_func)(int fd, void * data, size_t len);
@@ -92,6 +98,8 @@ gboolean music_event_handle(GIOChannel *source, GIOCondition condition, gpointer
 
     return TRUE;
 }
+
+// end inter-thread i/o stuff
 
 int music_init()
 {
