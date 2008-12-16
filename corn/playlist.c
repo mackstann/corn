@@ -18,11 +18,11 @@ GArray * playlist = NULL;
 
 gint playlist_position = -1;
 
-static void listitem_init(PlaylistItem * item, gchar * path, gchar ** p, guint nalts)
+static void listitem_init(PlaylistItem * item, gchar * path, gchar ** alts)
 {
     item->main_path = path;
-    item->paths = p;
-    item->use_path = 0; /*they cycle to the end.. g_random_int_range(0, nalts);*/
+    item->paths = alts;
+    item->use_path = 0;
 }
 
 static void listitem_destroy(PlaylistItem * item)
@@ -54,9 +54,12 @@ static inline void reset_playlist_position(void)
         playlist_position = 0;
 }
 
-static void playlist_append(PlaylistItem * item)
+static void playlist_append(gchar * path, gchar ** alts)
 {
-    g_array_append_val(playlist, *item); // O(1)
+    PlaylistItem item;
+    listitem_init(&item, path, alts);
+
+    g_array_append_val(playlist, item); // O(1)
 
     if(playlist_position == -1)
         reset_playlist_position();
@@ -80,9 +83,7 @@ void playlist_append_single(const gchar * path)
     paths[0] = g_strdup(path);
     paths[1] = NULL;
 
-    PlaylistItem item;
-    listitem_init(&item, g_strdup(path), paths, 1);
-    playlist_append(&item);
+    playlist_append(g_strdup(path), paths);
 }
 
 void playlist_append_alternatives(const gchar * path, gchar * const * alts)
@@ -103,9 +104,7 @@ void playlist_append_alternatives(const gchar * path, gchar * const * alts)
         paths[i] = g_strdup(alts[i]);
     }
 
-    PlaylistItem item;
-    listitem_init(&item, g_strdup(path), paths, nalts);
-    playlist_append(&item);
+    playlist_append(g_strdup(path), paths);
 }
 
 void playlist_replace_path(guint track, const gchar * path)
