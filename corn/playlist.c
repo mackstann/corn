@@ -257,7 +257,7 @@ void playlist_clear(void)
     for(gint i = 0; i < playlist->len; i++)
         listitem_destroy(&g_array_index(playlist, PlaylistItem, i));
 
-    g_array_remove_range(playlist, 0, playlist->len);
+    g_array_set_size(playlist, 0);
 
     plrand_clear();
 
