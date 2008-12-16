@@ -14,7 +14,6 @@
 // to the length of the playlist (unless otherwise noted)
 
 GArray * playlist = NULL;
-static GArray * playlist_random = NULL;
 
 PlaylistItem * playlist_current = NULL;
 gint playlist_position = -1;
@@ -61,14 +60,12 @@ get_file_utf8 (const gchar * path, gchar ** f, gchar ** u)
 void playlist_init(void)
 {
     playlist = g_array_new(FALSE, FALSE, sizeof(PlaylistItem));
-    playlist_random = g_array_new(FALSE, FALSE, sizeof(gint));
 }
 
 void playlist_destroy(void)
 {
     // TODO delete elements
     g_array_free(playlist, TRUE);
-    g_array_free(playlist_random, TRUE);
 }
 
 static inline void reset_playlist_position(void)
@@ -83,15 +80,7 @@ static inline void reset_playlist_position(void)
 
 static void playlist_append(PlaylistItem * item)
 {
-    gint rand_pos_after_current = g_random_int_range(
-        playlist_position+1,
-        playlist_random->len+1
-    ); // +1 to put it after the chosen index
-
     g_array_append_val(playlist, *item); // O(1)
-
-    gint last_song_index = playlist->len-1; // need lvalue for insert_val
-    g_array_insert_val(playlist_random, rand_pos_after_current, last_song_index); // O(n)
 
     if(playlist_position == -1)
         reset_playlist_position();
@@ -200,24 +189,6 @@ gboolean playlist_fail(void)
     return FALSE;
 }
 
-#define swap(type, a, b) do { \
-        type tmp = a; \
-        a = b; \
-        b = tmp; \
-    } while(0)
-
-void playlist_rerandomize(void) // O(n)
-{
-    // http://en.wikipedia.org/wiki/Fisher-Yates_shuffle
-    for(gint n = playlist->len; n > 1;) // O(n)
-    {
-        gint k = g_random_int_range(0, n--);
-        swap(gint,
-            g_array_index(playlist_random, gint, n),
-            g_array_index(playlist_random, gint, k));
-    }
-}
-
 #define array_index_of_value(arr, typ, val) (__extension__({ \
     g_assert(sizeof(val) == sizeof(typ)); \
     gint index = -1; \
@@ -230,7 +201,6 @@ void playlist_rerandomize(void) // O(n)
 
 void playlist_advance(gint num, gboolean loop)
 {
-    static gint rand_cur = -1;
     gboolean looped = FALSE;
     gint wasplaying = music_playing;
 
@@ -239,42 +209,21 @@ void playlist_advance(gint num, gboolean loop)
 
     if(!config_repeat_track)
     {
-        if(config_random_order)
+        if(0 && config_random_order)
         {
-            rand_cur = array_index_of_value(playlist_random, gint, playlist_position); // O(n)
-
+        } else {
             while(num > 0)
             {
                 num--;
-                if(++rand_cur >= playlist_random->len)
-                {
-                    playlist_rerandomize();
-                    rand_cur = 0;
-                    looped = TRUE;
-                }
-            }
-            while(num < 0)
-            {
-                num++;
-                if(--rand_cur < 0)
-                {
-                    playlist_rerandomize();
-                    rand_cur = playlist_random->len - 1;
-                    looped = TRUE;
-                }
-            }
-            playlist_position = g_array_index(playlist_random, gint, rand_cur);
-        } else {
-            while(num-- > 0)
-            {
                 if(++playlist_position >= playlist->len)
                 {
                     playlist_position = 0;
                     looped = TRUE;
                 }
             }
-            while(num++ < 0)
+            while(num < 0)
             {
+                num++;
                 if(--playlist_position < 0)
                 {
                     playlist_position = playlist->len - 1;
@@ -319,7 +268,6 @@ void playlist_clear(void)
         listitem_destroy(&g_array_index(playlist, PlaylistItem, playlist->len));
 
     g_array_remove_range(playlist, 0, playlist->len);
-    g_array_remove_range(playlist_random, 0, playlist_random->len);
 
     playlist_position = -1;
 }
@@ -334,16 +282,6 @@ void playlist_remove(gint track)
 
     if(track < playlist_position)
         playlist_position--;
-
-    // this takes the last item in the array, puts it in x's place, and
-    // decrements the array size.
-    g_array_remove_index_fast(playlist_random, // O(n)
-        array_index_of_value(playlist_random, gint, track)
-    );
-
-    for(gint i = 0; i < playlist_random->len; i++)
-        if(g_array_index(playlist_random, gint, i) > track)
-            g_array_index(playlist_random, gint, i)--;
 
     listitem_destroy(&g_array_index(playlist, PlaylistItem, track));
 
