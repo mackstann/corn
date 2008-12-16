@@ -68,13 +68,13 @@ static void mpris_player_class_init(MprisPlayerClass * klass)
 
 gboolean mpris_player_next(MprisPlayer * obj, GError ** error)
 {
-    playlist_advance(1, TRUE);
+    playlist_advance(1);
     return TRUE;
 }
 
 gboolean mpris_player_prev(MprisPlayer * obj, GError ** error)
 {
-    playlist_advance(-1, TRUE);
+    playlist_advance(-1);
     return TRUE;
 }
 

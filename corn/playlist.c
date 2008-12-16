@@ -143,33 +143,33 @@ gboolean playlist_fail(void)
     else
     {
         /*playlist_remove(g_list_position(playlist, PLAYLIST_CURRENT_ITEM())); */
-        playlist_advance(1, config_loop_at_end);
+        playlist_advance(1);
         return TRUE;
     }
     return FALSE;
 }
 
-void playlist_advance(gint num, gboolean loop)
+void playlist_advance(gint how)
 {
     gboolean looped = FALSE;
     gint wasplaying = music_playing;
 
-    if(!playlist->len || G_UNLIKELY(!num))
+    if(!playlist->len || G_UNLIKELY(!how))
         return;
 
     if(!config_repeat_track)
     {
         if(config_random_order)
         {
-            if(num > 0)
+            if(how > 0)
                 playlist_position = plrand_next(playlist_position, playlist->len);
-            else if(num < 0)
+            else if(how < 0)
                 playlist_position = plrand_prev(playlist_position, playlist->len);
         }
         else
         {
             looped = TRUE;
-            playlist_position += num;
+            playlist_position += how;
             if(playlist_position < 0)
                 playlist_position = playlist->len - 1;
             else if(playlist_position == playlist->len)
@@ -180,7 +180,7 @@ void playlist_advance(gint num, gboolean loop)
     }
 
     music_stop();
-    if((!looped || loop) && wasplaying == MUSIC_PLAYING)
+    if((!looped || config_loop_at_end) && wasplaying == MUSIC_PLAYING)
         music_play();
 
     mpris_player_emit_track_change(mpris_player);
@@ -228,7 +228,7 @@ void playlist_remove(gint track)
     if(G_UNLIKELY(track >= playlist->len)) return;
 
     if(track == playlist_position)
-        playlist_advance(1, config_loop_at_end);
+        playlist_advance(1);
 
     if(track < playlist_position)
         playlist_position--;

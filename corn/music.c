@@ -83,7 +83,7 @@ gboolean music_event_handle(GIOChannel * source, GIOCondition condition, gpointe
                 xine_set_param(music_stream, XINE_PARAM_GAPLESS_SWITCH, 1);
 #endif
             // XXX should lock playlist
-            playlist_advance((mrl_change ? 0 : 1), config_loop_at_end);
+            playlist_advance((mrl_change ? 0 : 1));
             mrl_change = FALSE;
             break;
         case XINE_EVENT_MRL_REFERENCE_EXT:
