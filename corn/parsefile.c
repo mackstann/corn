@@ -104,8 +104,8 @@ static gchar * add_relative_dir(const gchar * name, const gchar * dir)
 
 gboolean parse_ram(const gchar * path)
 {
-    gchar ** lines, ** alternatives;
-    guint i, nalt;
+    gchar ** lines;
+    guint i;
     GnomeVFSHandle * h;
     char buf[4];
     GnomeVFSFileSize read, left;
@@ -132,10 +132,7 @@ gboolean parse_ram(const gchar * path)
 
     if((lines = read_file(path)))
     {
-
-        alternatives = g_new(gchar *, 1);
-        alternatives[0] = NULL;
-        nalt = 0;
+        GList * alternatives = NULL;
 
         for(i = 0; lines[i]; ++i)
         {
@@ -159,19 +156,15 @@ gboolean parse_ram(const gchar * path)
                    g_str_has_prefix(lines[i], "pnm://") ||
                    g_str_has_prefix(lines[i], "http://"))
                 {
-                    alternatives = g_renew(gchar *, alternatives, nalt + 2);
-                    alternatives[nalt] = g_strdup(lines[i]);
-                    alternatives[nalt + 1] = NULL;
-                    ++nalt;
+                    alternatives = g_list_append(alternatives, g_strdup(lines[i]));
                 }
             }
         }
 
-        if(nalt)
+        if(alternatives)
             playlist_append(path, alternatives);
 
         g_strfreev(lines);
-        g_strfreev(alternatives);
     }
     return FALSE;
 }
@@ -210,8 +203,8 @@ gboolean parse_m3u(const gchar * path)
 /* this function heavily based on code from gxine */
 gboolean parse_pls(const gchar * path)
 {
-    int entries, i, nalt;
-    gchar ** lines, ** alternatives;
+    int entries, i;
+    gchar ** lines;
 
     g_message("parsing pls: %s", path);
     if((lines = read_file(path)))
@@ -227,9 +220,7 @@ gboolean parse_pls(const gchar * path)
             goto pls_fail;
         }
 
-        alternatives = g_new(gchar *, 1);
-        alternatives[0] = NULL;
-        nalt = 0;
+        GList * alternatives = NULL;
 
         for(i = 1; i <= entries; ++i)
         {
@@ -246,22 +237,14 @@ gboolean parse_pls(const gchar * path)
             /* g_free (title_key); */
 
             if(file != NULL)
-            {
-                file = g_strstrip(file);
-
-                alternatives = g_renew(gchar *, alternatives, nalt + 2);
-                alternatives[nalt] = file;
-                alternatives[nalt + 1] = NULL;
-                ++nalt;
-            }
+                alternatives = g_list_append(alternatives, g_strstrip(file));
             else
                 g_free(file);
             /* g_free (title); */
         }
 
-        if(nalt)
+        if(alternatives)
             playlist_append(path, alternatives);
-        g_strfreev(alternatives);
     }
   pls_fail:
     if(lines)

@@ -18,16 +18,18 @@ GArray * playlist = NULL;
 
 gint playlist_position = -1;
 
-static void listitem_init(PlaylistItem * item, gchar * path, gchar ** alts)
+static void listitem_init(PlaylistItem * item, gchar * path, GList * alts)
 {
     item->main_path = path;
     item->paths = alts;
-    item->use_path = 0;
+    item->use_path = item->paths;
 }
 
 static void listitem_destroy(PlaylistItem * item)
 {
-    g_strfreev(item->paths);
+    for(GList * it = item->paths; it; it = g_list_next(it))
+        g_free(it->data);
+    g_list_free(item->paths);
     g_free(item->main_path);
 }
 
@@ -54,32 +56,21 @@ static inline void reset_playlist_position(void)
         playlist_position = 0;
 }
 
-void playlist_append(gchar * path, gchar ** alts)
+void playlist_append(const gchar * path, GList * alts)
 {
     g_return_if_fail(g_utf8_validate(path, -1, NULL));
 
     if(!parse_file(path))
         return;
 
-    gchar * noalts[] = { path, NULL };
     if(!alts)
-        alts = noalts;
+        alts = g_list_append(alts, g_strdup(path)); // XXX
 
-    gint nalts = 0;
-    while(alts && alts[nalts])
-        ++nalts;
-
-    gchar **paths = g_new(gchar *, nalts + 1);
-    paths[nalts] = NULL;
-
-    for(gint i = 0; i < nalts; ++i)
-    {
-        g_return_if_fail(g_utf8_validate(alts[i], -1, NULL));
-        paths[i] = g_strdup(alts[i]);
-    }
+    for(GList * it = alts; it; it = g_list_next(it))
+        g_return_if_fail(g_utf8_validate(it->data, -1, NULL));
 
     PlaylistItem item;
-    listitem_init(&item, g_strdup(path), paths);
+    listitem_init(&item, g_strdup(path), alts);
 
     g_array_append_val(playlist, item);
 
@@ -89,64 +80,37 @@ void playlist_append(gchar * path, gchar ** alts)
 
 void playlist_replace_path(guint track, const gchar * path)
 {
-    guint i, nalts = 0;
-    gchar **p, **alts;
-
     g_return_if_fail(PLAYLIST_CURRENT_ITEM() != NULL);
 
-    alts = p = PLAYLIST_CURRENT_ITEM()->paths;
-
-    while(alts[nalts])
-        ++nalts;
+    gint nalts = g_list_length(PLAYLIST_CURRENT_ITEM()->paths);
 
     if(track > nalts - 1)
     {
-        g_assert(track == nalts); /* cant be more than one past the end! */
-        PLAYLIST_CURRENT_ITEM()->paths =
-            g_renew(gchar *, PLAYLIST_CURRENT_ITEM()->paths, track + 2);
-        alts[nalts - 1] = NULL;
-        nalts++;
+        g_assert(track == nalts); /* can't be more than one past the end! */
+        PLAYLIST_CURRENT_ITEM()->paths = g_list_append(PLAYLIST_CURRENT_ITEM()->paths, g_strdup(path));
     }
-
-    for(i = 0; i < track; ++i)
-        ++p;
-
-    g_free(*p);
-    *p = g_strdup(path);
-    for(++p; *p; ++p)
+    else
     {
-        g_free(*p);
-        *p = NULL;
+        GList * replaced = g_list_nth(PLAYLIST_CURRENT_ITEM()->paths, track);
+        g_free(replaced->data);
+        replaced->data = g_strdup(path);
     }
-
-    if(track < nalts - 1)
-        PLAYLIST_CURRENT_ITEM()->paths =
-            g_renew(gchar *, PLAYLIST_CURRENT_ITEM()->paths, track + 2);
 }
 
 gboolean playlist_fail(void)
 {
-    PlaylistItem * item;
-    guint nalts = 0;
-
     g_return_val_if_fail(PLAYLIST_CURRENT_ITEM() != NULL, FALSE);
 
-    item = PLAYLIST_CURRENT_ITEM();
-    while(item->paths[nalts])
-        ++nalts;
-    if(nalts - 1 > item->use_path)
-    {
-        ++item->use_path;
-        /* try again */
+    PlaylistItem * item = PLAYLIST_CURRENT_ITEM();
+    if((item->use_path = g_list_next(item->use_path)))
         return TRUE;
-    }
     else
     {
+        item->use_path = item->paths;
         /*playlist_remove(g_list_position(playlist, PLAYLIST_CURRENT_ITEM())); */
         playlist_advance(1);
         return TRUE;
     }
-    return FALSE;
 }
 
 void playlist_advance(gint how)

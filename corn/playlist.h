@@ -5,9 +5,9 @@
 
 typedef struct PlaylistItem
 {
-    guint use_path;
     gchar * main_path;
-    gchar **paths;
+    GList * paths;
+    GList * use_path;
 } PlaylistItem;
 
 extern GArray * playlist;
@@ -17,13 +17,12 @@ extern gint playlist_position;
     (playlist->len ? &g_array_index(playlist, PlaylistItem, playlist_position) \
                    : NULL)
 
-#define MAIN_PATH(item) (((PlaylistItem*)(item))->main_path)
-#define PATH(item) (((PlaylistItem*)(item))->paths \
-                    [((PlaylistItem*)(item))->use_path])
+#define MAIN_PATH(item) (((PlaylistItem *)(item))->main_path)
+#define PATH(item) ((gchar *)(((PlaylistItem *)(item))->use_path->data))
 
 void playlist_init(void);
 void playlist_destroy(void);
-void playlist_append(gchar * path, gchar ** alts);
+void playlist_append(const gchar * path, GList * alts);
 void playlist_replace_path(guint track, const gchar * path);
 /* re-create the random ordering */
 void playlist_rerandomize(void);
