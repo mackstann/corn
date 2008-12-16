@@ -209,9 +209,15 @@ void playlist_advance(gint num, gboolean loop)
 
     if(!config_repeat_track)
     {
-        if(0 && config_random_order)
+        if(config_random_order)
         {
-        } else {
+            if(num > 0)
+                playlist_position = g_random_int_range(0, playlist->len);
+            else
+                g_warning("prev when random -- unimplemented");
+        }
+        else
+        {
             for(; num > 0; num--)
             {
                 if(++playlist_position >= playlist->len)
