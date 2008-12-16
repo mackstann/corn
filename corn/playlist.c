@@ -216,7 +216,7 @@ void playlist_advance(gint num, gboolean loop)
         {
             if(num > 0)
                 playlist_position = plrand_next(playlist_position, playlist->len);
-            else
+            else if(num < 0)
                 playlist_position = plrand_prev(playlist_position, playlist->len);
         }
         else
