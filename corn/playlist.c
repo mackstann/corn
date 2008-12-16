@@ -221,22 +221,14 @@ void playlist_advance(gint num, gboolean loop)
         }
         else
         {
-            for(; num > 0; num--)
-            {
-                if(++playlist_position >= playlist->len)
-                {
-                    playlist_position = 0;
-                    looped = TRUE;
-                }
-            }
-            for(; num < 0; num++)
-            {
-                if(--playlist_position < 0)
-                {
-                    playlist_position = playlist->len - 1;
-                    looped = TRUE;
-                }
-            }
+            looped = TRUE;
+            playlist_position += num;
+            if(playlist_position < 0)
+                playlist_position = playlist->len - 1;
+            else if(playlist_position == playlist->len)
+                playlist_position = 0;
+            else
+                looped = FALSE;
         }
     }
 

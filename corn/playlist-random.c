@@ -13,7 +13,7 @@
 //  ..---------------------+---------+----------+-------------------------..
 
 // past and future each get this many entries
-static const gint history_size = 100;
+static const gint history_size = 20;
 
 static GQueue * past = NULL;
 static GQueue * future = NULL;
