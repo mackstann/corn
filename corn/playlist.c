@@ -192,16 +192,6 @@ gboolean playlist_fail(void)
     return FALSE;
 }
 
-#define array_index_of_value(arr, typ, val) (__extension__({ \
-    g_assert(sizeof(val) == sizeof(typ)); \
-    gint index = -1; \
-    for(gint i = 0; i < arr->len; i++) \
-        if(!memcmp(&g_array_index(arr, typ, i), &val, sizeof(val))) { \
-            index = i; \
-            break; \
-        } \
-    index; }))
-
 void playlist_advance(gint num, gboolean loop)
 {
     gboolean looped = FALSE;
@@ -246,6 +236,8 @@ void playlist_seek(gint track)
 
     gint was_playing = music_playing;
 
+    plrand_record_past(playlist_position);
+
     playlist_position = track;
 
     /* this function is used during load, and we don't want to start
@@ -268,6 +260,8 @@ void playlist_clear(void)
 
     g_array_remove_range(playlist, 0, playlist->len);
 
+    plrand_clear();
+
     playlist_position = -1;
 }
 
@@ -286,6 +280,9 @@ void playlist_remove(gint track)
 
     g_array_remove_index(playlist, track); // O(n)
 
+    plrand_shift_track_numbers(track+1, playlist->len-1, -1);
+    plrand_forget_track(track);
+
     // if we're still in the same spot, there was no track to advance to.  set
     // to track 0, or if we're removing last song, set to -1.
     if(track == playlist_position)
@@ -299,12 +296,15 @@ void playlist_move(gint track, gint dest)
     if G_UNLIKELY(track < 0) return;
     if G_UNLIKELY(track >= playlist->len) return;
 
-    PlaylistItem * item = &g_array_index(playlist, PlaylistItem, track);
-
     if(dest > track)
-        ++dest;
+        plrand_shift_track_numbers(track+1, dest-1, -1);
+    else if(dest < track)
+        plrand_shift_track_numbers(dest, track-1, +1);
 
-    g_array_insert_val(playlist, dest, *item); // O(n)
+    plrand_move_track(track, dest);
+
+    PlaylistItem * item = &g_array_index(playlist, PlaylistItem, track);
+    g_array_insert_val(playlist, (dest > track ? dest+1 : dest), *item); // O(n)
     g_array_remove_index(playlist, track); // O(n)
 
     if(track == playlist_position)
