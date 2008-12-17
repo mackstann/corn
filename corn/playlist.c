@@ -60,11 +60,12 @@ void playlist_append(const gchar * path, GList * alts)
 {
     g_return_if_fail(g_utf8_validate(path, -1, NULL));
 
-    if(!parse_file(path))
-        return;
-
     if(!alts)
+    {
+        if(!parse_file(path))
+            return;
         alts = g_list_append(alts, g_strdup(path)); // XXX
+    }
 
     for(GList * it = alts; it; it = g_list_next(it))
         g_return_if_fail(g_utf8_validate(it->data, -1, NULL));
