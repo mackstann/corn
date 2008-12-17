@@ -141,30 +141,32 @@ gboolean parse_pls(const gchar * path)
 {
     g_message("parsing pls: %s", path);
 
+    gint length;
+    gchar * buf;
+
     GKeyFile * keyfile = g_key_file_new();
-    if(!g_key_file_load_from_file(keyfile, path, G_KEY_FILE_NONE, NULL))
-        g_warning("Error loading .pls file: %s", path);
+
+    if(gnome_vfs_read_entire_file(path, &length, &buf) ||
+       !g_key_file_load_from_data(keyfile, buf, length, G_KEY_FILE_NONE, NULL) ||
+       !g_key_file_has_group(keyfile, "playlist") ||
+       !g_key_file_has_key(keyfile, "playlist", "NumberOfEntries", NULL))
+    {
+        g_warning("Invalid .pls file: %s", path);
+    }
     else
     {
-        if(!g_key_file_has_group(keyfile, "playlist") ||
-           !g_key_file_has_key(keyfile, "playlist", "NumberOfEntries", NULL))
+        gint entries = g_key_file_get_integer(keyfile, "playlist", "NumberOfEntries", NULL);
+        for(gint i = 1; i <= entries; ++i)
         {
-            g_warning("Invalid .pls file: %s", path);
-        }
-        else
-        {
-            gint entries = g_key_file_get_integer(keyfile, "playlist", "NumberOfEntries", NULL);
-            for(gint i = 1; i <= entries; ++i)
-            {
-                gchar * file_key = g_strdup_printf("File%d", i);
-                gchar * file = g_key_file_get_value(keyfile, "playlist", file_key, NULL);
-                if(file)
-                    playlist_append(file, NULL);
-                g_free(file_key);
-                g_free(file);
-            }
+            gchar * file_key = g_strdup_printf("File%d", i);
+            gchar * file = g_key_file_get_value(keyfile, "playlist", file_key, NULL);
+            if(file)
+                playlist_append(file, NULL);
+            g_free(file_key);
+            g_free(file);
         }
     }
+
     g_key_file_free(keyfile);
     return FALSE;
 }
