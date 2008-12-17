@@ -233,17 +233,13 @@ gboolean parse_file(const gchar * path)
                                 GNOME_VFS_FILE_INFO_FORCE_FAST_MIME_TYPE |
                                 GNOME_VFS_FILE_INFO_FOLLOW_LINKS))
     {
-        if(strcmp("x-directory/normal", info->mime_type) == 0)
-            ret = parse_dir(path);
-        else if(strcmp("audio/x-scpls", info->mime_type) == 0 ||
-                strcmp("application/pls", info->mime_type) == 0 ||
-                strcmp("application/pls+xml", info->mime_type) == 0)
-            ret = parse_pls(path);
-        else if(strcmp("audio/x-mpegurl", info->mime_type) == 0)
-            ret = parse_m3u(path);
-        else if(strcmp("audio/x-pn-realaudio", info->mime_type) == 0 ||
-                strcmp("audio/vnd.rn-realaudio", info->mime_type) == 0)
-            ret = parse_ram(path);
+             if(!strcmp("audio/x-mpegurl",        info->mime_type)) ret = parse_m3u(path);
+        else if(!strcmp("x-directory/normal",     info->mime_type)) ret = parse_dir(path);
+        else if(!strcmp("audio/x-scpls",          info->mime_type)) ret = parse_pls(path);
+        else if(!strcmp("application/pls",        info->mime_type)) ret = parse_pls(path);
+        else if(!strcmp("application/pls+xml",    info->mime_type)) ret = parse_pls(path);
+        else if(!strcmp("audio/x-pn-realaudio",   info->mime_type)) ret = parse_ram(path);
+        else if(!strcmp("audio/vnd.rn-realaudio", info->mime_type)) ret = parse_ram(path);
     }
 
     gnome_vfs_file_info_unref(info);
