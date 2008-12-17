@@ -29,6 +29,8 @@ corn_SOURCES = \
   parsefile.c \
   configuration.h \
   configuration.c \
+  sockqueue.h \
+  sockqueue.c \
   cpris-root.h \
   cpris-root.c \
   cpris-root-glue.h \

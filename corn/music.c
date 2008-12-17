@@ -4,6 +4,7 @@
 #include "music.h"
 #include "main.h"
 #include "playlist.h"
+#include "sockqueue.h"
 #include "configuration.h"
 
 #include <glib-object.h>
@@ -17,12 +18,6 @@
 #include <sys/socket.h>
 #include <errno.h>
 
-typedef struct _music_socket_pair_t
-{
-    gint reader;
-    gint writer;
-} music_socket_pair_t;
-
 xine_t * xine = NULL;
 xine_stream_t * music_stream = NULL;
 
@@ -35,40 +30,20 @@ gint music_volume;
 
 static gboolean music_gapless = FALSE;
 
-/////// inter-thread i/o ///////
-//
-// an async queue would be a bit cleaner for this, but the only way to check it
-// for events is to poll it.  with a socket pair, we have file descriptors that
-// we can select().
+#define READ 0
+#define WRITE 1
 
-static music_socket_pair_t event_sockets;
-
-typedef ssize_t (* rw_func)(int fd, void * data, size_t len);
-
-void music_event_read_or_write(rw_func func, int fd, xine_event_t * e)
-{
-    ssize_t ntransferred = 0;
-    do {
-        ssize_t ret = func(fd,
-                (void *) (((char *) e) + ntransferred),
-                sizeof(xine_event_t) - ntransferred);
-        if(ret == -1)
-            g_assert(ret == EINTR || ret == EAGAIN);
-        else
-            ntransferred += ret;
-    }
-    while(ntransferred < sizeof(xine_event_t));
-}
+static sockqueue_t * event_queue = NULL;
 
 void music_event_send(void * data, const xine_event_t * e)
 {
-    music_event_read_or_write((rw_func) write, event_sockets.writer, (xine_event_t *) e);
+    sockqueue_write(event_queue->fd[WRITE], xine_event_t, e);
 }
 
 gboolean music_event_handle(GIOChannel * source, GIOCondition condition, gpointer data)
 {
     xine_event_t e;
-    music_event_read_or_write((rw_func) read, event_sockets.reader, &e);
+    sockqueue_read(event_queue->fd[READ], xine_event_t, &e);
 
     xine_mrl_reference_data_t * mrl;
     static gboolean mrl_change = FALSE;
@@ -146,7 +121,7 @@ int music_init()
     xine_set_param(music_stream, XINE_PARAM_IGNORE_VIDEO, 1);
     xine_set_param(music_stream, XINE_PARAM_IGNORE_SPU, 1);
 
-    if(socketpair(AF_UNIX, SOCK_STREAM, 0, (int *) &event_sockets))
+    if(!(event_queue = sockqueue_create()))
     {
         g_critical("%s (%s).", _("Unable to open event socket pair"), g_strerror(errno));
         return 13;
@@ -155,7 +130,7 @@ int music_init()
     events = xine_event_new_queue(music_stream);
     xine_event_create_listener_thread(events, music_event_send, NULL);
 
-    GIOChannel * chan = g_io_channel_unix_new(event_sockets.reader);
+    GIOChannel * chan = g_io_channel_unix_new(event_queue->fd[READ]);
     g_io_add_watch_full(chan, G_PRIORITY_HIGH, G_IO_IN, music_event_handle, NULL, NULL);
     g_io_channel_unref(chan);
 
@@ -176,8 +151,7 @@ void music_destroy()
     xine_dispose(music_stream);
     xine_close_audio_driver(xine, ao);
     xine_exit(xine);
-    while(close(event_sockets.reader) == -1 && errno == EINTR);
-    while(close(event_sockets.writer) == -1 && errno == EINTR);
+    sockqueue_destroy(event_queue);
 }
 
 gboolean music_try_to_play(void)
