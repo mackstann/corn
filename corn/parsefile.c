@@ -235,11 +235,14 @@ gboolean parse_file(const gchar * path)
     {
         if(strcmp("x-directory/normal", info->mime_type) == 0)
             ret = parse_dir(path);
-        else if(strcmp("audio/x-scpls", info->mime_type) == 0)
+        else if(strcmp("audio/x-scpls", info->mime_type) == 0 ||
+                strcmp("application/pls", info->mime_type) == 0 ||
+                strcmp("application/pls+xml", info->mime_type) == 0)
             ret = parse_pls(path);
         else if(strcmp("audio/x-mpegurl", info->mime_type) == 0)
             ret = parse_m3u(path);
-        else if(strcmp("audio/x-pn-realaudio", info->mime_type) == 0)
+        else if(strcmp("audio/x-pn-realaudio", info->mime_type) == 0 ||
+                strcmp("audio/vnd.rn-realaudio", info->mime_type) == 0)
             ret = parse_ram(path);
     }
 
