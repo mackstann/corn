@@ -16,7 +16,6 @@ static gchar ** read_file(const gchar * path)
     if(gnome_vfs_read_entire_file(path, &size, &buf))
         return NULL;
 
-    /* null terminate that shit */
     buf = g_realloc(buf, size + 1);
     buf[size] = '\0';
 
