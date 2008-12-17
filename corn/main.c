@@ -44,6 +44,7 @@ void init_signals(void)
         .sa_flags = SA_NOCLDSTOP
     };
 
+    sigaction(SIGPIPE, &ignore_action, (struct sigaction *)NULL);
     sigaction(SIGHUP, &ignore_action, (struct sigaction *)NULL);
 
     sigaddset(&sigset, SIGTERM);
