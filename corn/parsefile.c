@@ -8,65 +8,6 @@
 #include <glib.h>
 #include <stdlib.h>
 
-/* this function stolen from gxine.. thanks guys ;) */
-static gint read_ini_line_int(gchar ** lines, const gchar * key)
-{
-    gint retval = -1;
-    gint i;
-
-    g_return_val_if_fail(lines != NULL && key != NULL, -1);
-
-    for(i = 0; (lines[i] != NULL && retval == -1); i++)
-    {
-        if(strncasecmp(lines[i], key, strlen(key)) == 0)
-        {
-            gchar ** bits;
-
-            bits = g_strsplit(lines[i], "=", 2);
-            if(bits[0] == NULL || bits[1] == NULL)
-            {
-                g_strfreev(bits);
-                return -1;
-            }
-
-            retval = atoi(bits[1]);
-            g_strfreev(bits);
-        }
-    }
-
-    return retval;
-}
-
-/* this function stolen from gxine.. thanks guys ;) */
-static gchar * read_ini_line_string(gchar ** lines, const gchar * key)
-{
-    gchar * retval = NULL;
-    int i;
-
-    g_return_val_if_fail(lines != NULL && key != NULL, NULL);
-
-    for(i = 0; (lines[i] != NULL && retval == NULL); i++)
-    {
-        if(strncasecmp(lines[i], key, strlen(key)) == 0)
-        {
-            gchar ** bits;
-
-            bits = g_strsplit(lines[i], "=", 2);
-            if(bits[0] == NULL || bits[1] == NULL)
-            {
-                g_strfreev(bits);
-                return NULL;
-            }
-
-            retval = g_strdup(bits[1]);
-
-            g_strfreev(bits);
-        }
-    }
-
-    return retval;
-}
-
 static gchar ** read_file(const gchar * path)
 {
     gint size;
@@ -199,55 +140,35 @@ gboolean parse_m3u(const gchar * path)
     return FALSE;
 }
 
-/* this function heavily based on code from gxine */
 gboolean parse_pls(const gchar * path)
 {
-    int entries, i;
-    gchar ** lines;
-
     g_message("parsing pls: %s", path);
-    if((lines = read_file(path)))
+
+    GKeyFile * keyfile = g_key_file_new();
+    if(!g_key_file_load_from_file(keyfile, path, G_KEY_FILE_NONE, NULL))
+        g_warning("Error loading .pls file: %s", path);
+    else
     {
-        if(strncasecmp("[playlist]", lines[0], strlen("[playlist]")) != 0)
+        if(!g_key_file_has_group(keyfile, "playlist") ||
+           !g_key_file_has_key(keyfile, "playlist", "NumberOfEntries", NULL))
         {
-            g_warning("Invalid .pls file '%s'", path);
-            goto pls_fail;
+            g_warning("Invalid .pls file: %s", path);
         }
-        if((entries = read_ini_line_int(lines, "NumberOfEntries")) < 0)
+        else
         {
-            g_warning("Invalid .pls file '%s'", path);
-            goto pls_fail;
-        }
-
-        GList * alternatives = NULL;
-
-        for(i = 1; i <= entries; ++i)
-        {
-            char * file /*, * title */ ;
-            char * file_key /*, * title_key */ ;
-
-            file_key = g_strdup_printf("file%d", i);
-            /* title_key = g_strdup_printf ("title%d", i); */
-
-            file = read_ini_line_string(lines, file_key);
-            /* title = read_ini_line_string (lines, title_key); */
-
-            g_free(file_key);
-            /* g_free (title_key); */
-
-            if(file != NULL)
-                alternatives = g_list_append(alternatives, g_strstrip(file));
-            else
+            gint entries = g_key_file_get_integer(keyfile, "playlist", "NumberOfEntries", NULL);
+            for(gint i = 1; i <= entries; ++i)
+            {
+                gchar * file_key = g_strdup_printf("File%d", i);
+                gchar * file = g_key_file_get_value(keyfile, "playlist", file_key, NULL);
+                if(file)
+                    playlist_append(file, NULL);
+                g_free(file_key);
                 g_free(file);
-            /* g_free (title); */
+            }
         }
-
-        if(alternatives)
-            playlist_append(path, alternatives);
     }
-  pls_fail:
-    if(lines)
-        g_strfreev(lines);
+    g_key_file_free(keyfile);
     return FALSE;
 }
 
