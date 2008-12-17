@@ -19,7 +19,7 @@ static gchar ** read_file(const gchar * path)
     buf = g_realloc(buf, size + 1);
     buf[size] = '\0';
 
-    g_strdelimit(buf, "\r", '\n');      /* \r is used on some platforms */
+    g_strdelimit(buf, "\r", '\n'); // \r is used on some platforms
     lines = g_strsplit(buf, "\n", 0);
     g_free(buf);
     return lines;
@@ -32,7 +32,7 @@ static gchar * add_relative_dir(const gchar * name, const gchar * dir)
     if(name[0] == G_DIR_SEPARATOR)
         return g_strdup(name);
 
-    /* make sure the dir ends in a separator */
+    // make sure the dir ends in a separator
     slashdir = g_strconcat(dir, (dir[strlen(dir) - 1] == G_DIR_SEPARATOR ?
                                  "" : G_DIR_SEPARATOR_S), NULL);
     ret = gnome_vfs_uri_make_full_from_relative(slashdir, name);
@@ -64,8 +64,8 @@ gboolean parse_ram(const gchar * path)
     if(left)
         return FALSE;
 
-    /* from gxine:
-       if this is true, then its an actual stream, not a playlist file */
+    // from gxine:
+    // if this is true, then its an actual stream, not a playlist file
     if(buf[0] == '.' && buf[1] == 'R' && buf[2] == 'M' && buf[3] == 'F')
         return TRUE;
 
@@ -79,18 +79,16 @@ gboolean parse_ram(const gchar * path)
             if(strlen(lines[i]))
             {
 
-                /* comment */
+                // comment
                 if(lines[i][0] == '#')
                     continue;
 
-                /* --stop-- lines */
+                // --stop-- lines
                 if(strstr(lines[i], "--stop--"))
                     break;
 
-                /* from gxine:
-                   Either it's a rtsp, or a pnm mrl, but we also match http
-                   mrls here.
-                 */
+                // from gxine:
+                // Either it's a rtsp, or a pnm mrl, but we also match http mrls here.
                 if(g_str_has_prefix(lines[i], "rtsp://") ||
                    g_str_has_prefix(lines[i], "pnm://") ||
                    g_str_has_prefix(lines[i], "http://"))
@@ -123,9 +121,9 @@ gboolean parse_m3u(const gchar * path)
             lines[i] = g_strstrip(lines[i]);
             if(strlen(lines[i]) && lines[i][0] != '#')
             {
-                if(lines[i][0] == '/')  // absolute
+                if(lines[i][0] == '/') // absolute
                     playlist_append(lines[i], NULL);
-                else            // relative
+                else // relative
                 {
                     gchar * fullpath = add_relative_dir(lines[i], dir);
                     playlist_append(fullpath, NULL);
