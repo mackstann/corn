@@ -1,10 +1,11 @@
+// Written by Nick Welch in the year 2008.  Author disclaims copyright.
+
 #ifndef __corn_sockqueue_h__
 #define __corn_sockqueue_h__
 
 #include <sys/types.h>
 #include <sys/socket.h>
-
-#include <glib.h>
+#include <assert.h>
 
 typedef struct _sockqueue_t {
     int fd[2];
@@ -17,7 +18,7 @@ typedef struct _sockqueue_t {
                     (void *) (((char *)(data)) + ntransferred), \
                     sizeof(type) - ntransferred); \
             if(ret == -1) \
-                g_assert(ret == EINTR || ret == EAGAIN); \
+                assert(ret == EINTR || ret == EAGAIN); \
             else \
                 ntransferred += ret; \
         } while(ntransferred < sizeof(type)); \
