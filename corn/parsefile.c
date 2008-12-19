@@ -177,20 +177,16 @@ gboolean parse_dir(const gchar * path)
     GnomeVFSFileInfo * info;
     GSList * entries = NULL, * it;
 
-    g_message("adding dir: %s", path);
-
     if(gnome_vfs_directory_open
        (&dirh, path, GNOME_VFS_FILE_INFO_FOLLOW_LINKS))
         return FALSE;
 
-    g_message("really adding dir: %s", path);
-
     info = gnome_vfs_file_info_new();
 
-    while(gnome_vfs_directory_read_next(dirh, info) == GNOME_VFS_OK
-          && info->name[0] != '.')
+    while(gnome_vfs_directory_read_next(dirh, info) == GNOME_VFS_OK)
     {
-        g_message("read dir entry: %s", info->name);
+        if(info->name[0] == '.')
+            continue;
         gchar * fullpath = add_relative_dir(info->name, path);
         entries = g_slist_append(entries, fullpath);
     }
@@ -198,6 +194,7 @@ gboolean parse_dir(const gchar * path)
     entries = g_slist_sort(entries, (GCompareFunc) strcmp);
     for(it = entries; it; it = g_slist_next(it))
     {
+        g_message("recursive directory add: %s", (gchar *)it->data);
         playlist_append(it->data, NULL);
         g_free(it->data);
     }
