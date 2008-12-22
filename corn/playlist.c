@@ -98,20 +98,18 @@ void playlist_replace_path(guint track, const gchar * path)
     }
 }
 
-gboolean playlist_fail(void)
+void playlist_fail(void)
 {
-    g_return_val_if_fail(PLAYLIST_CURRENT_ITEM() != NULL, FALSE);
+    g_return_if_fail(PLAYLIST_CURRENT_ITEM() != NULL);
 
     PlaylistItem * item = PLAYLIST_CURRENT_ITEM();
-    if((item->use_path = g_list_next(item->use_path)))
-        return TRUE;
-    else
+    item->use_path = g_list_next(item->use_path);
+    if(!item->use_path)
     {
         g_warning("Couldn't play %s", MAIN_PATH(item));
         item->use_path = item->paths;
         /*playlist_remove(g_list_position(playlist, PLAYLIST_CURRENT_ITEM())); */
         playlist_advance(1);
-        return TRUE;
     }
 }
 

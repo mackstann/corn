@@ -34,6 +34,6 @@ void playlist_remove(gint track);
 void playlist_move(gint track, gint dest);
 void playlist_next_alternative(void);
 void playlist_dump(void);
-gboolean playlist_fail(void);
+void playlist_fail(void);
 
 #endif

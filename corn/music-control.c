@@ -12,10 +12,17 @@ static void do_pause(void)
 void music_play(void)
 {
     gint orig_pos = playlist_position;
-    while(!music_try_to_play() && playlist_fail() && playlist_position != orig_pos);
-    // if we keep failing to load files, and loop/repeat are on, we don't want
-    // to infinitely keep trying to play the same file(s) that won't play.  so
-    // once we fail and eventually get back to the same song, stop.
+    while(!music_try_to_play())
+    {
+        playlist_fail();
+
+        // if we keep failing to load files, and loop/repeat are on, we don't
+        // want to infinitely keep trying to play the same file(s) that won't
+        // play.  so once we fail and eventually get back to the same song,
+        // stop.
+        if(playlist_position == orig_pos)
+            return;
+    }
 }
 
 void music_seek(gint ms)
