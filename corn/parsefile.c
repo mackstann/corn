@@ -208,6 +208,8 @@ gboolean parse_dir(const gchar * path)
 
 gboolean parse_file(const gchar * path)
 {
+    g_return_val_if_fail(path != NULL, FALSE);
+
     static GRegex * familiar_extensions = NULL;
     if(!familiar_extensions)
         familiar_extensions = g_regex_new(
@@ -215,11 +217,11 @@ gboolean parse_file(const gchar * path)
             G_REGEX_CASELESS | G_REGEX_OPTIMIZE, 0, NULL);
 
     if(g_str_has_prefix(path, "file://"))
-    {
         path += 7;
-        if(g_regex_match(familiar_extensions, path, 0, NULL))
-            return TRUE; // looks like a boring local media file
-    }
+
+    // looks like a boring media file with predictable file extension
+    if(g_regex_match(familiar_extensions, path, 0, NULL))
+        return TRUE;
 
     GnomeVFSFileInfo * info = gnome_vfs_file_info_new();
 
