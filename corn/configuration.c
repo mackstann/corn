@@ -54,7 +54,7 @@ static gint read_int_from_config_file(const char * name, gint min, gint max, gin
             glong val = strtol(mrl, &end, 10);
 
             if(!errno && end != mrl && val >= min && val <= max)
-                return (gint) val;
+                return (gint)val;
         }
     }
     return default_value;
@@ -70,7 +70,7 @@ void config_load(void)
     config_random_order = read_int_from_config_file("state.random", 0, 1, 0);
     config_repeat_track = read_int_from_config_file("state.repeat", 0, 1, 0);
 
-    playlist_seek(read_int_from_config_file ("state.list_position", 0, G_MAXINT, 0));
+    playlist_seek(read_int_from_config_file("state.list_position", 0, G_MAXINT, 0));
     gint pos = read_int_from_config_file("state.track_position", 0, G_MAXINT, 0);
 
     gint playing = read_int_from_config_file("state.playing", 0, 2, MUSIC_STOPPED);
