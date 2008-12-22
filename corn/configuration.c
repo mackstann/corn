@@ -39,8 +39,7 @@ static void save_int_to_config_file(const char * name, gint num)
         g_printerr("%s %s (%s).\n", _("Couldn't save to config file"), name, g_strerror(errno));
 }
 
-static gint read_int_from_config_file(const char * name, gint min, gint max,
-                                      gint default_value)
+static gint read_int_from_config_file(const char * name, gint min, gint max, gint default_value)
 {
     FILE * f = open_config_file(name, "r");
     if(f)
