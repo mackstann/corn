@@ -5,9 +5,8 @@
 
 typedef struct PlaylistItem
 {
-    gchar * main_path;
-    GList * paths;
-    GList * use_path;
+    GList * paths;    // allocated list
+    GList * use_path; // just a pointer to a node in paths
 } PlaylistItem;
 
 extern GArray * playlist;
@@ -17,8 +16,8 @@ extern gint playlist_position;
     (playlist->len ? &g_array_index(playlist, PlaylistItem, playlist_position) \
                    : NULL)
 
-#define MAIN_PATH(item) (((PlaylistItem *)(item))->main_path)
-#define PATH(item) ((gchar *)(((PlaylistItem *)(item))->use_path->data))
+#define MAIN_PATH(item) ((gchar *)(((PlaylistItem *)(item))->paths   ->data))
+#define PATH(item)      ((gchar *)(((PlaylistItem *)(item))->use_path->data))
 
 void playlist_init(void);
 void playlist_destroy(void);
