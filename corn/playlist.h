@@ -15,7 +15,6 @@ void playlist_init(void);
 void playlist_destroy(void);
 void playlist_append(gchar * path);
 void playlist_replace_path(const gchar * path);
-/* re-create the random ordering */
 void playlist_advance(gint how);
 void playlist_seek(gint track);
 void playlist_clear(void);
