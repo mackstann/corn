@@ -18,16 +18,9 @@ GArray * playlist = NULL;
 
 gint playlist_position = -1;
 
-static void listitem_destroy(PlaylistItem * item)
-{
-    for(GList * it = item->paths; it; it = g_list_next(it))
-        g_free(it->data);
-    g_list_free(item->paths);
-}
-
 void playlist_init(void)
 {
-    playlist = g_array_new(FALSE, FALSE, sizeof(PlaylistItem));
+    playlist = g_array_new(FALSE, FALSE, sizeof(gchar *));
     plrand_init();
 }
 
@@ -48,56 +41,25 @@ static inline void reset_playlist_position(void)
         playlist_position = 0;
 }
 
-void playlist_append(GList * paths)
+void playlist_append(gchar * path) // takes ownership of the path passed in
 {
-    g_return_if_fail(paths != NULL);
+    g_return_if_fail(path != NULL);
+    g_return_if_fail(g_utf8_validate(path, -1, NULL));
 
-    for(GList * it = paths; it; it = g_list_next(it))
-        g_return_if_fail(g_utf8_validate(it->data, -1, NULL));
-
-    if(!g_list_next(paths) && !parse_file(paths->data))
+    if(!parse_file(path))
         return;
 
-    PlaylistItem item = { .paths = paths, .use_path = paths };
-
-    g_array_append_val(playlist, item);
+    g_array_append_val(playlist, path);
 
     if(playlist_position == -1)
         reset_playlist_position();
 }
 
-void playlist_replace_path(guint track, const gchar * path)
+void playlist_replace_path(const gchar * path)
 {
     g_return_if_fail(PLAYLIST_CURRENT_ITEM() != NULL);
-
-    gint nalts = g_list_length(PLAYLIST_CURRENT_ITEM()->paths);
-
-    if(track > nalts - 1)
-    {
-        g_assert(track == nalts); /* can't be more than one past the end! */
-        PLAYLIST_CURRENT_ITEM()->paths = g_list_append(PLAYLIST_CURRENT_ITEM()->paths, g_strdup(path));
-    }
-    else
-    {
-        GList * replaced = g_list_nth(PLAYLIST_CURRENT_ITEM()->paths, track);
-        g_free(replaced->data);
-        replaced->data = g_strdup(path);
-    }
-}
-
-void playlist_fail(void)
-{
-    g_return_if_fail(PLAYLIST_CURRENT_ITEM() != NULL);
-
-    PlaylistItem * item = PLAYLIST_CURRENT_ITEM();
-    item->use_path = g_list_next(item->use_path);
-    if(!item->use_path)
-    {
-        g_warning("Couldn't play %s", MAIN_PATH(item));
-        item->use_path = item->paths;
-        /*playlist_remove(g_list_position(playlist, PLAYLIST_CURRENT_ITEM())); */
-        playlist_advance(1);
-    }
+    g_free(PLAYLIST_CURRENT_ITEM());
+    PLAYLIST_ITEM_N(playlist_position) = g_strdup(path);
 }
 
 void playlist_advance(gint how)
@@ -164,7 +126,7 @@ void playlist_clear(void)
     music_stop();
 
     for(gint i = 0; i < playlist->len; i++)
-        listitem_destroy(&g_array_index(playlist, PlaylistItem, i));
+        g_free(PLAYLIST_ITEM_N(i));
 
     g_array_set_size(playlist, 0);
 
@@ -184,8 +146,7 @@ void playlist_remove(gint track)
     if(track < playlist_position)
         playlist_position--;
 
-    listitem_destroy(&g_array_index(playlist, PlaylistItem, track));
-
+    g_free(PLAYLIST_ITEM_N(track));
     g_array_remove_index(playlist, track); // O(n)
 
     plrand_shift_track_numbers(track + 1, playlist->len - 1, -1);
@@ -211,8 +172,8 @@ void playlist_move(gint track, gint dest)
 
     plrand_move_track(track, dest);
 
-    PlaylistItem * item = &g_array_index(playlist, PlaylistItem, track);
-    g_array_insert_val(playlist, (dest > track ? dest+1 : dest), *item); // O(n)
+    gchar * item = PLAYLIST_ITEM_N(track);
+    g_array_insert_val(playlist, (dest > track ? dest+1 : dest), item); // O(n)
     g_array_remove_index(playlist, track); // O(n)
 
     if(track == playlist_position)

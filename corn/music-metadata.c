@@ -83,7 +83,7 @@ static GHashTable * get_stream_metadata(xine_stream_t * strm)
     return meta;
 }
 
-GHashTable * music_get_playlist_item_metadata(PlaylistItem * item)
+GHashTable * music_get_playlist_item_metadata(const gchar * item)
 {
     GHashTable * empty = g_hash_table_new(NULL, NULL);
 
@@ -101,10 +101,10 @@ GHashTable * music_get_playlist_item_metadata(PlaylistItem * item)
     }
 
     gchar * path;
-    if(!(path = g_filename_from_utf8(PATH(item), -1, NULL, NULL, NULL)))
+    if(!(path = g_filename_from_utf8(item, -1, NULL, NULL, NULL)))
     {
         g_critical(_("Skipping getting track metadata for '%s'. "
-                     "Could not convert from UTF-8. Bug?"), PATH(item));
+                     "Could not convert from UTF-8. Bug?"), item);
         xine_dispose(strm);
         xine_close_audio_driver(xine, audio);
         return empty;
@@ -118,7 +118,7 @@ GHashTable * music_get_playlist_item_metadata(PlaylistItem * item)
     }
 
     GHashTable * meta = get_stream_metadata(strm);
-    add_metadata_from_string(meta, "mrl", PATH(item));
+    add_metadata_from_string(meta, "mrl", item);
 
     xine_dispose(strm);
     xine_close_audio_driver(xine, audio);
@@ -133,7 +133,7 @@ GHashTable * music_get_track_metadata(gint track)
     g_return_val_if_fail(track >= 0, empty);
     g_return_val_if_fail(track < playlist->len, empty);
     g_hash_table_unref(empty);
-    return music_get_playlist_item_metadata(&g_array_index(playlist, PlaylistItem, track));
+    return music_get_playlist_item_metadata(PLAYLIST_ITEM_N(track));
 }
 
 GHashTable * music_get_current_track_metadata(void)
@@ -142,7 +142,7 @@ GHashTable * music_get_current_track_metadata(void)
     if(music_stream && xine_get_status(music_stream) != XINE_STATUS_IDLE)
     {
         GHashTable * meta = get_stream_metadata(music_stream);
-        add_metadata_from_string(meta, "mrl", PATH(PLAYLIST_CURRENT_ITEM()));
+        add_metadata_from_string(meta, "mrl", PLAYLIST_CURRENT_ITEM());
         return meta;
     }
     else if(playlist_position != -1) // or do it the hard way

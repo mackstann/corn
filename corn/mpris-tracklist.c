@@ -38,7 +38,7 @@ gboolean mpris_tracklist_add_track(MprisTrackList * obj, const gchar * uri,
     }
     else
     {
-        playlist_append(g_list_append(NULL, u));
+        playlist_append(u);
         if(playnow)
             playlist_seek(playlist->len - 1);
         *failed = 0;

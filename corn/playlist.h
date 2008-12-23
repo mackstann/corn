@@ -3,36 +3,24 @@
 
 #include <glib.h>
 
-typedef struct PlaylistItem
-{
-    GList * paths;    // allocated list
-    GList * use_path; // just a pointer to a node in paths
-} PlaylistItem;
-
 extern GArray * playlist;
 extern gint playlist_position;
 
-#define PLAYLIST_CURRENT_ITEM() \
-    (playlist->len ? &g_array_index(playlist, PlaylistItem, playlist_position) \
-                   : NULL)
+#define PLAYLIST_ITEM_N(n) g_array_index(playlist, gchar *, (n))
 
-#define MAIN_PATH(item) ((gchar *)(((PlaylistItem *)(item))->paths   ->data))
-#define PATH(item)      ((gchar *)(((PlaylistItem *)(item))->use_path->data))
+#define PLAYLIST_CURRENT_ITEM() \
+    (playlist->len ? PLAYLIST_ITEM_N(playlist_position) : NULL)
 
 void playlist_init(void);
 void playlist_destroy(void);
-void playlist_append(GList * paths);
-void playlist_replace_path(guint track, const gchar * path);
+void playlist_append(gchar * path);
+void playlist_replace_path(const gchar * path);
 /* re-create the random ordering */
-void playlist_rerandomize(void);
 void playlist_advance(gint how);
 void playlist_seek(gint track);
 void playlist_clear(void);
 void playlist_remove(gint track);
 /* before = -1 to move to the end of the list */
 void playlist_move(gint track, gint dest);
-void playlist_next_alternative(void);
-void playlist_dump(void);
-void playlist_fail(void);
 
 #endif

@@ -98,7 +98,7 @@ void config_save(void)
     {
         for(gint i = 0; i < playlist->len; i++)
         {
-            fputs(MAIN_PATH(&g_array_index(playlist, PlaylistItem, i)), f);
+            fputs(PLAYLIST_ITEM_N(i), f);
             fputc('\n', f);
         }
         fclose(f);

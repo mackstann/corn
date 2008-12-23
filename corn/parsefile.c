@@ -54,7 +54,7 @@ gboolean parse_m3u(const gchar * path)
             lines[i] = g_strstrip(lines[i]);
             if(lines[i][0] == '\0' || lines[i][0] == '#')
                 continue;
-            playlist_append(g_list_append(NULL, add_relative_dir(lines[i], dir)));
+            playlist_append(add_relative_dir(lines[i], dir));
         }
         g_free(dir);
         g_strfreev(lines);
@@ -86,7 +86,7 @@ gboolean parse_pls(const gchar * path)
             gchar * file_key = g_strdup_printf("File%d", i);
             gchar * file = g_key_file_get_value(keyfile, "playlist", file_key, NULL);
             if(file)
-                playlist_append(g_list_append(NULL, file));
+                playlist_append(file);
             g_free(file_key);
         }
     }
@@ -119,7 +119,7 @@ gboolean parse_dir(const gchar * path)
     for(it = entries; it; it = g_slist_next(it))
     {
         g_message("recursive directory add: %s", (gchar *)it->data);
-        playlist_append(g_list_append(NULL, it->data));
+        playlist_append(it->data);
     }
     g_slist_free(entries);
 
