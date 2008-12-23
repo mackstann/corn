@@ -32,9 +32,11 @@ static gchar * add_relative_dir(const gchar * name, const gchar * dir)
     if(name[0] == G_DIR_SEPARATOR)
         return g_strdup(name);
 
+    gint len = strlen(dir);
+    const gchar * sep = dir[len-1] == G_DIR_SEPARATOR ?  "" : G_DIR_SEPARATOR_S;
+
     // make sure the dir ends in a separator
-    slashdir = g_strconcat(dir, (dir[strlen(dir) - 1] == G_DIR_SEPARATOR ?
-                                 "" : G_DIR_SEPARATOR_S), NULL);
+    slashdir = g_strconcat(dir, sep, NULL);
     ret = gnome_vfs_uri_make_full_from_relative(slashdir, name);
     g_free(slashdir);
 
