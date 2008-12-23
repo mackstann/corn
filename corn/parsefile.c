@@ -41,63 +41,6 @@ static gchar * add_relative_dir(const gchar * name, const gchar * dir)
     return ret;
 }
 
-gboolean parse_ram(const gchar * path)
-{
-    g_message("parsing ram: %s", path);
-
-    GnomeVFSHandle * h;
-    if(gnome_vfs_open(&h, path, GNOME_VFS_OPEN_READ))
-        return FALSE;
-
-    char buf[4];
-    GnomeVFSFileSize read, left = 4;
-    while(left && gnome_vfs_read(h, buf + (4 - left), left, &read) == GNOME_VFS_OK)
-        left -= read;
-
-    gnome_vfs_close(h);
-
-    if(left)
-        return FALSE;
-
-    // from gxine:
-    // if this is true, then its an actual stream, not a playlist file
-    if(g_str_has_prefix(buf, ".RMF"))
-        return TRUE;
-
-    gchar ** lines;
-    if((lines = read_file(path)))
-    {
-        GList * alternatives = NULL;
-        for(gint i = 0; lines[i]; ++i)
-        {
-            lines[i] = g_strstrip(lines[i]);
-            if(lines[i][0] == '\0' || lines[i][0] == '#')
-                continue;
-
-            if(strstr(lines[i], "--stop--"))
-                break;
-
-            // from gxine:
-            // Either it's a rtsp, or a pnm mrl, but we also match http mrls here.
-            if(g_str_has_prefix(lines[i], "rtsp://") ||
-               g_str_has_prefix(lines[i], "pnm://") ||
-               g_str_has_prefix(lines[i], "http://"))
-            {
-                alternatives = g_list_append(alternatives, g_strdup(lines[i]));
-            }
-        }
-
-        if(alternatives)
-        {
-            GList * paths = g_list_prepend(alternatives, g_strdup(path));
-            playlist_append(paths);
-        }
-
-        g_strfreev(lines);
-    }
-    return FALSE;
-}
-
 gboolean parse_m3u(const gchar * path)
 {
     g_message("parsing m3u: %s", path);
@@ -217,8 +160,6 @@ gboolean parse_file(const gchar * path)
         else if(!strcmp("audio/x-scpls",          info->mime_type)) addme = parse_pls(path);
         else if(!strcmp("application/pls",        info->mime_type)) addme = parse_pls(path);
         else if(!strcmp("application/pls+xml",    info->mime_type)) addme = parse_pls(path);
-        else if(!strcmp("audio/x-pn-realaudio",   info->mime_type)) addme = parse_ram(path);
-        else if(!strcmp("audio/vnd.rn-realaudio", info->mime_type)) addme = parse_ram(path);
     }
 
     gnome_vfs_file_info_unref(info);
