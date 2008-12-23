@@ -18,12 +18,6 @@ GArray * playlist = NULL;
 
 gint playlist_position = -1;
 
-static void listitem_init(PlaylistItem * item, GList * paths)
-{
-    item->paths = paths;
-    item->use_path = item->paths;
-}
-
 static void listitem_destroy(PlaylistItem * item)
 {
     for(GList * it = item->paths; it; it = g_list_next(it))
@@ -54,17 +48,17 @@ static inline void reset_playlist_position(void)
         playlist_position = 0;
 }
 
-void playlist_append(const gchar * path, GList * alts)
+void playlist_append(GList * paths)
 {
-    g_return_if_fail(g_utf8_validate(path, -1, NULL));
-    for(GList * it = alts; it; it = g_list_next(it))
+    g_return_if_fail(paths != NULL);
+
+    for(GList * it = paths; it; it = g_list_next(it))
         g_return_if_fail(g_utf8_validate(it->data, -1, NULL));
 
-    if(!alts && !parse_file(path))
+    if(!g_list_next(paths) && !parse_file(paths->data))
         return;
 
-    PlaylistItem item;
-    listitem_init(&item, g_list_prepend(alts, g_strdup(path)));
+    PlaylistItem item = { .paths = paths, .use_path = paths };
 
     g_array_append_val(playlist, item);
 

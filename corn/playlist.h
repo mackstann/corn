@@ -21,7 +21,7 @@ extern gint playlist_position;
 
 void playlist_init(void);
 void playlist_destroy(void);
-void playlist_append(const gchar * path, GList * alts);
+void playlist_append(GList * paths);
 void playlist_replace_path(guint track, const gchar * path);
 /* re-create the random ordering */
 void playlist_rerandomize(void);
