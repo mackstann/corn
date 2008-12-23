@@ -121,14 +121,9 @@ gboolean parse_m3u(const gchar * path)
             lines[i] = g_strstrip(lines[i]);
             if(strlen(lines[i]) && lines[i][0] != '#')
             {
-                if(lines[i][0] == '/') // absolute
-                    playlist_append(lines[i], NULL);
-                else // relative
-                {
-                    gchar * fullpath = add_relative_dir(lines[i], dir);
-                    playlist_append(fullpath, NULL);
-                    g_free(fullpath);
-                }
+                gchar * fullpath = add_relative_dir(lines[i], dir);
+                playlist_append(fullpath, NULL);
+                g_free(fullpath);
             }
         }
         g_strfreev(lines);
