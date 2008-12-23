@@ -43,20 +43,15 @@ static gchar * add_relative_dir(const gchar * name, const gchar * dir)
 
 gboolean parse_ram(const gchar * path)
 {
-    gchar ** lines;
-    guint i;
-    GnomeVFSHandle * h;
-    char buf[4];
-    GnomeVFSFileSize read, left;
-
     g_message("parsing ram: %s", path);
 
+    GnomeVFSHandle * h;
     if(gnome_vfs_open(&h, path, GNOME_VFS_OPEN_READ))
         return FALSE;
 
-    left = 4;
-    while(left &&
-          gnome_vfs_read(h, buf + (4 - left), left, &read) == GNOME_VFS_OK)
+    char buf[4];
+    GnomeVFSFileSize read, left = 4;
+    while(left && gnome_vfs_read(h, buf + (4 - left), left, &read) == GNOME_VFS_OK)
         left -= read;
 
     gnome_vfs_close(h);
@@ -66,35 +61,30 @@ gboolean parse_ram(const gchar * path)
 
     // from gxine:
     // if this is true, then its an actual stream, not a playlist file
-    if(buf[0] == '.' && buf[1] == 'R' && buf[2] == 'M' && buf[3] == 'F')
+    if(g_str_has_prefix(buf, ".RMF"))
         return TRUE;
 
+    gchar ** lines;
     if((lines = read_file(path)))
     {
         GList * alternatives = NULL;
 
-        for(i = 0; lines[i]; ++i)
+        for(gint i = 0; lines[i]; ++i)
         {
             lines[i] = g_strstrip(lines[i]);
-            if(strlen(lines[i]))
+            if(lines[i][0] == '\0' || lines[i][0] == '#')
+                continue;
+
+            if(strstr(lines[i], "--stop--"))
+                break;
+
+            // from gxine:
+            // Either it's a rtsp, or a pnm mrl, but we also match http mrls here.
+            if(g_str_has_prefix(lines[i], "rtsp://") ||
+               g_str_has_prefix(lines[i], "pnm://") ||
+               g_str_has_prefix(lines[i], "http://"))
             {
-
-                // comment
-                if(lines[i][0] == '#')
-                    continue;
-
-                // --stop-- lines
-                if(strstr(lines[i], "--stop--"))
-                    break;
-
-                // from gxine:
-                // Either it's a rtsp, or a pnm mrl, but we also match http mrls here.
-                if(g_str_has_prefix(lines[i], "rtsp://") ||
-                   g_str_has_prefix(lines[i], "pnm://") ||
-                   g_str_has_prefix(lines[i], "http://"))
-                {
-                    alternatives = g_list_append(alternatives, g_strdup(lines[i]));
-                }
+                alternatives = g_list_append(alternatives, g_strdup(lines[i]));
             }
         }
 
@@ -108,27 +98,24 @@ gboolean parse_ram(const gchar * path)
 
 gboolean parse_m3u(const gchar * path)
 {
-    gchar ** lines;
-    guint i;
-    gchar * dir = g_path_get_dirname(path);
-
     g_message("parsing m3u: %s", path);
 
+    gchar ** lines;
     if((lines = read_file(path)))
     {
-        for(i = 0; lines[i]; ++i)
+        gchar * dir = g_path_get_dirname(path);
+        for(gint i = 0; lines[i]; ++i)
         {
             lines[i] = g_strstrip(lines[i]);
-            if(strlen(lines[i]) && lines[i][0] != '#')
-            {
-                gchar * fullpath = add_relative_dir(lines[i], dir);
-                playlist_append(fullpath, NULL);
-                g_free(fullpath);
-            }
+            if(lines[i][0] == '\0' || lines[i][0] == '#')
+                continue;
+            gchar * fullpath = add_relative_dir(lines[i], dir);
+            playlist_append(fullpath, NULL);
+            g_free(fullpath);
         }
+        g_free(dir);
         g_strfreev(lines);
     }
-    g_free(dir);
     return FALSE;
 }
 
