@@ -63,8 +63,10 @@ static gint read_int_from_config_file(const char * name, gint min, gint max, gin
 void config_load(void)
 {
     gchar * playlist_filename = g_build_filename(g_get_user_config_dir(), PACKAGE, "playlist", NULL);
-    parse_m3u(playlist_filename);
+    GnomeVFSURI * pl_uri = gnome_vfs_uri_new(playlist_filename);
     g_free(playlist_filename);
+    parse_m3u(pl_uri);
+    gnome_vfs_uri_unref(pl_uri);
 
     config_loop_at_end = read_int_from_config_file("state.loop", 0, 1, 0);
     config_random_order = read_int_from_config_file("state.random", 0, 1, 0);
