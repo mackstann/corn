@@ -12,18 +12,12 @@
 
 static gchar ** read_file(const gchar * path)
 {
-    gint size;
-    gchar * buf, ** lines;
-
-    if(gnome_vfs_read_entire_file(path, &size, &buf)) // nul-terminated only since 2.10
+    gchar * buf;
+    if(gnome_vfs_read_entire_file(path, NULL, &buf)) // nul-terminated only since 2.10
         return NULL;
 
-        buf = g_realloc(buf, size + 1);
-            buf[size] = '\0';
-
-
     g_strdelimit(buf, "\r", '\n'); // \r is used on some platforms
-    lines = g_strsplit(buf, "\n", 0);
+    gchar ** lines = g_strsplit(buf, "\n", 0);
     g_free(buf);
     return lines;
 }
@@ -94,11 +88,10 @@ gboolean parse_pls(GnomeVFSURI * uri)
 {
     g_message("parsing pls: %s", uri->text);
 
-    gint length;
-    gchar * buf;
-
     GKeyFile * keyfile = g_key_file_new();
 
+    gchar * buf;
+    gint length;
     if(gnome_vfs_read_entire_file(uri->text, &length, &buf) ||
        !g_key_file_load_from_data(keyfile, buf, length, G_KEY_FILE_NONE, NULL) ||
        !g_key_file_has_group(keyfile, "playlist") ||
@@ -138,7 +131,7 @@ gboolean parse_dir(GnomeVFSURI * uri)
 {
     GnomeVFSDirectoryHandle * dirh;
     GnomeVFSFileInfo * info;
-    GSList * entries = NULL, * it;
+    GSList * entries = NULL;
 
     if(gnome_vfs_directory_open_from_uri(&dirh, uri, GNOME_VFS_FILE_INFO_FOLLOW_LINKS))
         return FALSE;
@@ -158,16 +151,16 @@ gboolean parse_dir(GnomeVFSURI * uri)
                     info->name, _("in"), _("directory"), uri->text);
     }
 
+    gnome_vfs_file_info_unref(info);
+    gnome_vfs_directory_close(dirh);
+
     entries = g_slist_sort(entries, (GCompareFunc) strcmp);
-    for(it = entries; it; it = g_slist_next(it))
+    for(GSList * it = entries; it; it = g_slist_next(it))
     {
         g_message("recursive directory add: %s", (gchar *)it->data);
         playlist_append(it->data);
     }
     g_slist_free(entries);
-
-    gnome_vfs_directory_close(dirh);
-    gnome_vfs_file_info_unref(info);
 
     return FALSE;
 }
