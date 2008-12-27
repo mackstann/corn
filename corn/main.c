@@ -17,12 +17,23 @@
 #include <string.h>
 
 CornStatus main_status;
+guint main_time_counter = 0;
 
 static GMainLoop * loop;
 
 void main_quit() { g_main_loop_quit(loop); }
 
 void signal_handler_quit(int signal) { main_quit(); }
+
+static gboolean increment_time_counter(gpointer data)
+{
+    // calling time() or gettimeofday() all the time is kind of wasteful since
+    // we don't need the actual time, just relative time.  so we schedule this
+    // to be called every second.  it won't be 100% precise but we don't need
+    // 100% precision.
+    main_time_counter++;
+    return TRUE;
+}
 
 void init_locale(void)
 {
@@ -68,6 +79,8 @@ int main(int argc, char **argv)
     init_locale();
 
     loop = g_main_loop_new(NULL, FALSE);
+    g_timeout_add_seconds_full(G_PRIORITY_HIGH, 1, increment_time_counter, NULL, NULL);
+
     init_signals();
 
     g_type_init();

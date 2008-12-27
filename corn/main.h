@@ -11,6 +11,7 @@ typedef enum
 } CornStatus;
 
 extern CornStatus main_status;
+extern guint main_time_counter;
 
 void main_quit(void);
 
