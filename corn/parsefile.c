@@ -28,27 +28,46 @@ static gchar ** read_file(const gchar * path)
     return lines;
 }
 
-static GRegex * absolute_path_or_uri_prefix = NULL;
+static GRegex * is_uri = NULL;
 
-static GnomeVFSURI * add_relative_dir(GnomeVFSURI * dir_uri, const gchar * name)
+static gchar * add_relative_dir(GnomeVFSURI * dir_uri, const gchar * name)
 {
-    // WRONG
-    //
-    // check if name is local or a uri.  then escape or not.
-    //
-    // or find a better way?
-    if(!absolute_path_or_uri_prefix)
-        absolute_path_or_uri_prefix = g_regex_new("^(/|[a-z0-9+.-]+://)",
+    if(!is_uri)
+        is_uri = g_regex_new("^[a-z0-9+.-]+://",
             G_REGEX_CASELESS | G_REGEX_OPTIMIZE, 0, NULL);
 
-    gchar * escaped_name = gnome_vfs_get_uri_from_local_path(name);
-    GnomeVFSURI * uri;
-    if(g_regex_match(absolute_path_or_uri_prefix, escaped_name, 0, NULL))
-        uri = gnome_vfs_uri_new(escaped_name);
-    else
-        uri = gnome_vfs_uri_append_file_name(dir_uri, escaped_name);
-    g_free(escaped_name);
-    return uri;
+    GnomeVFSURI * uri = NULL;
+
+    if(g_regex_match(is_uri, name, 0, NULL)) // absolute uri
+        uri = gnome_vfs_uri_new(name);
+    else if(name[0] == '/') // absolute local path
+    {
+        gchar * uri_text = gnome_vfs_get_uri_from_local_path(name);
+        if(uri_text)
+        {
+            uri = gnome_vfs_uri_new(uri_text);
+            g_free(uri_text);
+        }
+    }
+    else // relative local path
+    {
+        gchar * scheme = gnome_vfs_get_uri_scheme(dir_uri->text);
+        g_assert(scheme == NULL || !strcmp(scheme, "file"));
+        if(scheme)
+            g_free(scheme);
+        gchar * dir_path = gnome_vfs_get_local_path_from_uri(dir_uri->text);
+        gchar * full_path = g_build_path(dir_path, name, NULL);
+        uri = gnome_vfs_uri_new(full_path);
+        g_free(full_path);
+        g_free(dir_path);
+    }
+
+    if(!uri)
+        return NULL;
+
+    gchar * canon = gnome_vfs_make_uri_canonical(uri->text);
+    gnome_vfs_uri_unref(uri);
+    return canon;
 }
 
 gboolean parse_m3u(GnomeVFSURI * uri)
@@ -67,9 +86,12 @@ gboolean parse_m3u(GnomeVFSURI * uri)
             lines[i] = g_strstrip(lines[i]);
             if(lines[i][0] == '\0' || lines[i][0] == '#')
                 continue;
-            GnomeVFSURI * absolute = add_relative_dir(dir_uri, lines[i]);
-            playlist_append(absolute->text);
-            gnome_vfs_uri_unref(absolute);
+            gchar * uri_text = add_relative_dir(dir_uri, lines[i]);
+            if(uri_text)
+                playlist_append(uri_text);
+            else
+                g_warning("%s %s %s .m3u %s %s", _("Could not parse/create URI"),
+                        lines[i], _("in"), _("file"), uri->text);
         }
         g_message("%d lines", i);
         gnome_vfs_uri_unref(dir_uri);
@@ -97,23 +119,24 @@ gboolean parse_pls(GnomeVFSURI * uri)
     else
     {
         gint entries = g_key_file_get_integer(keyfile, "playlist", "NumberOfEntries", NULL);
+        gchar * dir = gnome_vfs_uri_extract_dirname(uri);
+        GnomeVFSURI * dir_uri = gnome_vfs_uri_new(dir);
+        g_free(dir);
         for(gint i = 1; i <= entries; ++i)
         {
             gchar * file_key = g_strdup_printf("File%d", i);
             gchar * file = g_key_file_get_value(keyfile, "playlist", file_key, NULL);
-            if(file)
+            if(file && file[0] != '\0')
             {
-                GnomeVFSURI * file_uri = gnome_vfs_uri_new(file);
-                if(file_uri)
-                {
-                    playlist_append(file_uri->text);
-                    gnome_vfs_uri_unref(file_uri);
-                }
+                gchar * uri_text = add_relative_dir(dir_uri, file);
+                if(uri_text)
+                    playlist_append(uri_text);
                 else
-                    g_warning("%s %s %s .pls %s %s", _("Could not parse URI"),
+                    g_warning("%s %s %s .pls %s %s", _("Could not parse/create URI"),
                             file, _("in"), _("file"), uri->text);
             }
             g_free(file_key);
+            g_free(file);
         }
     }
 
@@ -136,9 +159,13 @@ gboolean parse_dir(GnomeVFSURI * uri)
     {
         if(info->name[0] == '.')
             continue;
-        GnomeVFSURI * absolute = add_relative_dir(uri, info->name);
-        entries = g_slist_append(entries, g_strdup(absolute->text));
-        gnome_vfs_uri_unref(absolute);
+
+        gchar * uri_text = add_relative_dir(uri, info->name);
+        if(uri_text)
+            entries = g_slist_append(entries, uri_text);
+        else
+            g_warning("%s %s %s %s %s", _("Could not parse/create URI"),
+                    info->name, _("in"), _("directory"), uri->text);
     }
 
     entries = g_slist_sort(entries, (GCompareFunc) strcmp);
