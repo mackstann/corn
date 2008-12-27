@@ -154,7 +154,7 @@ gboolean parse_dir(GnomeVFSURI * uri)
     gnome_vfs_file_info_unref(info);
     gnome_vfs_directory_close(dirh);
 
-    entries = g_slist_sort(entries, (GCompareFunc) strcmp);
+    entries = g_slist_sort(entries, (GCompareFunc)g_ascii_strcasecmp);
     for(GSList * it = entries; it; it = g_slist_next(it))
     {
         g_message("recursive directory add: %s", (gchar *)it->data);
