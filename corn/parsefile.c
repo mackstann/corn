@@ -28,39 +28,29 @@ static gchar ** read_file(const gchar * path)
     return lines;
 }
 
-static GRegex * is_uri = NULL;
+static GRegex * uri_pattern = NULL;
 
+// if #name is a relative path, then make it an absolute path by prepending
+// #dir_uri to it.  if scheme is unknown or file://, then return a non-uri unix
+// file path.  otherwise, return a uri.
 static gchar * add_relative_dir(GnomeVFSURI * dir_uri, const gchar * name)
 {
-    if(!is_uri)
-        is_uri = g_regex_new("^[a-z0-9+.-]+://",
+    g_assert(dir_uri != NULL);
+    g_assert(name != NULL);
+
+    if(name[0] == '/') // non-uri absolute filesystem path; quick short circuit
+        return g_strdup(name);
+
+    if(!uri_pattern)
+        uri_pattern = g_regex_new("^[a-z0-9+.-]+://",
             G_REGEX_CASELESS | G_REGEX_OPTIMIZE, 0, NULL);
 
     GnomeVFSURI * uri = NULL;
 
-    if(g_regex_match(is_uri, name, 0, NULL)) // absolute uri
+    if(g_regex_match(uri_pattern, name, 0, NULL)) // absolute uri
         uri = gnome_vfs_uri_new(name);
-    else if(name[0] == '/') // absolute local path
-    {
-        gchar * uri_text = gnome_vfs_get_uri_from_local_path(name);
-        if(uri_text)
-        {
-            uri = gnome_vfs_uri_new(uri_text);
-            g_free(uri_text);
-        }
-    }
-    else // relative local path
-    {
-        gchar * scheme = gnome_vfs_get_uri_scheme(dir_uri->text);
-        g_assert(scheme == NULL || !strcmp(scheme, "file"));
-        if(scheme)
-            g_free(scheme);
-        gchar * dir_path = gnome_vfs_get_local_path_from_uri(dir_uri->text);
-        gchar * full_path = g_build_path(dir_path, name, NULL);
-        uri = gnome_vfs_uri_new(full_path);
-        g_free(full_path);
-        g_free(dir_path);
-    }
+    else // relative path
+        uri = gnome_vfs_uri_append_file_name(dir_uri, name);
 
     if(!uri)
         return NULL;
