@@ -20,7 +20,7 @@ gboolean config_loop_at_end = FALSE;
 gboolean config_random_order = FALSE;
 gboolean config_repeat_track = FALSE;
 
-static GMutex * config_playlist_save_mutex;
+static GThreadPool * pool;
 
 static FILE * open_config_file(const char * name, const char * mode)
 {
@@ -63,13 +63,17 @@ static gint read_int_from_config_file(const char * name, gint min, gint max, gin
     return default_value;
 }
 
+void save_playlist_threadfunc(gpointer data, gpointer user_data);
+
 void config_load(void)
 {
+    // playlist
     gchar * playlist_filename = g_build_filename(g_get_user_config_dir(), PACKAGE, "playlist", NULL);
     GnomeVFSURI * pl_uri = gnome_vfs_uri_new(playlist_filename);
     g_free(playlist_filename);
     parse_m3u(pl_uri);
     gnome_vfs_uri_unref(pl_uri);
+    // end playlist
 
     config_loop_at_end = read_int_from_config_file("state.loop", 0, 1, 0);
     config_random_order = read_int_from_config_file("state.random", 0, 1, 0);
@@ -88,7 +92,13 @@ void config_load(void)
         music_stream_time = pos;
     }
 
-    config_playlist_save_mutex = g_mutex_new();
+    // playlist
+    GError * error = NULL;
+    pool = g_thread_pool_new(save_playlist_threadfunc, NULL, 1, FALSE, &error);
+    if(error)
+        g_error("%s (%s).\n", _("Couldn't create thread pool"),
+                error->message);
+    // end playlist
 }
 
 void save_playlist(GString * pldata)
@@ -124,11 +134,9 @@ void config_save(void)
     save_playlist(generate_playlist_data());
 }
 
-gpointer save_playlist_threadfunc(gpointer data)
+void save_playlist_threadfunc(gpointer data, gpointer user_data)
 {
     save_playlist((GString *)data);
-    g_mutex_unlock(config_playlist_save_mutex);
-    return NULL; // ignored since thread is not joinable
 }
 
 gboolean config_maybe_save_playlist(gpointer data)
@@ -137,23 +145,17 @@ gboolean config_maybe_save_playlist(gpointer data)
         return TRUE;
     if(main_time_counter - playlist_mtime < playlist_save_wait_time)
         return TRUE;
-    if(!g_mutex_trylock(config_playlist_save_mutex))
+    if(g_thread_pool_unprocessed(pool))
+    {
+        g_warning(_("Thread pool is getting backed up!  Attempts to save playlist are hanging?"));
         return TRUE;
-
-    // if we got here then the mutex is locked
-
-    GString * pldata = generate_playlist_data();
+    }
 
     GError * error = NULL;
-    g_thread_create(save_playlist_threadfunc, pldata, FALSE, &error);
+    g_thread_pool_push(pool, generate_playlist_data(), &error);
     if(error)
-    {
-        g_printerr("%s (%s). %s.\n",
-                _("Couldn't create thread to save playlist to disk"), error->message,
-                _("Saving the playlist synchronously"));
-        g_error_free(error);
-        save_playlist_threadfunc(pldata);
-    }
+        g_error("%s (%s).\n", _("Couldn't push thread to save playlist to disk"),
+                error->message);
 
     playlist_mtime = -1;
     return TRUE;
