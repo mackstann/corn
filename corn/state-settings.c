@@ -59,7 +59,7 @@ void state_settings_init(void)
     setting_random_order = load("state.random", 0, 1, 0);
     setting_repeat_track = load("state.repeat", 0, 1, 0);
 
-    playlist_seek(load("state.list_position", 0, G_MAXINT, 0));
+    playlist_seek(load("state.list_position", -1, G_MAXINT, -1));
     gint pos = load("state.track_position", 0, G_MAXINT, 0);
 
     gint playing = load("state.playing", 0, 2, MUSIC_STOPPED);
