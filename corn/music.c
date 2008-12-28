@@ -5,7 +5,6 @@
 #include "main.h"
 #include "playlist.h"
 #include "sockqueue.h"
-#include "configuration.h"
 
 #include <glib-object.h>
 #include <xine.h>

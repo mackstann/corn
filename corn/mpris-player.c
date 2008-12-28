@@ -3,7 +3,7 @@
 #include "music-metadata.h"
 #include "music.h"
 #include "playlist.h"
-#include "configuration.h"
+#include "state-settings.h"
 
 #include "mpris-player.h"
 
@@ -134,7 +134,7 @@ gboolean mpris_player_position_get(MprisPlayer * obj, gint * ms, GError ** error
 
 gboolean mpris_player_repeat(MprisPlayer * obj, gboolean on, GError ** error)
 {
-    config_repeat_track = on;
+    setting_repeat_track = on;
     return TRUE;
 }
 
@@ -153,9 +153,9 @@ gpointer get_status_struct(void)
     g_value_init(&value, DBUS_STRUCT_INT_INT_INT_INT);
     g_value_take_boxed(&value, dbus_g_type_specialized_construct(DBUS_STRUCT_INT_INT_INT_INT));
     dbus_g_type_struct_set(&value, 0, music_playing, 1,
-                           config_random_order ? 1 : 0, 2,
-                           config_repeat_track ? 1 : 0, 3,
-                           config_loop_at_end ? 1 : 0, G_MAXUINT);
+                           setting_random_order ? 1 : 0, 2,
+                           setting_repeat_track ? 1 : 0, 3,
+                           setting_loop_at_end ? 1 : 0, G_MAXUINT);
     return g_value_get_boxed(&value);
 }
 

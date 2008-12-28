@@ -6,7 +6,8 @@
 #include "dbus.h"
 #include "music.h"
 #include "playlist.h"
-#include "configuration.h"
+#include "state-settings.h"
+#include "state-playlist.h"
 #include "main.h"
 
 #include <libgnomevfs/gnome-vfs.h>
@@ -80,7 +81,7 @@ int main(int argc, char **argv)
 
     loop = g_main_loop_new(NULL, FALSE);
     g_timeout_add_seconds_full(G_PRIORITY_HIGH, 1, increment_time_counter, NULL, NULL);
-    g_timeout_add_seconds_full(G_PRIORITY_DEFAULT_IDLE, 1, config_maybe_save_playlist, NULL, NULL);
+    g_timeout_add_seconds_full(G_PRIORITY_DEFAULT_IDLE, 1, state_playlist_save_if_modified, NULL, NULL);
 
     init_signals();
 
@@ -100,14 +101,16 @@ int main(int argc, char **argv)
             if(!(failed = mpris_init()))
             {
                 playlist_init();
-                config_load();
+                state_playlist_init();
+                state_settings_init();
 
                 main_status = CORN_RUNNING;
                 g_message("ready");
                 g_main_loop_run(loop);
                 main_status = CORN_EXITING;
 
-                config_save();
+                state_playlist_destroy();
+                state_settings_destroy();
                 playlist_destroy();
                 mpris_destroy();
             }

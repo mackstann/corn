@@ -27,8 +27,12 @@ corn_SOURCES = \
   playlist-random.c \
   parsefile.h \
   parsefile.c \
-  configuration.h \
-  configuration.c \
+  state.h \
+  state.c \
+  state-settings.h \
+  state-settings.c \
+  state-playlist.h \
+  state-playlist.c \
   sockqueue.h \
   sockqueue.c \
   cpris-root.h \

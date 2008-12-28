@@ -6,7 +6,7 @@
 #include "music-control.h"
 #include "main.h"
 #include "parsefile.h"
-#include "configuration.h"
+#include "state-settings.h"
 #include "dbus.h"
 
 #include "string.h"
@@ -41,7 +41,7 @@ static inline void reset_playlist_position(void)
 {
     if(!playlist || !playlist->len)
         playlist_position = -1;
-    else if(playlist->len > 1 && config_random_order)
+    else if(playlist->len > 1 && setting_random_order)
         playlist_position = g_random_int_range(0, playlist->len);
     else
         playlist_position = 0;
@@ -77,9 +77,9 @@ void playlist_advance(gint how)
     if(!playlist->len || G_UNLIKELY(!how))
         return;
 
-    if(!config_repeat_track)
+    if(!setting_repeat_track)
     {
-        if(config_random_order)
+        if(setting_random_order)
         {
             if(how > 0)
                 playlist_position = plrand_next(playlist_position, playlist->len);
@@ -100,7 +100,7 @@ void playlist_advance(gint how)
     }
 
     music_stop();
-    if((!looped || config_loop_at_end) && wasplaying == MUSIC_PLAYING)
+    if((!looped || setting_loop_at_end) && wasplaying == MUSIC_PLAYING)
         music_play();
 
     mpris_player_emit_track_change(mpris_player);
