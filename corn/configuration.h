@@ -10,4 +10,6 @@ extern gboolean config_repeat_track;
 void config_load(void);
 void config_save(void);
 
+gboolean config_maybe_save_playlist(gpointer data);
+
 #endif

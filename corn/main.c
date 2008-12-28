@@ -80,6 +80,7 @@ int main(int argc, char **argv)
 
     loop = g_main_loop_new(NULL, FALSE);
     g_timeout_add_seconds_full(G_PRIORITY_HIGH, 1, increment_time_counter, NULL, NULL);
+    g_timeout_add_seconds_full(G_PRIORITY_DEFAULT_IDLE, 1, config_maybe_save_playlist, NULL, NULL);
 
     init_signals();
 

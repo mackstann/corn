@@ -2,6 +2,7 @@
 
 #include "gettext.h"
 
+#include "main.h"
 #include "music.h"
 #include "music-control.h"
 #include "playlist.h"
@@ -18,6 +19,8 @@
 gboolean config_loop_at_end = FALSE;
 gboolean config_random_order = FALSE;
 gboolean config_repeat_track = FALSE;
+
+static GMutex * config_playlist_save_mutex;
 
 static FILE * open_config_file(const char * name, const char * mode)
 {
@@ -84,6 +87,30 @@ void config_load(void)
         music_pause();
         music_stream_time = pos;
     }
+
+    config_playlist_save_mutex = g_mutex_new();
+}
+
+void save_playlist(GString * pldata)
+{
+    FILE * f = open_config_file("playlist", "w");
+    if(f)
+    {
+        fputs(pldata->str, f);
+        fclose(f);
+    }
+    g_string_free(pldata, TRUE);
+}
+
+GString * generate_playlist_data(void)
+{
+    GString * s = g_string_new("");
+    for(gint i = 0; i < playlist->len; i++)
+    {   
+        g_string_append(s, PLAYLIST_ITEM_N(i));
+        g_string_append_c(s, '\n');
+    }
+    return s;
 }
 
 void config_save(void)
@@ -94,15 +121,40 @@ void config_save(void)
     save_int_to_config_file("state.playing", music_playing);
     save_int_to_config_file("state.list_position", playlist_position);
     save_int_to_config_file("state.track_position", music_get_position());
+    save_playlist(generate_playlist_data());
+}
 
-    FILE * f = open_config_file("playlist", "w");
-    if(f)
+gpointer save_playlist_threadfunc(gpointer data)
+{
+    save_playlist((GString *)data);
+    g_mutex_unlock(config_playlist_save_mutex);
+    return NULL; // ignored since thread is not joinable
+}
+
+gboolean config_maybe_save_playlist(gpointer data)
+{
+    if(playlist_mtime == -1)
+        return TRUE;
+    if(main_time_counter - playlist_mtime < playlist_save_wait_time)
+        return TRUE;
+    if(!g_mutex_trylock(config_playlist_save_mutex))
+        return TRUE;
+
+    // if we got here then the mutex is locked
+
+    GString * pldata = generate_playlist_data();
+
+    GError * error = NULL;
+    g_thread_create(save_playlist_threadfunc, pldata, FALSE, &error);
+    if(error)
     {
-        for(gint i = 0; i < playlist->len; i++)
-        {
-            fputs(PLAYLIST_ITEM_N(i), f);
-            fputc('\n', f);
-        }
-        fclose(f);
+        g_printerr("%s (%s). %s.\n",
+                _("Couldn't create thread to save playlist to disk"), error->message,
+                _("Saving the playlist synchronously"));
+        g_error_free(error);
+        save_playlist_threadfunc(pldata);
     }
+
+    playlist_mtime = -1;
+    return TRUE;
 }
