@@ -5,6 +5,8 @@
 
 extern GArray * playlist;
 extern gint playlist_position;
+extern gint playlist_mtime;
+extern gint playlist_save_wait_time;
 
 #define PLAYLIST_ITEM_N(n) g_array_index(playlist, gchar *, (n))
 
