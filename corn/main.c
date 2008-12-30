@@ -24,7 +24,7 @@ static GMainLoop * loop;
 
 void main_quit() { g_main_loop_quit(loop); }
 
-void signal_handler_quit(int signal) { main_quit(); }
+static void signal_handler_quit(int signal) { main_quit(); }
 
 static gboolean increment_time_counter(gpointer data)
 {
@@ -36,7 +36,13 @@ static gboolean increment_time_counter(gpointer data)
     return TRUE;
 }
 
-void init_locale(void)
+static gboolean playlist_save_timeout_func(gpointer data)
+{
+    state_playlist_launch_save_if_time_has_come();
+    return TRUE;
+}
+
+static void init_locale(void)
 {
     if(!setlocale(LC_ALL, ""))
         g_warning("Couldn't set locale from environment.\n");
@@ -45,7 +51,7 @@ void init_locale(void)
     textdomain(PACKAGE_NAME);
 }
 
-void init_signals(void)
+static void init_signals(void)
 {
     sigset_t sigset;
     sigemptyset(&sigset);
@@ -81,7 +87,7 @@ int main(int argc, char **argv)
 
     loop = g_main_loop_new(NULL, FALSE);
     g_timeout_add_seconds_full(G_PRIORITY_HIGH, 1, increment_time_counter, NULL, NULL);
-    g_timeout_add_seconds_full(G_PRIORITY_DEFAULT_IDLE, 1, state_playlist_save_if_modified, NULL, NULL);
+    g_timeout_add_seconds_full(G_PRIORITY_DEFAULT_IDLE, 1, playlist_save_timeout_func, NULL, NULL);
 
     init_signals();
 

@@ -57,27 +57,25 @@ void state_playlist_init(void)
 void state_playlist_destroy(void)
 {
     g_thread_pool_free(pool, FALSE, TRUE);
-    save_playlist(generate_playlist_data());
+    if(PLAYLIST_MODIFIED())
+        save_playlist(generate_playlist_data());
 }
 
-gboolean state_playlist_save_if_modified(gpointer data)
+void state_playlist_launch_save_if_time_has_come(void)
 {
-    if(playlist_mtime == -1)
-        return TRUE;
-    if(main_time_counter - playlist_mtime < playlist_save_wait_time)
-        return TRUE;
+    if(!PLAYLIST_FLUSH_TIME_HAS_COME())
+        return;
+
     if(g_thread_pool_unprocessed(pool))
     {
         g_warning(_("Thread pool is getting backed up!  Attempts to save playlist are hanging?"));
-        return TRUE;
+        return;
     }
 
     GError * error = NULL;
     g_thread_pool_push(pool, generate_playlist_data(), &error);
     if(error)
-        g_error("%s (%s).\n", _("Couldn't push thread to save playlist to disk"),
-                error->message);
+        g_error("%s (%s).\n", _("Couldn't push thread to save playlist to disk"), error->message);
 
-    playlist_mtime = -1;
-    return TRUE;
+    PLAYLIST_MARK_AS_FLUSHED();
 }

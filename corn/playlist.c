@@ -21,7 +21,7 @@ gint playlist_position = -1;
 // -1 if current playlist has been saved to disk.  otherwise, the time at which
 // the playlist was last modified.  we only trigger a save-to-disk when
 // playlist modification activity has died down for a little bit.
-gint playlist_mtime = -1;
+gint playlist_mtime = PLAYLIST_MTIME_NEVER;
 gint playlist_save_wait_time = 5;
 
 void playlist_init(void)
@@ -58,7 +58,7 @@ void playlist_append(gchar * path) // takes ownership of the path passed in
     if(playlist_position == -1)
         reset_playlist_position();
 
-    playlist_mtime = main_time_counter;
+    PLAYLIST_TOUCH();
 }
 
 void playlist_replace_path(const gchar * path)
@@ -66,7 +66,7 @@ void playlist_replace_path(const gchar * path)
     g_return_if_fail(PLAYLIST_CURRENT_ITEM() != NULL);
     g_free(PLAYLIST_CURRENT_ITEM());
     PLAYLIST_ITEM_N(playlist_position) = g_strdup(path);
-    playlist_mtime = main_time_counter;
+    PLAYLIST_TOUCH();
 }
 
 void playlist_advance(gint how)
@@ -141,7 +141,7 @@ void playlist_clear(void)
 
     playlist_position = -1;
 
-    playlist_mtime = main_time_counter;
+    PLAYLIST_TOUCH();
 }
 
 void playlist_remove(gint track)
@@ -166,7 +166,7 @@ void playlist_remove(gint track)
     if(track == playlist_position)
         reset_playlist_position();
 
-    playlist_mtime = main_time_counter;
+    PLAYLIST_TOUCH();
 }
 
 void playlist_move(gint track, gint dest)
@@ -193,5 +193,5 @@ void playlist_move(gint track, gint dest)
     else if(track > playlist_position && dest <= playlist_position)
         playlist_position++;
 
-    playlist_mtime = main_time_counter;
+    PLAYLIST_TOUCH();
 }
