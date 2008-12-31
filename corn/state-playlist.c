@@ -10,6 +10,7 @@
 #include <glib.h>
 
 #include <stdio.h>
+#include <errno.h>
 
 static GThreadPool * pool;
 
@@ -21,6 +22,8 @@ static void save_playlist(GString * pldata)
         fputs(pldata->str, f);
         fclose(f);
     }
+    else
+        g_printerr("%s (%s).\n", _("Couldn't open playlist file for writing"), g_strerror(errno));
     g_string_free(pldata, TRUE);
 }
 
