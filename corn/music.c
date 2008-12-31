@@ -63,11 +63,8 @@ gboolean music_event_handle(GIOChannel * source, GIOCondition condition, gpointe
         case XINE_EVENT_MRL_REFERENCE_EXT:
             mrl = e.data;
             g_message("MRL REFERENCE %s", mrl->mrl);
-            if(PLAYLIST_CURRENT_ITEM())
-            {
-                playlist_replace_path(mrl->mrl);
-                mrl_change = TRUE;
-            }
+            playlist_replace_path(mrl->mrl);
+            mrl_change = TRUE;
             break;
         }
     }
@@ -153,12 +150,13 @@ void music_destroy()
     sockqueue_destroy(event_queue);
 }
 
+// TODO: instead of returning bool, return { MUSIC_PLAYBACK_STARTED, MUSIC_PLAYBACK_ALREADY, MUSIC_PLAYBACK_SONG_FAILED, MUSIC_PLAYBACK_NO_MUSIC }
 gboolean music_try_to_play(void)
 {
     if(music_playing == MUSIC_PLAYING)
         return TRUE;
 
-    if(!PLAYLIST_CURRENT_ITEM())
+    if(!playlist->len)
         return TRUE;
 
     gchar * path;

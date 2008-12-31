@@ -8,10 +8,8 @@ extern gint playlist_position;
 extern gint playlist_mtime;
 extern gint playlist_save_wait_time;
 
-#define PLAYLIST_ITEM_N(n) g_array_index(playlist, gchar *, (n))
-
-#define PLAYLIST_CURRENT_ITEM() \
-    (playlist->len ? PLAYLIST_ITEM_N(playlist_position) : NULL)
+#define PLAYLIST_ITEM_N(n)      g_array_index(playlist, gchar *, (n))
+#define PLAYLIST_CURRENT_ITEM() g_array_index(playlist, gchar *, playlist_position)
 
 #define PLAYLIST_MTIME_NEVER -1
 

@@ -63,7 +63,7 @@ void playlist_append(gchar * path) // takes ownership of the path passed in
 
 void playlist_replace_path(const gchar * path)
 {
-    g_return_if_fail(PLAYLIST_CURRENT_ITEM() != NULL);
+    g_return_if_fail(playlist->len > 0);
     g_free(PLAYLIST_CURRENT_ITEM());
     PLAYLIST_ITEM_N(playlist_position) = g_strdup(path);
     PLAYLIST_TOUCH();
