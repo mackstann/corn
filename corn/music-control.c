@@ -14,8 +14,8 @@ void music_play(void)
     gint orig_pos = playlist_position;
     while(!music_try_to_play())
     {
-        g_warning("Couldn't play %s", PLAYLIST_CURRENT_ITEM());
-        /*playlist_remove(g_list_position(playlist, PLAYLIST_CURRENT_ITEM())); */
+        g_warning("Couldn't play %s", playlist_current());
+        /*playlist_remove(g_list_position(playlist, playlist_current())); */
         playlist_advance(1);
 
         // if we keep failing to load files, and loop/repeat are on, we don't

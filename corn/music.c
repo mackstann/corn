@@ -156,14 +156,14 @@ gboolean music_try_to_play(void)
     if(music_playing == MUSIC_PLAYING)
         return TRUE;
 
-    if(!playlist->len)
+    if(playlist_empty())
         return TRUE;
 
     gchar * path;
-    if(!(path = g_filename_from_utf8(PLAYLIST_CURRENT_ITEM(), -1, NULL, NULL, NULL)))
+    if(!(path = g_filename_from_utf8(playlist_current(), -1, NULL, NULL, NULL)))
     {
         g_critical(_("Skipping '%s'. Could not convert from UTF-8. Bug?"),
-                   PLAYLIST_CURRENT_ITEM());
+                   playlist_current());
         return FALSE;
     }
 

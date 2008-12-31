@@ -40,7 +40,7 @@ gboolean mpris_tracklist_add_track(MprisTrackList * obj, const gchar * uri,
     {
         playlist_append(u);
         if(playnow)
-            playlist_seek(playlist->len - 1);
+            playlist_seek(-1);
         *failed = 0;
     }
     return TRUE;
@@ -48,7 +48,7 @@ gboolean mpris_tracklist_add_track(MprisTrackList * obj, const gchar * uri,
 
 gboolean mpris_tracklist_get_length(MprisTrackList * obj, gint * len, GError ** error)
 {
-    *len = playlist->len;
+    *len = playlist_length();
     return TRUE;
 }
 

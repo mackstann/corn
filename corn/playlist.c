@@ -17,7 +17,7 @@
 // annotations of algorithmic complexity use 'n' to refer
 // to the length of the playlist (unless otherwise noted)
 
-GArray * playlist = NULL;
+static GArray * playlist = NULL;
 
 gint playlist_position = -1;
 
@@ -40,20 +40,17 @@ void playlist_destroy(void)
     g_array_free(playlist, TRUE);
 }
 
-gboolean playlist_modified(void)
-{
-    return playlist_mtime != playlist_mtime_never;
-}
+gint playlist_length(void)     { return playlist->len; }
+gboolean playlist_empty(void)  { return !playlist->len; }
+gchar * playlist_nth(gint i)   { return g_array_index(playlist, gchar *, i); }
+gchar * playlist_current(void) { return g_array_index(playlist, gchar *, playlist_position); }
+gboolean playlist_modified(void)  { return playlist_mtime != playlist_mtime_never; }
+void playlist_mark_as_flushed(void) { playlist_mtime = playlist_mtime_never; }
 
 gboolean playlist_flush_due(void)
 {
     return playlist_modified() &&
         main_time_counter - playlist_mtime >= playlist_save_wait_time;
-}
-
-void playlist_mark_as_flushed(void)
-{
-    playlist_mtime = playlist_mtime_never;
 }
 
 static void touch()
@@ -89,8 +86,8 @@ void playlist_append(gchar * path) // takes ownership of the path passed in
 void playlist_replace_path(const gchar * path)
 {
     g_return_if_fail(playlist->len > 0);
-    g_free(PLAYLIST_CURRENT_ITEM());
-    PLAYLIST_ITEM_N(playlist_position) = g_strdup(path);
+    g_free(playlist_current());
+    g_array_index(playlist, gchar *, playlist_position) = g_strdup(path);
     touch();
 }
 
@@ -158,7 +155,7 @@ void playlist_clear(void)
     music_stop();
 
     for(gint i = 0; i < playlist->len; i++)
-        g_free(PLAYLIST_ITEM_N(i));
+        g_free(playlist_nth(i));
 
     g_array_set_size(playlist, 0);
 
@@ -180,7 +177,7 @@ void playlist_remove(gint track)
     if(track < playlist_position)
         playlist_position--;
 
-    g_free(PLAYLIST_ITEM_N(track));
+    g_free(playlist_nth(track));
     g_array_remove_index(playlist, track); // O(n)
 
     plrand_shift_track_numbers(track + 1, playlist->len - 1, -1);
@@ -207,7 +204,7 @@ void playlist_move(gint track, gint dest)
 
     plrand_move_track(track, dest);
 
-    gchar * item = PLAYLIST_ITEM_N(track);
+    gchar * item = playlist_nth(track);
     g_array_insert_val(playlist, (dest > track ? dest+1 : dest), item); // O(n)
     g_array_remove_index(playlist, track); // O(n)
 

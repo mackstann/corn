@@ -131,9 +131,9 @@ GHashTable * music_get_track_metadata(gint track)
 {
     GHashTable * empty = g_hash_table_new(NULL, NULL);
     g_return_val_if_fail(track >= 0, empty);
-    g_return_val_if_fail(track < playlist->len, empty);
+    g_return_val_if_fail(track < playlist_length(), empty);
     g_hash_table_unref(empty);
-    return music_get_playlist_item_metadata(PLAYLIST_ITEM_N(track));
+    return music_get_playlist_item_metadata(playlist_nth(track));
 }
 
 GHashTable * music_get_current_track_metadata(void)
@@ -142,11 +142,11 @@ GHashTable * music_get_current_track_metadata(void)
     if(music_stream && xine_get_status(music_stream) != XINE_STATUS_IDLE)
     {
         GHashTable * meta = get_stream_metadata(music_stream);
-        add_metadata_from_string(meta, "mrl", PLAYLIST_CURRENT_ITEM());
+        add_metadata_from_string(meta, "mrl", playlist_current());
         return meta;
     }
     else if(playlist_position != -1) // or do it the hard way
-        return music_get_playlist_item_metadata(PLAYLIST_CURRENT_ITEM());
+        return music_get_playlist_item_metadata(playlist_current());
 
     return g_hash_table_new(NULL, NULL);
 }

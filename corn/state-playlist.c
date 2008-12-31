@@ -35,9 +35,9 @@ static void save_playlist_threadfunc(gpointer data, gpointer user_data)
 static GString * generate_playlist_data(void)
 {
     GString * s = g_string_new("");
-    for(gint i = 0; i < playlist->len; i++)
+    for(gint i = 0; i < playlist_length(); i++)
     {   
-        g_string_append(s, PLAYLIST_ITEM_N(i));
+        g_string_append(s, playlist_nth(i));
         g_string_append_c(s, '\n');
     }
     return s;
