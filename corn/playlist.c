@@ -1,5 +1,3 @@
-#include "config.h"
-
 #include "playlist.h"
 #include "playlist-random.h"
 #include "music.h"
@@ -8,8 +6,6 @@
 #include "parsefile.h"
 #include "state-settings.h"
 #include "dbus.h"
-
-#include "string.h"
 
 #define playlist_mtime_never -1
 #define playlist_save_wait_time 5
