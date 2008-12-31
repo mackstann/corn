@@ -3,8 +3,6 @@
 
 #include <glib.h>
 
-extern gint playlist_mtime;
-
 void playlist_init(void);
 void playlist_destroy(void);
 

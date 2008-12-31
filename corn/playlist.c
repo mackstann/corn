@@ -21,7 +21,7 @@ static gint position = -1;
 // the time at which the playlist was last modified.  we only trigger a
 // save-to-disk when playlist modification activity has died down for a little
 // bit (determined by playlist_save_wait_time)
-gint playlist_mtime = playlist_mtime_never;
+static gint playlist_mtime = playlist_mtime_never;
 
 void playlist_init(void)
 {
