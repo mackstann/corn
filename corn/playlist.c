@@ -17,10 +17,11 @@
 static GArray * playlist = NULL;
 static gint position = -1;
 
-// playlist_mtime_never if current playlist has been saved to disk.  otherwise,
-// the time at which the playlist was last modified.  we only trigger a
-// save-to-disk when playlist modification activity has died down for a little
-// bit (determined by playlist_save_wait_time)
+// this is set to playlist_mtime_never if current playlist has been saved to
+// disk.  otherwise, it's set to the time at which the playlist was last
+// modified.  we only trigger a save-to-disk when playlist modification
+// activity has died down for a little bit (determined by
+// playlist_save_wait_time)
 static gint playlist_mtime = playlist_mtime_never;
 
 void playlist_init(void)
