@@ -13,9 +13,9 @@
 #include <stdlib.h>
 #include <errno.h>
 
-gboolean setting_loop_at_end = FALSE;
-gboolean setting_random_order = FALSE;
-gboolean setting_repeat_track = FALSE;
+gboolean setting_loop_at_end;
+gboolean setting_random_order;
+gboolean setting_repeat_track;
 
 static void save(const char * name, gint num)
 {
