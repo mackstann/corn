@@ -11,7 +11,7 @@ static void do_pause(void)
 
 void music_play(void)
 {
-    gint orig_pos = playlist_position;
+    gint orig_pos = playlist_position();
     while(!music_try_to_play())
     {
         g_warning("Couldn't play %s", playlist_current());
@@ -22,7 +22,7 @@ void music_play(void)
         // want to infinitely keep trying to play the same file(s) that won't
         // play.  so once we fail and eventually get back to the same song,
         // stop.
-        if(playlist_position == orig_pos)
+        if(playlist_position() == orig_pos)
             return;
     }
 }

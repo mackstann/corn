@@ -56,7 +56,7 @@ gboolean mpris_tracklist_get_current_track(MprisTrackList * obj, gint * track, G
 {
     // will be -1 when list is empty, but that's ok because the spec says
     // behavior is undefined when calling this on an empty tracklist.
-    *track = playlist_position;
+    *track = playlist_position();
     return TRUE;
 }
 

@@ -14,12 +14,8 @@
 #define playlist_mtime_never -1
 #define playlist_save_wait_time 5
 
-// annotations of algorithmic complexity use 'n' to refer
-// to the length of the playlist (unless otherwise noted)
-
 static GArray * playlist = NULL;
-
-gint playlist_position = -1;
+static gint position = -1;
 
 // playlist_mtime_never if current playlist has been saved to disk.  otherwise,
 // the time at which the playlist was last modified.  we only trigger a
@@ -40,11 +36,12 @@ void playlist_destroy(void)
     g_array_free(playlist, TRUE);
 }
 
+gint playlist_position(void)   { return position; }
 gint playlist_length(void)     { return playlist->len; }
 gboolean playlist_empty(void)  { return !playlist->len; }
 gchar * playlist_nth(gint i)   { return g_array_index(playlist, gchar *, i); }
-gchar * playlist_current(void) { return g_array_index(playlist, gchar *, playlist_position); }
-gboolean playlist_modified(void)  { return playlist_mtime != playlist_mtime_never; }
+gchar * playlist_current(void) { return g_array_index(playlist, gchar *, position); }
+gboolean playlist_modified(void) { return playlist_mtime != playlist_mtime_never; }
 void playlist_mark_as_flushed(void) { playlist_mtime = playlist_mtime_never; }
 
 gboolean playlist_flush_due(void)
@@ -62,11 +59,11 @@ static void touch()
 static void reset_position(void)
 {
     if(!playlist || !playlist->len)
-        playlist_position = -1;
+        position = -1;
     else if(playlist->len > 1 && setting_random_order)
-        playlist_position = g_random_int_range(0, playlist->len);
+        position = g_random_int_range(0, playlist->len);
     else
-        playlist_position = 0;
+        position = 0;
 }
 
 void playlist_append(gchar * path) // takes ownership of the path passed in
@@ -77,7 +74,7 @@ void playlist_append(gchar * path) // takes ownership of the path passed in
     if(parse_file(path))
         g_array_append_val(playlist, path);
 
-    if(playlist_position == -1)
+    if(position == -1)
         reset_position();
 
     touch();
@@ -87,7 +84,7 @@ void playlist_replace_path(const gchar * path)
 {
     g_return_if_fail(playlist->len > 0);
     g_free(playlist_current());
-    g_array_index(playlist, gchar *, playlist_position) = g_strdup(path);
+    g_array_index(playlist, gchar *, position) = g_strdup(path);
     touch();
 }
 
@@ -104,18 +101,18 @@ void playlist_advance(gint how)
         if(setting_random_order)
         {
             if(how > 0)
-                playlist_position = plrand_next(playlist_position, playlist->len);
+                position = plrand_next(position, playlist->len);
             else if(how < 0)
-                playlist_position = plrand_prev(playlist_position, playlist->len);
+                position = plrand_prev(position, playlist->len);
         }
         else
         {
             looped = TRUE;
-            playlist_position += how;
-            if(playlist_position < 0)
-                playlist_position = playlist->len - 1;
-            else if(playlist_position == playlist->len)
-                playlist_position = 0;
+            position += how;
+            if(position < 0)
+                position = playlist->len - 1;
+            else if(position == playlist->len)
+                position = 0;
             else
                 looped = FALSE;
         }
@@ -135,9 +132,9 @@ void playlist_seek(gint track)
 
     gint was_playing = music_playing;
 
-    plrand_record_past(playlist_position);
+    plrand_record_past(position);
 
-    playlist_position = track;
+    position = track;
 
     /* this function is used during load, and we don't want to start
        playing necessarily */
@@ -161,7 +158,7 @@ void playlist_clear(void)
 
     plrand_clear();
 
-    playlist_position = -1;
+    position = -1;
 
     touch();
 }
@@ -171,11 +168,11 @@ void playlist_remove(gint track)
     if(G_UNLIKELY(track < 0)) return;
     if(G_UNLIKELY(track >= playlist->len)) return;
 
-    if(track == playlist_position)
+    if(track == position)
         playlist_advance(1);
 
-    if(track < playlist_position)
-        playlist_position--;
+    if(track < position)
+        position--;
 
     g_free(playlist_nth(track));
     g_array_remove_index(playlist, track); // O(n)
@@ -185,7 +182,7 @@ void playlist_remove(gint track)
 
     // if we're still in the same spot, there was no track to advance to.  set
     // to track 0, or if we're removing last song, set to -1.
-    if(track == playlist_position)
+    if(track == position)
         reset_position();
 
     touch();
@@ -208,12 +205,12 @@ void playlist_move(gint track, gint dest)
     g_array_insert_val(playlist, (dest > track ? dest+1 : dest), item); // O(n)
     g_array_remove_index(playlist, track); // O(n)
 
-    if(track == playlist_position)
-        playlist_position = dest;
-    else if(track < playlist_position && dest > playlist_position)
-        playlist_position--;
-    else if(track > playlist_position && dest <= playlist_position)
-        playlist_position++;
+    if(track == position)
+        position = dest;
+    else if(track < position && dest > position)
+        position--;
+    else if(track > position && dest <= position)
+        position++;
 
     touch();
 }

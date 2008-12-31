@@ -145,7 +145,7 @@ GHashTable * music_get_current_track_metadata(void)
         add_metadata_from_string(meta, "mrl", playlist_current());
         return meta;
     }
-    else if(playlist_position != -1) // or do it the hard way
+    else if(playlist_position() != -1) // or do it the hard way
         return music_get_playlist_item_metadata(playlist_current());
 
     return g_hash_table_new(NULL, NULL);

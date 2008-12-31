@@ -3,12 +3,12 @@
 
 #include <glib.h>
 
-extern gint playlist_position;
 extern gint playlist_mtime;
 
 void playlist_init(void);
 void playlist_destroy(void);
 
+gint playlist_position(void);
 gint playlist_length(void);
 gboolean playlist_empty(void);
 gchar * playlist_nth(gint i);

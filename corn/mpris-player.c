@@ -173,7 +173,7 @@ gboolean mpris_player_emit_caps_change(MprisPlayer * obj)
 
 gboolean mpris_player_emit_track_change(MprisPlayer * obj)
 {
-    g_return_val_if_fail(playlist_position != -1, TRUE);
+    g_return_val_if_fail(playlist_position() != -1, TRUE);
     GHashTable * meta = music_get_current_track_metadata();
     g_signal_emit(obj, track_change_signal, 0, meta);
     g_hash_table_destroy(meta);

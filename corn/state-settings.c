@@ -79,6 +79,6 @@ void state_settings_destroy(void)
     save("state.random", setting_random_order ? 1 : 0);
     save("state.repeat", setting_repeat_track ? 1 : 0);
     save("state.playing", music_playing);
-    save("state.list_position", playlist_position);
+    save("state.list_position", playlist_position());
     save("state.track_position", music_get_position());
 }
