@@ -37,13 +37,13 @@ void playlist_destroy(void)
     g_array_free(playlist, TRUE);
 }
 
-gint playlist_position(void)   { return position; }
-gint playlist_length(void)     { return playlist->len; }
-gboolean playlist_empty(void)  { return !playlist->len; }
-gchar * playlist_nth(gint i)   { return g_array_index(playlist, gchar *, i); }
-gchar * playlist_current(void) { return g_array_index(playlist, gchar *, position); }
+gint     playlist_position(void) { return position; }
+gint     playlist_length(void)   { return playlist->len; }
+gboolean playlist_empty(void)    { return !playlist->len; }
+gchar *  playlist_nth(gint i)    { return g_array_index(playlist, gchar *, i); }
+gchar *  playlist_current(void)  { return g_array_index(playlist, gchar *, position); }
 gboolean playlist_modified(void) { return playlist_mtime != playlist_mtime_never; }
-void playlist_mark_as_flushed(void) { playlist_mtime = playlist_mtime_never; }
+void     playlist_mark_as_flushed(void) { playlist_mtime = playlist_mtime_never; }
 
 gboolean playlist_flush_due(void)
 {
