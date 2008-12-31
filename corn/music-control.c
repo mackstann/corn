@@ -4,7 +4,7 @@
 
 static void do_pause(void)
 {
-    music_stream_time = music_get_position();
+    music_stream_time = music_position();
     if(xine_get_status(music_stream) != XINE_STATUS_IDLE)
         xine_close(music_stream);
 }
@@ -32,17 +32,6 @@ void music_seek(gint ms)
     music_pause();
     music_stream_time = MAX(0, ms); // xine is smart.  no need to check upper bound.
     music_play();
-}
-
-// position within current song, in ms
-gint music_get_position(void)
-{
-    if(xine_get_status(music_stream) == XINE_STATUS_IDLE)
-        return music_stream_time;
-    gint pos, time, length;
-    if(xine_get_pos_length(music_stream, &pos, &time, &length))
-        return time;
-    return 0;
 }
 
 void music_pause(void)

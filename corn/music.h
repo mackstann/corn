@@ -23,4 +23,6 @@ void music_destroy(void);
 
 gboolean music_try_to_play(void);
 
+gint music_position(void);
+
 #endif

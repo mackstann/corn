@@ -187,3 +187,14 @@ gboolean music_try_to_play(void)
     music_playing = MUSIC_STOPPED;
     return FALSE;
 }
+
+// position within current song, in ms
+gint music_position(void)
+{
+    if(xine_get_status(music_stream) == XINE_STATUS_IDLE)
+        return music_stream_time;
+    gint pos, time, length;
+    if(xine_get_pos_length(music_stream, &pos, &time, &length))
+        return time;
+    return 0;
+}

@@ -128,7 +128,7 @@ gboolean mpris_player_position_set(MprisPlayer * obj, gint ms, GError ** error)
 
 gboolean mpris_player_position_get(MprisPlayer * obj, gint * ms, GError ** error)
 {
-    *ms = music_get_position();
+    *ms = music_position();
     return TRUE;
 }
 
