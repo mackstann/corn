@@ -14,7 +14,7 @@
 #define playlist_mtime_never -1
 #define playlist_save_wait_time 5
 
-static GArray * playlist = NULL;
+static GArray * playlist;
 static gint position = -1;
 
 // this is set to playlist_mtime_never if current playlist has been saved to
