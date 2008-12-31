@@ -60,13 +60,13 @@ void state_playlist_init(void)
 void state_playlist_destroy(void)
 {
     g_thread_pool_free(pool, FALSE, TRUE);
-    if(PLAYLIST_MODIFIED())
+    if(playlist_modified())
         save_playlist(generate_playlist_data());
 }
 
 void state_playlist_launch_save_if_time_has_come(void)
 {
-    if(!PLAYLIST_FLUSH_TIME_HAS_COME())
+    if(!playlist_flush_due())
         return;
 
     if(g_thread_pool_unprocessed(pool))
@@ -80,5 +80,5 @@ void state_playlist_launch_save_if_time_has_come(void)
     if(error)
         g_error("%s (%s).\n", _("Couldn't push thread to save playlist to disk"), error->message);
 
-    PLAYLIST_MARK_AS_FLUSHED();
+    playlist_mark_as_flushed();
 }

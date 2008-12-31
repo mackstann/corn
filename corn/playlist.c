@@ -11,6 +11,9 @@
 
 #include "string.h"
 
+#define playlist_mtime_never -1
+#define playlist_save_wait_time 5
+
 // annotations of algorithmic complexity use 'n' to refer
 // to the length of the playlist (unless otherwise noted)
 
@@ -18,11 +21,11 @@ GArray * playlist = NULL;
 
 gint playlist_position = -1;
 
-// -1 if current playlist has been saved to disk.  otherwise, the time at which
-// the playlist was last modified.  we only trigger a save-to-disk when
-// playlist modification activity has died down for a little bit.
-gint playlist_mtime = PLAYLIST_MTIME_NEVER;
-gint playlist_save_wait_time = 5;
+// playlist_mtime_never if current playlist has been saved to disk.  otherwise,
+// the time at which the playlist was last modified.  we only trigger a
+// save-to-disk when playlist modification activity has died down for a little
+// bit (determined by playlist_save_wait_time)
+gint playlist_mtime = playlist_mtime_never;
 
 void playlist_init(void)
 {
@@ -37,7 +40,29 @@ void playlist_destroy(void)
     g_array_free(playlist, TRUE);
 }
 
-static inline void reset_playlist_position(void)
+gboolean playlist_modified(void)
+{
+    return playlist_mtime != playlist_mtime_never;
+}
+
+gboolean playlist_flush_due(void)
+{
+    return playlist_modified() &&
+        main_time_counter - playlist_mtime >= playlist_save_wait_time;
+}
+
+void playlist_mark_as_flushed(void)
+{
+    playlist_mtime = playlist_mtime_never;
+}
+
+static void touch()
+{
+    if(main_status == CORN_RUNNING)
+        playlist_mtime = main_time_counter;
+}
+
+static void reset_position(void)
 {
     if(!playlist || !playlist->len)
         playlist_position = -1;
@@ -56,9 +81,9 @@ void playlist_append(gchar * path) // takes ownership of the path passed in
         g_array_append_val(playlist, path);
 
     if(playlist_position == -1)
-        reset_playlist_position();
+        reset_position();
 
-    PLAYLIST_TOUCH();
+    touch();
 }
 
 void playlist_replace_path(const gchar * path)
@@ -66,7 +91,7 @@ void playlist_replace_path(const gchar * path)
     g_return_if_fail(playlist->len > 0);
     g_free(PLAYLIST_CURRENT_ITEM());
     PLAYLIST_ITEM_N(playlist_position) = g_strdup(path);
-    PLAYLIST_TOUCH();
+    touch();
 }
 
 void playlist_advance(gint how)
@@ -141,7 +166,7 @@ void playlist_clear(void)
 
     playlist_position = -1;
 
-    PLAYLIST_TOUCH();
+    touch();
 }
 
 void playlist_remove(gint track)
@@ -164,9 +189,9 @@ void playlist_remove(gint track)
     // if we're still in the same spot, there was no track to advance to.  set
     // to track 0, or if we're removing last song, set to -1.
     if(track == playlist_position)
-        reset_playlist_position();
+        reset_position();
 
-    PLAYLIST_TOUCH();
+    touch();
 }
 
 void playlist_move(gint track, gint dest)
@@ -193,5 +218,5 @@ void playlist_move(gint track, gint dest)
     else if(track > playlist_position && dest <= playlist_position)
         playlist_position++;
 
-    PLAYLIST_TOUCH();
+    touch();
 }
