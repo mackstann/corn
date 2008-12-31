@@ -14,9 +14,12 @@ extern gint playlist_save_wait_time;
     (playlist->len ? PLAYLIST_ITEM_N(playlist_position) : NULL)
 
 #define PLAYLIST_MTIME_NEVER -1
+
 #define PLAYLIST_MODIFIED() (playlist_mtime != PLAYLIST_MTIME_NEVER)
+
 #define PLAYLIST_FLUSH_TIME_HAS_COME() (PLAYLIST_MODIFIED() && \
     main_time_counter - playlist_mtime >= playlist_save_wait_time)
+
 #define PLAYLIST_MARK_AS_FLUSHED() do { playlist_mtime = PLAYLIST_MTIME_NEVER; } while(0)
 
 #define PLAYLIST_TOUCH() do { \
