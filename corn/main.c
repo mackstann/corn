@@ -3,6 +3,7 @@
 #include "gettext.h"
 #include <locale.h>
 
+#include "mpris-player.h"
 #include "dbus.h"
 #include "music.h"
 #include "playlist.h"
@@ -111,6 +112,7 @@ int main(int argc, char **argv)
                 state_settings_init();
 
                 main_status = CORN_RUNNING;
+                mpris_player_emit_caps_change(mpris_player);
                 g_message("ready");
                 g_main_loop_run(loop);
                 main_status = CORN_EXITING;

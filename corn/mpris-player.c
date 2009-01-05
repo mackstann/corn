@@ -13,8 +13,6 @@
 
 #include <string.h>
 
-gint mpris_player_capabilities = CAP_NONE;
-
 // much thanks to audacious developers -- some code is inherited from them.
 
 guint track_change_signal;
@@ -157,9 +155,17 @@ gboolean mpris_player_get_status(MprisPlayer * obj, GValue ** status, GError ** 
     return TRUE;
 }
 
+gint lastcaps = 0;
 gboolean mpris_player_emit_caps_change(MprisPlayer * obj)
 {
-    g_signal_emit(obj, caps_change_signal, 0, mpris_player_capabilities);
+    if(main_status != CORN_RUNNING)
+        return TRUE;
+    gint caps = CAP_CURRENT_ALL();
+    if(caps != lastcaps)
+    {
+        g_signal_emit(obj, caps_change_signal, 0, caps);
+        lastcaps = caps;
+    }
     return TRUE;
 }
 

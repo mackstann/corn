@@ -2,6 +2,7 @@
 #include "playlist-random.h"
 #include "music.h"
 #include "music-control.h"
+#include "mpris-player.h"
 #include "main.h"
 #include "parsefile.h"
 #include "state-settings.h"
@@ -10,7 +11,7 @@
 #define playlist_mtime_never -1
 #define playlist_save_wait_time 5
 
-static GArray * playlist;
+static GArray * playlist = NULL;
 static gint position = -1;
 
 // this is set to playlist_mtime_never if current playlist has been saved to
@@ -34,7 +35,7 @@ void playlist_destroy(void)
 }
 
 gint     playlist_position(void) { return position; }
-gint     playlist_length(void)   { return playlist->len; }
+gint     playlist_length(void)   { return playlist ? playlist->len : 0; }
 gboolean playlist_empty(void)    { return !playlist->len; }
 gchar *  playlist_nth(gint i)    { return g_array_index(playlist, gchar *, i); }
 gchar *  playlist_current(void)  { return g_array_index(playlist, gchar *, position); }
@@ -57,8 +58,6 @@ static void reset_position(void)
 {
     if(!playlist || !playlist->len)
         position = -1;
-    else if(playlist->len > 1 && setting_random_order)
-        position = g_random_int_range(0, playlist->len);
     else
         position = 0;
 }
@@ -72,7 +71,10 @@ void playlist_append(gchar * path) // takes ownership of the path passed in
         g_array_append_val(playlist, path);
 
     if(position == -1)
+    {
         reset_position();
+        mpris_player_emit_caps_change(mpris_player);
+    }
 
     touch();
 }
@@ -120,6 +122,7 @@ void playlist_advance(gint how)
         music_play();
 
     mpris_player_emit_track_change(mpris_player);
+    mpris_player_emit_caps_change(mpris_player);
 }
 
 void playlist_seek(gint track)
@@ -142,6 +145,7 @@ void playlist_seek(gint track)
         music_playing = MUSIC_PAUSED;
 
     mpris_player_emit_track_change(mpris_player);
+    mpris_player_emit_caps_change(mpris_player);
 }
 
 void playlist_clear(void)
@@ -158,6 +162,7 @@ void playlist_clear(void)
     position = -1;
 
     touch();
+    mpris_player_emit_caps_change(mpris_player);
 }
 
 void playlist_remove(gint track)
@@ -183,6 +188,7 @@ void playlist_remove(gint track)
         reset_position();
 
     touch();
+    mpris_player_emit_caps_change(mpris_player);
 }
 
 void playlist_move(gint track, gint dest)
@@ -210,4 +216,5 @@ void playlist_move(gint track, gint dest)
         position++;
 
     touch();
+    mpris_player_emit_caps_change(mpris_player);
 }

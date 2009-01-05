@@ -1,6 +1,8 @@
 #include "music-control.h"
 #include "music.h"
 #include "playlist.h"
+#include "mpris-player.h"
+#include "dbus.h"
 
 static void do_pause(void)
 {
@@ -9,7 +11,7 @@ static void do_pause(void)
         xine_close(music_stream);
 }
 
-void music_play(void)
+static void do_play(void)
 {
     gint orig_pos = playlist_position();
     while(!music_try_to_play())
@@ -27,11 +29,17 @@ void music_play(void)
     }
 }
 
+void music_play(void)
+{
+    do_play();
+    mpris_player_emit_caps_change(mpris_player); // new song, seekability may have changed
+}
+
 void music_seek(gint ms)
 {
-    music_pause();
+    do_pause();
     music_stream_time = MAX(0, ms); // xine is smart.  no need to check upper bound.
-    music_play();
+    do_play();
 }
 
 void music_pause(void)

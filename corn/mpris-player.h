@@ -58,6 +58,4 @@ gboolean mpris_player_emit_caps_change  (MprisPlayer * obj);
 gboolean mpris_player_emit_track_change (MprisPlayer * obj);
 gboolean mpris_player_emit_status_change(MprisPlayer * obj);
 
-extern gint mpris_player_capabilities;
-
 #endif
