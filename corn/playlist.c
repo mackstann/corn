@@ -3,6 +3,7 @@
 #include "music.h"
 #include "music-control.h"
 #include "mpris-player.h"
+#include "mpris-tracklist.h"
 #include "main.h"
 #include "parsefile.h"
 #include "state-settings.h"
@@ -52,6 +53,8 @@ static void touch()
 {
     if(main_status == CORN_RUNNING)
         playlist_mtime = main_time_counter;
+    mpris_player_emit_caps_change(mpris_player);
+    mpris_tracklist_emit_track_list_change(mpris_tracklist);
 }
 
 static void reset_position(void)
@@ -73,7 +76,6 @@ void playlist_append(gchar * path) // takes ownership of the path passed in
     if(position == -1)
     {
         reset_position();
-        mpris_player_emit_caps_change(mpris_player);
     }
 
     touch();
@@ -162,7 +164,6 @@ void playlist_clear(void)
     position = -1;
 
     touch();
-    mpris_player_emit_caps_change(mpris_player);
 }
 
 void playlist_remove(gint track)
@@ -188,7 +189,6 @@ void playlist_remove(gint track)
         reset_position();
 
     touch();
-    mpris_player_emit_caps_change(mpris_player);
 }
 
 void playlist_move(gint track, gint dest)
@@ -216,5 +216,4 @@ void playlist_move(gint track, gint dest)
         position++;
 
     touch();
-    mpris_player_emit_caps_change(mpris_player);
 }

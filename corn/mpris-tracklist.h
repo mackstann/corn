@@ -20,4 +20,6 @@ gboolean mpris_tracklist_set_loop         (MprisTrackList * obj, gboolean on, GE
 gboolean mpris_tracklist_set_random       (MprisTrackList * obj, gboolean on, GError ** error);
 gboolean mpris_tracklist_get_metadata     (MprisTrackList * obj, gint track, GHashTable ** meta, GError ** error);
 
+void mpris_tracklist_emit_track_list_change(MprisTrackList * obj);
+
 #endif

@@ -12,6 +12,8 @@
 #include <glib.h>
 #include <glib-object.h>
 
+guint track_list_change_signal;
+
 G_DEFINE_TYPE(MprisTrackList, mpris_tracklist, G_TYPE_OBJECT)
 
 static void mpris_tracklist_init(MprisTrackList * obj)
@@ -20,6 +22,14 @@ static void mpris_tracklist_init(MprisTrackList * obj)
 
 static void mpris_tracklist_class_init(MprisTrackListClass * klass)
 {
+    track_list_change_signal =
+        g_signal_new("track_list_change",
+                     G_OBJECT_CLASS_TYPE(klass),
+                     G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+                     0,
+                     NULL, NULL,
+                     g_cclosure_marshal_VOID__BOXED,
+                     G_TYPE_NONE, 1, G_TYPE_INT);
 }
 
 gboolean mpris_tracklist_del_track(MprisTrackList * obj, gint track, GError ** error)
@@ -80,4 +90,9 @@ gboolean mpris_tracklist_get_metadata(MprisTrackList * obj, gint track, GHashTab
 {
     *meta = music_get_track_metadata(track);
     return TRUE;
+}
+
+void mpris_tracklist_emit_track_list_change(MprisTrackList * obj)
+{
+    g_signal_emit(obj, track_list_change_signal, 0, playlist_length());
 }
