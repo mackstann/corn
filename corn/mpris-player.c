@@ -13,7 +13,7 @@
 
 #include <string.h>
 
-gint mpris_player_capabilities = 0;
+gint mpris_player_capabilities = CAP_NONE;
 
 // much thanks to audacious developers -- some code is inherited from them.
 
@@ -27,11 +27,6 @@ G_DEFINE_TYPE(MprisPlayer, mpris_player, G_TYPE_OBJECT)
 
 static void mpris_player_init(MprisPlayer * obj)
 {
-    // set caps!
-    //CAN_GO_NEXT | CAN_GO_PREV | CAN_PAUSE | CAN_PLAY;
-    //CAN_SEEK
-    //CAN_PROVIDE_METADATA
-    //CAN_HAS_TRACKLIST
 }
 
 static void mpris_player_class_init(MprisPlayerClass * klass)
@@ -101,10 +96,7 @@ gboolean mpris_player_play(MprisPlayer * obj, GError ** error)
 
 gboolean mpris_player_get_caps(MprisPlayer * obj, gint * caps, GError ** error)
 {
-    *caps = CAN_GO_NEXT | CAN_GO_PREV | CAN_PAUSE | CAN_PLAY;
-    //CAN_SEEK
-    //CAN_PROVIDE_METADATA
-    //CAN_HAS_TRACKLIST
+    *caps = CAP_CURRENT_ALL();
     return TRUE;
 }
 
