@@ -33,19 +33,14 @@ void music_play(void)
 {
     do_play();
     mpris_player_emit_caps_change(mpris_player); // new song, seekability may have changed
-}
-
-void music_seek(gint ms)
-{
-    do_pause();
-    music_stream_time = MAX(0, ms); // xine is smart.  no need to check upper bound.
-    do_play();
+    mpris_player_emit_status_change(mpris_player);
 }
 
 void music_pause(void)
 {
     do_pause();
     music_playing = MUSIC_PAUSED;
+    mpris_player_emit_status_change(mpris_player);
 }
 
 void music_stop(void)
@@ -53,6 +48,14 @@ void music_stop(void)
     do_pause();
     music_playing = MUSIC_STOPPED;
     music_stream_time = 0;
+    mpris_player_emit_status_change(mpris_player);
+}
+
+void music_seek(gint ms)
+{
+    do_pause();
+    music_stream_time = MAX(0, ms); // xine is smart.  no need to check upper bound.
+    do_play();
 }
 
 void music_set_volume(gint vol)

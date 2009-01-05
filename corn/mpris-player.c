@@ -1,4 +1,5 @@
 #include "main.h"
+#include "dbus.h"
 #include "music-control.h"
 #include "music-metadata.h"
 #include "music.h"
@@ -125,6 +126,7 @@ gboolean mpris_player_position_get(MprisPlayer * obj, gint * ms, GError ** error
 gboolean mpris_player_repeat(MprisPlayer * obj, gboolean on, GError ** error)
 {
     setting_repeat_track = on;
+    mpris_player_emit_status_change(mpris_player);
     return TRUE;
 }
 
