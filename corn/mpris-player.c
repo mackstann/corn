@@ -24,6 +24,8 @@ G_DEFINE_TYPE(MprisPlayer, mpris_player, G_TYPE_OBJECT)
 
 #define DBUS_TYPE_G_STRING_VALUE_HASHTABLE (dbus_g_type_get_map ("GHashTable", G_TYPE_STRING, G_TYPE_VALUE))
 
+#define DBUS_STRUCT_INT_INT_INT_INT (dbus_g_type_get_struct("GValueArray", G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INVALID))
+
 static void mpris_player_init(MprisPlayer * obj)
 {
 }
@@ -53,7 +55,7 @@ static void mpris_player_class_init(MprisPlayerClass * klass)
                      0,
                      NULL, NULL,
                      g_cclosure_marshal_VOID__INT,
-                     G_TYPE_NONE, 1, G_TYPE_INT);
+                     G_TYPE_NONE, 1, DBUS_STRUCT_INT_INT_INT_INT);
 }
 
 // example for calling these on the command line:
@@ -135,8 +137,6 @@ gboolean mpris_player_get_metadata(MprisPlayer * obj, GHashTable ** meta, GError
     *meta = music_get_current_track_metadata();
     return TRUE;
 }
-
-#define DBUS_STRUCT_INT_INT_INT_INT (dbus_g_type_get_struct("GValueArray", G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INVALID))
 
 gpointer get_status_struct(void)
 {
