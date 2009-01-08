@@ -16,15 +16,26 @@
 
 // much thanks to audacious developers -- some code is inherited from them.
 
-guint track_change_signal;
-guint status_change_signal;
-guint caps_change_signal;
-
-G_DEFINE_TYPE(MprisPlayer, mpris_player, G_TYPE_OBJECT)
+#define CAP_NONE                 (0)
+#define CAP_CAN_GO_NEXT          (1 << 0)
+#define CAP_CAN_GO_PREV          (1 << 1)
+#define CAP_CAN_PAUSE            (1 << 2)
+#define CAP_CAN_PLAY             (1 << 3)
+#define CAP_CAN_SEEK             (1 << 4)
+#define CAP_CAN_PROVIDE_METADATA (1 << 5)
+#define CAP_CAN_HAS_TRACKLIST    (1 << 6)
 
 #define DBUS_TYPE_G_STRING_VALUE_HASHTABLE (dbus_g_type_get_map ("GHashTable", G_TYPE_STRING, G_TYPE_VALUE))
 
 #define DBUS_STRUCT_INT_INT_INT_INT (dbus_g_type_get_struct("GValueArray", G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INVALID))
+
+guint track_change_signal;
+guint status_change_signal;
+guint caps_change_signal;
+
+static gint capabilities;
+
+G_DEFINE_TYPE(MprisPlayer, mpris_player, G_TYPE_OBJECT)
 
 static void mpris_player_init(MprisPlayer * obj)
 {
@@ -56,6 +67,37 @@ static void mpris_player_class_init(MprisPlayerClass * klass)
                      NULL, NULL,
                      g_cclosure_marshal_VOID__INT,
                      G_TYPE_NONE, 1, DBUS_STRUCT_INT_INT_INT_INT);
+}
+
+static gint current_capabilities(void)
+{
+    gint caps = CAP_CAN_HAS_TRACKLIST;
+    if(!playlist_empty())
+    {
+        caps |= CAP_CAN_PAUSE | CAP_CAN_PLAY | CAP_CAN_PROVIDE_METADATA |
+                CAP_CAN_GO_NEXT | CAP_CAN_GO_PREV;
+        if(!setting_loop_at_end)
+        {
+            if(playlist_position() >= playlist_length()-1)
+                caps &= ~CAP_CAN_GO_NEXT;
+            else if(playlist_position() < 0)
+                caps &= ~CAP_CAN_GO_PREV;
+        }
+        if(music_stream && xine_get_stream_info(music_stream, XINE_STREAM_INFO_SEEKABLE))
+            caps |= CAP_CAN_SEEK;
+    }
+    return caps;
+}
+
+static gboolean refresh_capabilities(void)
+{
+    gint newcaps = current_capabilities();
+    if(newcaps != capabilities)
+    {
+        capabilities = newcaps;
+        return TRUE;
+    }
+    return FALSE;
 }
 
 // example for calling these on the command line:
@@ -97,7 +139,7 @@ gboolean mpris_player_play(MprisPlayer * obj, GError ** error)
 
 gboolean mpris_player_get_caps(MprisPlayer * obj, gint * caps, GError ** error)
 {
-    *caps = CAP_CURRENT_ALL();
+    *caps = capabilities;
     return TRUE;
 }
 
@@ -157,17 +199,10 @@ gboolean mpris_player_get_status(MprisPlayer * obj, GValue ** status, GError ** 
     return TRUE;
 }
 
-gint lastcaps = 0;
 gboolean mpris_player_emit_caps_change(MprisPlayer * obj)
 {
-    if(main_status != CORN_RUNNING)
-        return TRUE;
-    gint caps = CAP_CURRENT_ALL();
-    if(caps != lastcaps)
-    {
-        g_signal_emit(obj, caps_change_signal, 0, caps);
-        lastcaps = caps;
-    }
+    if(main_status == CORN_RUNNING && refresh_capabilities())
+        g_signal_emit(obj, caps_change_signal, 0, capabilities);
     return TRUE;
 }
 
