@@ -23,6 +23,7 @@
 CornStatus main_status;
 guint main_time_counter = 0;
 gchar * main_instance_name = PACKAGE_NAME;
+gchar * main_service_name;
 
 static GMainLoop * loop;
 
@@ -105,6 +106,8 @@ int main(int argc, char **argv)
         }
         g_regex_unref(instance_pattern);
     }
+
+    main_service_name = g_strdup_printf("org.mpris.%s", main_instance_name);
 
     loop = g_main_loop_new(NULL, FALSE);
     g_timeout_add_seconds_full(G_PRIORITY_HIGH, 1, increment_time_counter, NULL, NULL);
