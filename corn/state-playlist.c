@@ -45,7 +45,7 @@ static GString * generate_playlist_data(void)
 
 void state_playlist_init(void)
 {
-    gchar * playlist_filename = g_build_filename(g_get_user_config_dir(), PACKAGE, "playlist", NULL);
+    gchar * playlist_filename = g_build_filename(g_get_user_config_dir(), main_instance_name, "playlist", NULL);
     GnomeVFSURI * pl_uri = gnome_vfs_uri_new(playlist_filename);
     g_free(playlist_filename);
     parse_m3u(pl_uri);

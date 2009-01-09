@@ -89,7 +89,7 @@ int music_init()
     xine_config_register_string(xine, "audio.driver", "auto", "audio driver",
             NULL, 0, NULL, NULL);
 
-    configfile = g_build_filename(g_get_user_config_dir(), PACKAGE, "xine_config", NULL);
+    configfile = g_build_filename(g_get_user_config_dir(), main_instance_name, "xine_config", NULL);
     xine_config_load(xine, configfile);
     g_free(configfile);
 

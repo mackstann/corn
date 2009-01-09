@@ -17,9 +17,12 @@
 #include <sys/types.h>
 #include <signal.h>
 #include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 CornStatus main_status;
 guint main_time_counter = 0;
+gchar * main_instance_name = PACKAGE_NAME;
 
 static GMainLoop * loop;
 
@@ -47,9 +50,9 @@ static void init_locale(void)
 {
     if(!setlocale(LC_ALL, ""))
         g_warning("Couldn't set locale from environment.\n");
-    bindtextdomain(PACKAGE_NAME, LOCALEDIR);
-    bind_textdomain_codeset(PACKAGE_NAME, "UTF-8");
-    textdomain(PACKAGE_NAME);
+    bindtextdomain(main_instance_name, LOCALEDIR);
+    bind_textdomain_codeset(main_instance_name, "UTF-8");
+    textdomain(main_instance_name);
 }
 
 static void init_signals(void)
@@ -85,17 +88,30 @@ int main(int argc, char **argv)
     main_status = CORN_STARTING;
 
     init_locale();
+    init_signals();
+    g_type_init();
+    g_thread_init(NULL);
+
+    if(argc > 1)
+    {
+        GRegex * instance_pattern = g_regex_new("^[^a-zA-Z][a-zA-Z0-9]*$", 0, 0, NULL);
+        if(g_regex_match(instance_pattern, argv[1], 0, NULL))
+            main_instance_name = argv[1];
+        else
+        {
+            fprintf(stderr, _("instance name must start with a letter "
+                              "and only contain alphanumeric characters."));
+            return 1;
+        }
+        g_regex_unref(instance_pattern);
+    }
 
     loop = g_main_loop_new(NULL, FALSE);
     g_timeout_add_seconds_full(G_PRIORITY_HIGH, 1, increment_time_counter, NULL, NULL);
     g_timeout_add_seconds_full(G_PRIORITY_DEFAULT_IDLE, 1, playlist_save_timeout_func, NULL, NULL);
 
-    init_signals();
-
-    g_type_init();
-
     /* make sure the config directory exists */
-    gchar * dir = g_build_filename(g_get_user_config_dir(), PACKAGE, NULL);
+    gchar * dir = g_build_filename(g_get_user_config_dir(), main_instance_name, NULL);
     g_mkdir_with_parents(dir, S_IRWXU | S_IRWXG | S_IRWXO);
     g_free(dir);
 

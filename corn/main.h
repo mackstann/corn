@@ -12,6 +12,7 @@ typedef enum
 
 extern CornStatus main_status;
 extern guint main_time_counter;
+extern gchar * main_instance_name;
 
 void main_quit(void);
 

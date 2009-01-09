@@ -13,13 +13,12 @@
 #include "mpris-tracklist.h"
 #include "mpris-tracklist-glue.h"
 #include "dbus.h"
+#include "main.h"
 
 #include <glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus.h>
-
-#define CORN_BUS_SERVICE "org.mpris.corn"
 
 #define CORN_BUS_CROOT_PATH "/Corn"
 #define CORN_BUS_ROOT_PATH "/"
@@ -34,6 +33,7 @@ MprisPlayer * mpris_player;
 MprisTrackList * mpris_tracklist;
 
 static DBusGConnection * bus = NULL;
+static gchar * service_name = NULL;
 
 static int mpris_register_objects(DBusGConnection *);
 
@@ -55,6 +55,8 @@ int mpris_init(void)
     // ok, so how do we get notified when the bus disconnects, to handle it
     // ourselves?
 
+    service_name = g_strdup_printf("org.mpris.%s", main_instance_name);
+
     return mpris_register_objects(bus);
 }
 
@@ -63,6 +65,7 @@ void mpris_destroy(void)
     if(bus)
         dbus_g_connection_unref(bus);
     bus = NULL;
+    g_free(service_name);
 }
 
 static int mpris_register_objects(DBusGConnection * bus)
@@ -79,7 +82,7 @@ static int mpris_register_objects(DBusGConnection * bus)
     GError * error = NULL;
     guint request_name_result;
     dbus_g_proxy_call(bus_proxy, "RequestName", &error,
-        G_TYPE_STRING, CORN_BUS_SERVICE,
+        G_TYPE_STRING, service_name,
         G_TYPE_UINT, 0,
         G_TYPE_INVALID,
         G_TYPE_UINT, &request_name_result,
@@ -94,7 +97,7 @@ static int mpris_register_objects(DBusGConnection * bus)
 
     if(!request_name_result)
     {
-        g_printerr("Failed to acquire %s service.\n", CORN_BUS_SERVICE);
+        g_printerr("Failed to acquire %s service.\n", service_name);
         return 32;
     }
 
