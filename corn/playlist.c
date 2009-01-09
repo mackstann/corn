@@ -193,6 +193,7 @@ void playlist_remove(gint track)
 
 void playlist_move(gint track, gint dest)
 {
+    // XXX segfaults
     if(G_UNLIKELY(track == dest)) return;
     if(G_UNLIKELY(track < 0)) return;
     if(G_UNLIKELY(track >= playlist->len)) return;
