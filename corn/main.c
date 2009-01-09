@@ -11,11 +11,14 @@
 #include "state-playlist.h"
 #include "main.h"
 
+#include <unique/unique.h>
 #include <libgnomevfs/gnome-vfs.h>
 #include <glib.h>
+#include <time.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <signal.h>
+#include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -95,19 +98,46 @@ int main(int argc, char **argv)
 
     if(argc > 1)
     {
-        GRegex * instance_pattern = g_regex_new("^[^a-zA-Z][a-zA-Z0-9]*$", 0, 0, NULL);
+        GRegex * instance_pattern = g_regex_new("^[a-zA-Z][a-zA-Z0-9]*$", 0, 0, NULL);
         if(g_regex_match(instance_pattern, argv[1], 0, NULL))
             main_instance_name = argv[1];
         else
         {
             fprintf(stderr, _("instance name must start with a letter "
-                              "and only contain alphanumeric characters."));
+                              "and only contain alphanumeric characters.\n"));
             return 1;
         }
         g_regex_unref(instance_pattern);
     }
 
     main_service_name = g_strdup_printf("org.mpris.%s", main_instance_name);
+
+    // hack to work around bug in libunique that segfaults when X display
+    // doesn't exist and no startup id is passed in
+    gchar * startup_id = g_strdup_printf("%s.%d_TIME%d", g_get_host_name(), getpid(), (int)time(NULL));
+    g_setenv("DESKTOP_STARTUP_ID", startup_id, FALSE);
+
+    UniqueApp * app = unique_app_new(main_service_name, startup_id);
+    g_free(startup_id);
+
+    if(unique_app_is_running(app))
+    {
+        fprintf(stderr,
+            "An instance of %s named %s is already running.  If you would really\n"
+            "like to run two instances at once (for example, to play to two different audio\n"
+            "devices), then run %s with a single argument, which will be the instance\n"
+            "name, for example:\n"
+            "\n"
+            "$ %s foo\n"
+            "\n"
+            "All config data for that instance will be under the name foo (config directory,\n"
+            "etc.), it will use that name on D-BUS, and it will not interact with other\n"
+            "instances in any way.  You can quit it and re-start it with the same instance\n"
+            "name and it will remember everything about itself just like running %s\n"
+            "without an instance name normally would.\n",
+            PACKAGE_NAME, main_instance_name, PACKAGE_NAME, argv[0], PACKAGE_NAME);
+        return 2;
+    };
 
     loop = g_main_loop_new(NULL, FALSE);
     g_timeout_add_seconds_full(G_PRIORITY_HIGH, 1, increment_time_counter, NULL, NULL);
