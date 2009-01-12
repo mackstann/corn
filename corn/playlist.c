@@ -61,7 +61,7 @@ static inline void reset_position(void)
 {
     if(!playlist || !playlist->len)
         position = -1;
-    else if(playlist == -1)
+    else if(position == -1)
         position = 0;
 }
 
