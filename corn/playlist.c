@@ -57,11 +57,11 @@ static void touch()
     mpris_tracklist_emit_track_list_change(mpris_tracklist);
 }
 
-static void reset_position(void)
+static inline void reset_position(void)
 {
     if(!playlist || !playlist->len)
         position = -1;
-    else
+    else if(playlist == -1)
         position = 0;
 }
 
@@ -73,11 +73,7 @@ void playlist_append(gchar * path) // takes ownership of the path passed in
     if(parse_file(path))
         g_array_append_val(playlist, path);
 
-    if(position == -1)
-    {
-        reset_position();
-    }
-
+    reset_position();
     touch();
 }
 
