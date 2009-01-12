@@ -8,6 +8,7 @@
 #include "parsefile.h"
 #include "state-settings.h"
 #include "dbus.h"
+#include "watch.h"
 
 #define playlist_mtime_never -1
 #define playlist_save_wait_time 5
@@ -71,7 +72,10 @@ void playlist_append(gchar * path) // takes ownership of the path passed in
     g_return_if_fail(g_utf8_validate(path, -1, NULL));
 
     if(parse_file(path))
+    {
         g_array_append_val(playlist, path);
+        watch_file(path);
+    }
 
     reset_position();
     touch();

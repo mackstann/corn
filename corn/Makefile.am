@@ -1,13 +1,13 @@
 localedir=$(datadir)/locale
 
-AM_CPPFLAGS=$(GLIB_CFLAGS) $(GTHREAD_CFLAGS) \
+AM_CPPFLAGS=$(GLIB_CFLAGS) $(GTHREAD_CFLAGS) $(GIO_CFLAGS) \
     $(DBUS_GLIB_CFLAGS) $(GNOMEVFS_CFLAGS) $(XINE_CFLAGS) \
     $(UNIQUE_CFLAGS) -DG_DISABLE_DEPRECATED -DLOCALEDIR=\"$(localedir)\"
 
 bin_PROGRAMS = corn
 
 corn_LDADD = $(GLIB_LIBS) $(GTHREAD_LIBS) $(DBUS_GLIB_CFLAGS) \
-    $(GNOMEVFS_LIBS) $(XINE_LIBS) $(UNIQUE_LIBS)
+    $(GNOMEVFS_LIBS) $(XINE_LIBS) $(UNIQUE_LIBS) $(GIO_LIBS)
 
 corn_SOURCES = \
   gettext.h \
@@ -35,6 +35,8 @@ corn_SOURCES = \
   state-playlist.c \
   sockqueue.h \
   sockqueue.c \
+  watch.h \
+  watch.c \
   cpris-root.h \
   cpris-root.c \
   cpris-root-glue.h \
