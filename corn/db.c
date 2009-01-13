@@ -123,6 +123,32 @@ void db_destroy(void)
 
 // CRUD
 
+static void update_with_metadata(const gchar * uri, GHashTable * meta)
+{
+    sqlite3_reset(insert_stmt);
+    sqlite3_clear_bindings(insert_stmt);
+
+    GValue * location    = g_hash_table_lookup(meta, "location");
+    GValue * artist      = g_hash_table_lookup(meta, "artist");
+    GValue * title       = g_hash_table_lookup(meta, "title");
+    GValue * album       = g_hash_table_lookup(meta, "album");
+    GValue * tracknumber = g_hash_table_lookup(meta, "tracknumber");
+    GValue * ms          = g_hash_table_lookup(meta, "mtime");
+    GValue * samplerate  = g_hash_table_lookup(meta, "audio-samplerate");
+    GValue * bitrate     = g_hash_table_lookup(meta, "audio-bitrate");
+
+    if(location)    sqlite3_bind_text(insert_stmt, 1, g_value_get_string(location),    -1, SQLITE_STATIC);
+    if(artist)      sqlite3_bind_text(insert_stmt, 2, g_value_get_string(artist),      -1, SQLITE_STATIC);
+    if(title)       sqlite3_bind_text(insert_stmt, 3, g_value_get_string(title),       -1, SQLITE_STATIC);
+    if(album)       sqlite3_bind_text(insert_stmt, 4, g_value_get_string(album),       -1, SQLITE_STATIC);
+    if(tracknumber) sqlite3_bind_text(insert_stmt, 5, g_value_get_string(tracknumber), -1, SQLITE_STATIC);
+    if(ms)          sqlite3_bind_int (insert_stmt, 6, g_value_get_int(ms));
+    if(samplerate)  sqlite3_bind_int (insert_stmt, 7, g_value_get_int(samplerate));
+    if(bitrate)     sqlite3_bind_int (insert_stmt, 8, g_value_get_int(bitrate));
+
+    TRY(sqlite3_step(insert_stmt), "Couldn't step insert statement");
+}
+
 GHashTable * db_get(const gchar * uri)
 {
     sqlite3_reset(select_stmt);
@@ -137,7 +163,11 @@ GHashTable * db_get(const gchar * uri)
     {
         if(result != SQLITE_DONE)
             printerr("Couldn't step select statement");
-        return g_hash_table_new(NULL, NULL);
+
+        // not in db yet, fetch manually and insert it while we have it
+        GHashTable * meta = music_get_playlist_item_metadata(uri);
+        update_with_metadata(uri, meta);
+        return meta;
     }
 
     GHashTable * meta = g_hash_table_new(g_str_hash, g_str_equal);
@@ -159,31 +189,8 @@ GHashTable * db_get(const gchar * uri)
 
 static void update(const gchar * uri)
 {
-    sqlite3_reset(insert_stmt);
-    sqlite3_clear_bindings(insert_stmt);
-
     GHashTable * meta = music_get_playlist_item_metadata(uri);
-
-    GValue * location    = g_hash_table_lookup(meta, "location");
-    GValue * artist      = g_hash_table_lookup(meta, "artist");
-    GValue * title       = g_hash_table_lookup(meta, "title");
-    GValue * album       = g_hash_table_lookup(meta, "album");
-    GValue * tracknumber = g_hash_table_lookup(meta, "tracknumber");
-    GValue * ms          = g_hash_table_lookup(meta, "mtime");
-    GValue * samplerate  = g_hash_table_lookup(meta, "audio-samplerate");
-    GValue * bitrate     = g_hash_table_lookup(meta, "audio-bitrate");
-
-    if(location)    sqlite3_bind_text(insert_stmt, 1, g_value_get_string(location),    -1, SQLITE_STATIC);
-    if(artist)      sqlite3_bind_text(insert_stmt, 2, g_value_get_string(artist),      -1, SQLITE_STATIC);
-    if(title)       sqlite3_bind_text(insert_stmt, 3, g_value_get_string(title),       -1, SQLITE_STATIC);
-    if(album)       sqlite3_bind_text(insert_stmt, 4, g_value_get_string(album),       -1, SQLITE_STATIC);
-    if(tracknumber) sqlite3_bind_text(insert_stmt, 5, g_value_get_string(tracknumber), -1, SQLITE_STATIC);
-    if(ms)          sqlite3_bind_int (insert_stmt, 6, g_value_get_int(ms));
-    if(samplerate)  sqlite3_bind_int (insert_stmt, 7, g_value_get_int(samplerate));
-    if(bitrate)     sqlite3_bind_int (insert_stmt, 8, g_value_get_int(bitrate));
-
-    TRY(sqlite3_step(insert_stmt), "Couldn't step insert statement");
-
+    update_with_metadata(uri, meta);
     g_hash_table_unref(meta);
 }
 
