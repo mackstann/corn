@@ -204,10 +204,6 @@ static gboolean do_when_idle(GHashTable * table, void (* runfunc)(const gchar *)
     if(!g_hash_table_iter_next(&iter, &key, &value))
         return FALSE;
 
-    const gchar * path = (const gchar *)key;
-    runfunc(path);
-    g_hash_table_iter_remove(&iter);
-
     if(main_time_counter - transaction_start_time >= 10)
     {
         sqlite3_reset(commit_stmt);
@@ -216,6 +212,10 @@ static gboolean do_when_idle(GHashTable * table, void (* runfunc)(const gchar *)
         sqlite3_step(begin_stmt);
         transaction_start_time = main_time_counter;
     }
+
+    const gchar * path = (const gchar *)key;
+    runfunc(path);
+    g_hash_table_iter_remove(&iter);
 
     return !!g_hash_table_size(table);
 }
