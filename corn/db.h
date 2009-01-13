@@ -7,6 +7,6 @@ gint db_init(void);
 void db_destroy(void);
 
 void db_schedule_update(const gchar * uri);
-void db_remove(const gchar * uri);
+void db_schedule_remove(const gchar * uri);
 
 #endif

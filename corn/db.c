@@ -13,7 +13,8 @@
 
 static sqlite3 * db = NULL;
 
-static GQueue * to_update = NULL;
+static GHashTable * to_update = NULL;
+static GHashTable * to_remove = NULL;
 
 sqlite3_stmt * insert_stmt;
 sqlite3_stmt * delete_stmt;
@@ -82,7 +83,8 @@ gint db_init(void)
     INIT_TRY(sqlite3_prepare_v2(db, sql_item_insert, -1, &insert_stmt, NULL), "Couldn't prepare insert statement");
     INIT_TRY(sqlite3_prepare_v2(db, sql_item_delete, -1, &delete_stmt, NULL), "Couldn't prepare delete statement");
 
-    to_update = g_queue_new();
+    to_update = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+    to_remove = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 
     return 0;
 }
@@ -92,13 +94,18 @@ void db_destroy(void)
     sqlite3_finalize(insert_stmt);
     if(db)
         sqlite3_close(db);
-    g_queue_free(to_update);
+    g_hash_table_unref(to_update);
+    g_hash_table_unref(to_remove);
 }
 
-static void update(GHashTable * meta)
+// create/update/delete
+
+static void update(const gchar * uri)
 {
     sqlite3_reset(insert_stmt);
     sqlite3_clear_bindings(insert_stmt);
+
+    GHashTable * meta = music_get_playlist_item_metadata(uri);
 
     GValue * location    = g_hash_table_lookup(meta, "location");
     GValue * artist      = g_hash_table_lookup(meta, "artist");
@@ -121,24 +128,55 @@ static void update(GHashTable * meta)
     TRY(sqlite3_step(insert_stmt), "Couldn't step insert statement");
 }
 
-static gboolean update_when_idle(G_GNUC_UNUSED gpointer data)
-{
-    update(music_get_playlist_item_metadata(g_queue_peek_head(to_update)));
-    g_free(g_queue_pop_head(to_update));
-    return !g_queue_is_empty(to_update);
-}
-
-void db_schedule_update(const gchar * path)
-{
-    g_queue_push_tail(to_update, g_strdup(path));
-    if(g_queue_get_length(to_update) == 1)
-        g_idle_add(update_when_idle, NULL);
-}
-
-void db_remove(const gchar * uri)
+static void remove(const gchar * uri)
 {
     sqlite3_reset(delete_stmt);
     sqlite3_clear_bindings(delete_stmt);
     sqlite3_bind_text(delete_stmt, 1, uri, -1, SQLITE_STATIC);
     TRY(sqlite3_step(delete_stmt), "Couldn't step delete statement");
 }
+
+// idle callback functions
+
+static gboolean do_when_idle(GHashTable * table, void (* runfunc)(const gchar *))
+{
+    GList * head = g_hash_table_get_keys(table);
+    if(!head)
+        return FALSE;
+    gchar * key = head->data;
+    runfunc(key);
+    g_hash_table_remove(table, key);
+    return !!g_hash_table_size(table);
+}
+
+static gboolean update_when_idle(G_GNUC_UNUSED gpointer data)
+{
+    return do_when_idle(to_update, update);
+}
+
+static gboolean remove_when_idle(G_GNUC_UNUSED gpointer data)
+{
+    return do_when_idle(to_remove, remove);
+}
+
+// scheduling functions
+
+static void schedule(GHashTable * table, gboolean (* idlefunc)(gpointer), const gchar * path)
+{
+    g_hash_table_remove(table, path);
+    gboolean was_empty = !g_hash_table_size(table);
+    g_hash_table_insert(table, g_strdup(path), GINT_TO_POINTER(1));
+    if(was_empty)
+        g_idle_add(idlefunc, NULL);
+}
+
+void db_schedule_update(const gchar * path)
+{
+    schedule(to_update, update_when_idle, path);
+}
+
+void db_schedule_remove(const gchar * path)
+{
+    schedule(to_remove, remove_when_idle, path);
+}
+

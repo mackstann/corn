@@ -163,7 +163,11 @@ void playlist_clear(void)
     music_stop();
 
     for(gint i = 0; i < playlist->len; i++)
+    {
+        unwatch_parent(playlist_nth(i));
+        db_schedule_remove(playlist_nth(i));
         g_free(playlist_nth(i));
+    }
 
     g_array_set_size(playlist, 0);
 
@@ -185,8 +189,8 @@ void playlist_remove(gint track)
     if(track < position)
         position--;
 
-    unwatch_file(playlist_nth(track));
-    db_remove(playlist_nth(track));
+    unwatch_parent(playlist_nth(track));
+    db_schedule_remove(playlist_nth(track));
 
     g_free(playlist_nth(track));
     g_array_remove_index(playlist, track); // O(n)
