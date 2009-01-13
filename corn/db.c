@@ -115,9 +115,10 @@ GHashTable * db_get(const gchar * uri)
         result = sqlite3_step(select_stmt);
     } while(result == SQLITE_BUSY);
 
-    if(result != SQLITE_OK && result != SQLITE_DONE && result != SQLITE_ROW)
+    if(result != SQLITE_ROW)
     {
-        printerr("Couldn't step select statement");
+        if(result != SQLITE_DONE)
+            printerr("Couldn't step select statement");
         return g_hash_table_new(NULL, NULL);
     }
 
