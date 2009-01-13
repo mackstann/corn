@@ -18,6 +18,7 @@ static GHashTable * to_remove = NULL;
 
 sqlite3_stmt * insert_stmt;
 sqlite3_stmt * delete_stmt;
+sqlite3_stmt * select_stmt;
 
 static const char * sql_create_table =
     "create table if not exists metadata ("
@@ -38,6 +39,9 @@ static const char * sql_item_insert =
 
 static const char * sql_item_delete =
     "delete from metadata where location = ?";
+
+static const char * sql_item_select =
+    "select * from metadata where location = ?";
 
 static void printerr(const char * msg)
 {
@@ -82,6 +86,7 @@ gint db_init(void)
 
     INIT_TRY(sqlite3_prepare_v2(db, sql_item_insert, -1, &insert_stmt, NULL), "Couldn't prepare insert statement");
     INIT_TRY(sqlite3_prepare_v2(db, sql_item_delete, -1, &delete_stmt, NULL), "Couldn't prepare delete statement");
+    INIT_TRY(sqlite3_prepare_v2(db, sql_item_select, -1, &select_stmt, NULL), "Couldn't prepare select statement");
 
     to_update = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
     to_remove = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
@@ -98,7 +103,40 @@ void db_destroy(void)
     g_hash_table_unref(to_remove);
 }
 
-// create/update/delete
+// CRUD
+
+GHashTable * db_get(const gchar * uri)
+{
+    sqlite3_reset(select_stmt);
+    sqlite3_bind_text(select_stmt, 1, uri, -1, SQLITE_STATIC);
+
+    int result;
+    do {
+        result = sqlite3_step(select_stmt);
+    } while(result == SQLITE_BUSY);
+
+    if(result != SQLITE_OK && result != SQLITE_DONE && result != SQLITE_ROW)
+    {
+        printerr("Couldn't step select statement");
+        return g_hash_table_new(NULL, NULL);
+    }
+
+    GHashTable * meta = g_hash_table_new(g_str_hash, g_str_equal);
+    add_metadata_from_string(meta, "location",    sqlite3_column_text(select_stmt, 0));
+    add_metadata_from_string(meta, "artist",      sqlite3_column_text(select_stmt, 1));
+    add_metadata_from_string(meta, "title",       sqlite3_column_text(select_stmt, 2));
+    add_metadata_from_string(meta, "album",       sqlite3_column_text(select_stmt, 3));
+    add_metadata_from_string(meta, "tracknumber", sqlite3_column_text(select_stmt, 4));
+
+    if(sqlite3_column_text(select_stmt, 5))
+        add_metadata_from_int(meta, "ms",               sqlite3_column_int(select_stmt, 5));
+    if(sqlite3_column_text(select_stmt, 6))
+        add_metadata_from_int(meta, "audio-samplerate", sqlite3_column_int(select_stmt, 6));
+    if(sqlite3_column_text(select_stmt, 7))
+        add_metadata_from_int(meta, "audio-bitrate",    sqlite3_column_int(select_stmt, 7));
+
+    return meta;
+}
 
 static void update(const gchar * uri)
 {
@@ -131,7 +169,6 @@ static void update(const gchar * uri)
 static void remove(const gchar * uri)
 {
     sqlite3_reset(delete_stmt);
-    sqlite3_clear_bindings(delete_stmt);
     sqlite3_bind_text(delete_stmt, 1, uri, -1, SQLITE_STATIC);
     TRY(sqlite3_step(delete_stmt), "Couldn't step delete statement");
 }

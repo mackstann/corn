@@ -5,6 +5,7 @@
 #include "playlist.h"
 #include "state-settings.h"
 #include "mpris-player.h"
+#include "db.h"
 #include "dbus.h"
 
 #include "mpris-tracklist.h"
@@ -88,7 +89,7 @@ gboolean mpris_tracklist_set_random(MprisTrackList * obj, gboolean on, GError **
 
 gboolean mpris_tracklist_get_metadata(MprisTrackList * obj, gint track, GHashTable ** meta, GError ** error)
 {
-    *meta = music_get_track_metadata(track);
+    *meta = db_get(playlist_nth(track));
     return TRUE;
 }
 

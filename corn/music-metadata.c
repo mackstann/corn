@@ -16,7 +16,7 @@ static void free_gvalue_and_its_value(gpointer value)
     g_free((GValue *)value);
 }
 
-static void add_metadata_from_string(GHashTable * meta, const gchar * name, const gchar * str)
+void add_metadata_from_string(GHashTable * meta, const gchar * name, const gchar * str)
 {
     if(!str)
         return;
@@ -34,7 +34,7 @@ static void add_metadata_from_string(GHashTable * meta, const gchar * name, cons
     g_hash_table_insert(meta, (gchar *)name, val);
 }
 
-static void add_metadata_from_int(GHashTable * meta, const gchar * name, gint num)
+void add_metadata_from_int(GHashTable * meta, const gchar * name, gint num)
 {
     GValue * val = g_new0(GValue, 1);
     g_value_init(val, G_TYPE_INT);
