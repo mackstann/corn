@@ -161,22 +161,23 @@ static gboolean remove_when_idle(G_GNUC_UNUSED gpointer data)
 
 // scheduling functions
 
-static void schedule(GHashTable * table, gboolean (* idlefunc)(gpointer), const gchar * path)
+static void schedule(GHashTable * table, GHashTable * othertable,
+        gboolean (* idlefunc)(gpointer), const gchar * path)
 {
-    g_hash_table_remove(table, path);
+    g_hash_table_remove(othertable, path);
     gboolean was_empty = !g_hash_table_size(table);
     g_hash_table_insert(table, g_strdup(path), GINT_TO_POINTER(1));
     if(was_empty)
-        g_idle_add(idlefunc, NULL);
+        g_idle_add_full(G_PRIORITY_LOW, idlefunc, NULL, NULL);
 }
 
 void db_schedule_update(const gchar * path)
 {
-    schedule(to_update, update_when_idle, path);
+    schedule(to_update, to_remove, update_when_idle, path);
 }
 
 void db_schedule_remove(const gchar * path)
 {
-    schedule(to_remove, remove_when_idle, path);
+    schedule(to_remove, to_update, remove_when_idle, path);
 }
 

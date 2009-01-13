@@ -104,11 +104,8 @@ GHashTable * music_get_playlist_item_metadata(const gchar * item)
     if(!(path = g_filename_from_utf8(item, -1, NULL, NULL, NULL)))
         g_critical(_("Skipping getting track metadata for '%s'. "
                      "Could not convert from UTF-8. Bug?"), item);
-    else
-    {
-        if(xine_open(strm, path))
-            get_stream_metadata(meta, music_stream);
-    }
+    else if(xine_open(strm, path))
+        get_stream_metadata(meta, strm);
 
     xine_dispose(strm);
     xine_close_audio_driver(xine, audio);
