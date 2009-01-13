@@ -2,6 +2,7 @@
 #include "playlist-random.h"
 #include "music.h"
 #include "music-control.h"
+#include "music-metadata.h"
 #include "mpris-player.h"
 #include "mpris-tracklist.h"
 #include "main.h"
@@ -9,6 +10,7 @@
 #include "state-settings.h"
 #include "dbus.h"
 #include "watch.h"
+#include "db.h"
 
 #define playlist_mtime_never -1
 #define playlist_save_wait_time 5
@@ -75,6 +77,7 @@ void playlist_append(gchar * path) // takes ownership of the path passed in
     {
         g_array_append_val(playlist, path);
         watch_file(path);
+        db_schedule_update(path);
     }
 
     reset_position();
@@ -176,6 +179,9 @@ void playlist_remove(gint track)
 
     if(track < position)
         position--;
+
+    unwatch_file(playlist_nth(track));
+    db_remove(playlist_nth(track));
 
     g_free(playlist_nth(track));
     g_array_remove_index(playlist, track); // O(n)

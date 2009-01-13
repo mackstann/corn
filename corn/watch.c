@@ -1,5 +1,7 @@
 #include "watch.h"
+#include "playlist.h"
 #include "music-metadata.h"
+#include "db.h"
 
 #include <gio/gio.h>
 #include <glib.h>
@@ -46,9 +48,7 @@ gboolean handle_event_when_idle(G_GNUC_UNUSED gpointer data)
         if(pos > -1)
         {
             if(has_meta)
-            {
-                // replace old meta with new meta
-            }
+                db_schedule_update(playlist_nth(pos));
             else
             {
                 playlist_remove(pos);

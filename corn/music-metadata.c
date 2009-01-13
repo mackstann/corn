@@ -42,12 +42,8 @@ static void add_metadata_from_int(GHashTable * meta, const gchar * name, gint nu
     g_hash_table_insert(meta, (gchar *)name, val);
 }
 
-static GHashTable * get_stream_metadata(xine_stream_t * strm)
+static GHashTable * get_stream_metadata(GHashTable * meta, xine_stream_t * strm)
 {
-    GHashTable * meta = g_hash_table_new_full(g_str_hash, g_str_equal,
-        NULL, // our keys are all static -- no free function for them
-        free_gvalue_and_its_value);
-
     add_metadata_from_string(meta, "title", xine_get_meta_info(strm, XINE_META_INFO_TITLE));
     add_metadata_from_string(meta, "artist", xine_get_meta_info(strm, XINE_META_INFO_ARTIST));
     add_metadata_from_string(meta, "album", xine_get_meta_info(strm, XINE_META_INFO_ALBUM));
@@ -85,45 +81,37 @@ static GHashTable * get_stream_metadata(xine_stream_t * strm)
 
 GHashTable * music_get_playlist_item_metadata(const gchar * item)
 {
-    GHashTable * empty = g_hash_table_new(NULL, NULL);
+    g_assert(item != NULL);
 
-    g_return_val_if_fail(item != NULL, empty);
+    GHashTable * meta = g_hash_table_new_full(g_str_hash, g_str_equal,
+        NULL, // our keys are all static -- no free function for them
+        free_gvalue_and_its_value); // XXX this is copy/paste, refactor
+
+    add_metadata_from_string(meta, "location", item);
 
     xine_audio_port_t * audio = xine_open_audio_driver(xine, "none", NULL);
 
-    g_return_val_if_fail(audio != NULL, empty);
+    g_return_val_if_fail(audio != NULL, meta);
 
     xine_stream_t * strm = xine_stream_new(xine, audio, NULL);
     if(!strm)
     {
         xine_close_audio_driver(xine, audio);
-        g_return_val_if_fail(strm != NULL, empty);
+        g_return_val_if_fail(strm != NULL, meta);
     }
 
     gchar * path;
     if(!(path = g_filename_from_utf8(item, -1, NULL, NULL, NULL)))
-    {
         g_critical(_("Skipping getting track metadata for '%s'. "
                      "Could not convert from UTF-8. Bug?"), item);
-        xine_dispose(strm);
-        xine_close_audio_driver(xine, audio);
-        return empty;
-    }
-
-    if(!xine_open(strm, path))
+    else
     {
-        xine_dispose(strm);
-        xine_close_audio_driver(xine, audio);
-        return empty;
+        if(xine_open(strm, path))
+            get_stream_metadata(meta, music_stream);
     }
-
-    GHashTable * meta = get_stream_metadata(strm);
-    add_metadata_from_string(meta, "mrl", item);
 
     xine_dispose(strm);
     xine_close_audio_driver(xine, audio);
-
-    g_hash_table_unref(empty);
     return meta;
 }
 
@@ -141,8 +129,12 @@ GHashTable * music_get_current_track_metadata(void)
     // try to do it cheaply, using the already loaded stream
     if(music_stream && xine_get_status(music_stream) != XINE_STATUS_IDLE)
     {
-        GHashTable * meta = get_stream_metadata(music_stream);
-        add_metadata_from_string(meta, "mrl", playlist_current());
+        GHashTable * meta = g_hash_table_new_full(g_str_hash, g_str_equal,
+            NULL, // our keys are all static -- no free function for them
+            free_gvalue_and_its_value); // XXX refactor
+
+        get_stream_metadata(meta, music_stream);
+        add_metadata_from_string(meta, "location", playlist_current());
         return meta;
     }
     else if(playlist_position() != -1) // or do it the hard way

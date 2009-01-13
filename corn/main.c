@@ -9,6 +9,7 @@
 #include "playlist.h"
 #include "state-settings.h"
 #include "state-playlist.h"
+#include "db.h"
 #include "main.h"
 
 #include <unique/unique.h>
@@ -143,8 +144,12 @@ int main(int argc, char **argv)
     g_timeout_add_seconds_full(G_PRIORITY_HIGH, 1, increment_time_counter, NULL, NULL);
     g_timeout_add_seconds_full(G_PRIORITY_DEFAULT_IDLE, 1, playlist_save_timeout_func, NULL, NULL);
 
-    /* make sure the config directory exists */
+    /* make sure the config/data dirs exist */
     gchar * dir = g_build_filename(g_get_user_config_dir(), main_instance_name, NULL);
+    g_mkdir_with_parents(dir, S_IRWXU | S_IRWXG | S_IRWXO);
+    g_free(dir);
+
+    dir = g_build_filename(g_get_user_data_dir(), main_instance_name, NULL);
     g_mkdir_with_parents(dir, S_IRWXU | S_IRWXG | S_IRWXO);
     g_free(dir);
 
@@ -152,26 +157,30 @@ int main(int argc, char **argv)
 
     if(!(failed = gnome_vfs_init() ? 0 : 5))
     {
-        if(!(failed = music_init()))
+        if(!(failed = db_init()))
         {
-            if(!(failed = mpris_init()))
+            if(!(failed = music_init()))
             {
-                playlist_init();
-                state_playlist_init();
-                state_settings_init();
+                if(!(failed = mpris_init()))
+                {
+                    playlist_init();
+                    state_playlist_init();
+                    state_settings_init();
 
-                main_status = CORN_RUNNING;
-                mpris_player_emit_caps_change(mpris_player);
-                g_message("ready");
-                g_main_loop_run(loop);
-                main_status = CORN_EXITING;
+                    main_status = CORN_RUNNING;
+                    mpris_player_emit_caps_change(mpris_player);
+                    g_message("ready");
+                    g_main_loop_run(loop);
+                    main_status = CORN_EXITING;
 
-                state_playlist_destroy();
-                state_settings_destroy();
-                playlist_destroy();
-                mpris_destroy();
+                    state_playlist_destroy();
+                    state_settings_destroy();
+                    playlist_destroy();
+                    mpris_destroy();
+                }
+                music_destroy();
             }
-            music_destroy();
+            db_destroy();
         }
         gnome_vfs_shutdown();
     }
