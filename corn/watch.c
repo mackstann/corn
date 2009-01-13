@@ -9,7 +9,6 @@
 #include <string.h>
 
 static GQueue * event_queue = NULL;
-
 static GHashTable * watches = NULL;
 
 typedef struct
@@ -42,6 +41,7 @@ gboolean handle_event_when_idle(G_GNUC_UNUSED gpointer data)
     g_object_unref(file);
     if(path)
     {
+        g_message(path);
         GHashTable * meta = music_get_playlist_item_metadata(path);
         gboolean has_meta = g_hash_table_size(meta);
         gint pos = locate(path);
@@ -56,11 +56,9 @@ gboolean handle_event_when_idle(G_GNUC_UNUSED gpointer data)
             }
         }
         else if(pos == -1 && has_meta)
-        {
             playlist_append(path);
-        }
     }
-    return FALSE;
+    return !g_queue_is_empty(event_queue);
 }
 
 void changed_callback(G_GNUC_UNUSED GFileMonitor * monitor,
@@ -69,6 +67,16 @@ void changed_callback(G_GNUC_UNUSED GFileMonitor * monitor,
                                     GFileMonitorEvent event_type,
                       G_GNUC_UNUSED gpointer user_data)
 {
+    gchar * path = g_file_get_path(file);
+    if(event_type == G_FILE_MONITOR_EVENT_CHANGED) g_message("%40s %s", "G_FILE_MONITOR_EVENT_CHANGED", path);
+    if(event_type == G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT) g_message("%40s %s", "G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT", path);
+    if(event_type == G_FILE_MONITOR_EVENT_DELETED) g_message("%40s %s", "G_FILE_MONITOR_EVENT_DELETED", path);
+    if(event_type == G_FILE_MONITOR_EVENT_CREATED) g_message("%40s %s", "G_FILE_MONITOR_EVENT_CREATED", path);
+    if(event_type == G_FILE_MONITOR_EVENT_ATTRIBUTE_CHANGED) g_message("%40s %s", "G_FILE_MONITOR_EVENT_ATTRIBUTE_CHANGED", path);
+    if(event_type == G_FILE_MONITOR_EVENT_PRE_UNMOUNT) g_message("%40s %s", "G_FILE_MONITOR_EVENT_PRE_UNMOUNT", path);
+    if(event_type == G_FILE_MONITOR_EVENT_UNMOUNTED) g_message("%40s %s", "G_FILE_MONITOR_EVENT_UNMOUNTED", path);
+    g_free(path);
+
     switch(event_type)
     {
         case G_FILE_MONITOR_EVENT_CHANGED:
@@ -80,7 +88,8 @@ void changed_callback(G_GNUC_UNUSED GFileMonitor * monitor,
             {
                 g_object_ref(file);
                 g_queue_push_tail(event_queue, file);
-                g_idle_add(handle_event_when_idle, NULL);
+                if(g_queue_get_length(event_queue) == 1)
+                    g_idle_add(handle_event_when_idle, NULL);
             }
         default:
             return;

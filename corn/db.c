@@ -13,7 +13,6 @@
 
 static sqlite3 * db = NULL;
 
-static gboolean updating = FALSE;
 static GQueue * to_update = NULL;
 
 sqlite3_stmt * insert_stmt;
@@ -96,14 +95,6 @@ void db_destroy(void)
     g_queue_free(to_update);
 }
 
-static gboolean update_when_idle(G_GNUC_UNUSED gpointer data)
-{
-    update(music_get_playlist_item_metadata(g_queue_peek_head(to_update)));
-    g_free(g_queue_pop_head(to_update));
-    updating = !g_queue_is_empty(to_update);
-    return updating;
-}
-
 static void update(GHashTable * meta)
 {
     sqlite3_reset(insert_stmt);
@@ -130,12 +121,18 @@ static void update(GHashTable * meta)
     TRY(sqlite3_step(insert_stmt), "Couldn't step insert statement");
 }
 
+static gboolean update_when_idle(G_GNUC_UNUSED gpointer data)
+{
+    update(music_get_playlist_item_metadata(g_queue_peek_head(to_update)));
+    g_free(g_queue_pop_head(to_update));
+    return !g_queue_is_empty(to_update);
+}
+
 void db_schedule_update(const gchar * path)
 {
     g_queue_push_tail(to_update, g_strdup(path));
-    if(!updating)
+    if(g_queue_get_length(to_update) == 1)
         g_idle_add(update_when_idle, NULL);
-    updating = TRUE;
 }
 
 void db_remove(const gchar * uri)
