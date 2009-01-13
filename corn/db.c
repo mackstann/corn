@@ -16,9 +16,13 @@ static sqlite3 * db = NULL;
 static GHashTable * to_update = NULL;
 static GHashTable * to_remove = NULL;
 
-sqlite3_stmt * insert_stmt;
-sqlite3_stmt * delete_stmt;
-sqlite3_stmt * select_stmt;
+static sqlite3_stmt * insert_stmt;
+static sqlite3_stmt * delete_stmt;
+static sqlite3_stmt * select_stmt;
+static sqlite3_stmt * begin_stmt;
+static sqlite3_stmt * commit_stmt;
+
+static gint transaction_start_time = 0;
 
 static const char * sql_create_table =
     "create table if not exists metadata ("
@@ -30,7 +34,7 @@ static const char * sql_create_table =
     "    ms int,"
     "    samplerate int,"
     "    bitrate int"
-    ");";
+    ")";
 
 static const char * sql_item_insert =
     "insert or replace into metadata ("
@@ -88,6 +92,11 @@ gint db_init(void)
     INIT_TRY(sqlite3_prepare_v2(db, sql_item_delete, -1, &delete_stmt, NULL), "Couldn't prepare delete statement");
     INIT_TRY(sqlite3_prepare_v2(db, sql_item_select, -1, &select_stmt, NULL), "Couldn't prepare select statement");
 
+    INIT_TRY(sqlite3_prepare_v2(db, "begin",  -1, &begin_stmt,  NULL), "Couldn't prepare begin statement");
+    INIT_TRY(sqlite3_prepare_v2(db, "commit", -1, &commit_stmt, NULL), "Couldn't prepare commit statement");
+
+    INIT_TRY(sqlite3_step(begin_stmt), "Couldn't begin transaction");
+
     to_update = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
     to_remove = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 
@@ -96,9 +105,18 @@ gint db_init(void)
 
 void db_destroy(void)
 {
+    sqlite3_reset(commit_stmt);
+    sqlite3_step(commit_stmt);
+
     sqlite3_finalize(insert_stmt);
+    sqlite3_finalize(delete_stmt);
+    sqlite3_finalize(select_stmt);
+    sqlite3_finalize(begin_stmt);
+    sqlite3_finalize(commit_stmt);
+
     if(db)
         sqlite3_close(db);
+
     g_hash_table_unref(to_update);
     g_hash_table_unref(to_remove);
 }
@@ -180,12 +198,25 @@ static void remove(const gchar * uri)
 
 static gboolean do_when_idle(GHashTable * table, void (* runfunc)(const gchar *))
 {
-    GList * head = g_hash_table_get_keys(table);
-    if(!head)
+    GHashTableIter iter;
+    gpointer key, value;
+    g_hash_table_iter_init(&iter, table);
+    if(!g_hash_table_iter_next(&iter, &key, &value))
         return FALSE;
-    gchar * key = head->data;
-    runfunc(key);
-    g_hash_table_remove(table, key);
+
+    const gchar * path = (const gchar *)key;
+    runfunc(path);
+    g_hash_table_iter_remove(&iter);
+
+    if(main_time_counter - transaction_start_time >= 10)
+    {
+        sqlite3_reset(commit_stmt);
+        sqlite3_reset(begin_stmt);
+        sqlite3_step(commit_stmt);
+        sqlite3_step(begin_stmt);
+        transaction_start_time = main_time_counter;
+    }
+
     return !!g_hash_table_size(table);
 }
 
