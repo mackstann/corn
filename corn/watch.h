@@ -6,5 +6,7 @@
 
 void watch_file(const gchar * file_uri);
 void unwatch_file(const gchar * file_uri);
+void watch_parent(const gchar * file_uri);
+void unwatch_parent(const gchar * file_uri);
 
 #endif

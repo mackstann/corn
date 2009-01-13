@@ -73,12 +73,17 @@ void playlist_append(gchar * path) // takes ownership of the path passed in
     g_return_if_fail(path != NULL);
     g_return_if_fail(g_utf8_validate(path, -1, NULL));
 
-    if(parse_file(path))
+    gint result = parse_file(path);
+
+    if(result & PARSE_RESULT_IMPORT_FILE)
     {
         g_array_append_val(playlist, path);
-        watch_file(path);
         db_schedule_update(path);
     }
+    if(result & PARSE_RESULT_WATCH_PARENT)
+        watch_parent(path);
+    if(result & PARSE_RESULT_WATCH_FILE)
+        watch_file(path);
 
     reset_position();
     touch();

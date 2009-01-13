@@ -1,8 +1,8 @@
 #include "gettext.h"
-
 #include "config.h"
 
 #include "playlist.h"
+#include "parsefile.h"
 
 #include <libgnomevfs/gnome-vfs.h>
 #include <libgnomevfs/gnome-vfs-mime-utils.h>
@@ -53,7 +53,7 @@ static gchar * add_relative_dir(GnomeVFSURI * dir_uri, const gchar * name)
     return canon;
 }
 
-gboolean parse_m3u(GnomeVFSURI * uri)
+gint parse_m3u(GnomeVFSURI * uri)
 {
     g_message("parsing m3u: %s", uri->text);
 
@@ -80,10 +80,10 @@ gboolean parse_m3u(GnomeVFSURI * uri)
         gnome_vfs_uri_unref(dir_uri);
         g_strfreev(lines);
     }
-    return FALSE;
+    return 0;
 }
 
-gboolean parse_pls(GnomeVFSURI * uri)
+gint parse_pls(GnomeVFSURI * uri)
 {
     g_message("parsing pls: %s", uri->text);
 
@@ -123,7 +123,7 @@ gboolean parse_pls(GnomeVFSURI * uri)
     }
 
     g_key_file_free(keyfile);
-    return FALSE;
+    return 0;
 }
 
 gboolean parse_dir(GnomeVFSURI * uri)
@@ -133,7 +133,7 @@ gboolean parse_dir(GnomeVFSURI * uri)
     GSList * entries = NULL;
 
     if(gnome_vfs_directory_open_from_uri(&dirh, uri, GNOME_VFS_FILE_INFO_FOLLOW_LINKS))
-        return FALSE;
+        return 0;
 
     info = gnome_vfs_file_info_new();
 
@@ -161,12 +161,14 @@ gboolean parse_dir(GnomeVFSURI * uri)
     }
     g_slist_free(entries);
 
-    return FALSE;
+    return PARSE_RESULT_WATCH_FILE;
 }
 
-gboolean parse_file(const gchar * path)
+gint parse_file(const gchar * path)
 {
     g_return_val_if_fail(path != NULL, FALSE);
+
+    gint result = PARSE_RESULT_WATCH_PARENT | PARSE_RESULT_IMPORT_FILE;
 
     static GRegex * familiar_extensions = NULL;
     if(!familiar_extensions)
@@ -176,13 +178,13 @@ gboolean parse_file(const gchar * path)
 
     // looks like a boring media file with predictable file extension
     if(g_regex_match(familiar_extensions, path, 0, NULL))
-        return TRUE;
+        return result;
 
     gchar * uri_text = gnome_vfs_get_uri_from_local_path(path);
     if(!uri_text)
     {
         g_warning("%s: %s", _("Unknown error when creating URI for path"), path);
-        return FALSE;
+        return 0;
     }
     g_message("%s", path);
 
@@ -191,27 +193,25 @@ gboolean parse_file(const gchar * path)
     {
         g_free(uri_text);
         g_warning("%s: %s", _("Unknown error when creating URI for path"), path);
-        return FALSE;
+        return 0;
     }
 
     GnomeVFSFileInfo * info = gnome_vfs_file_info_new();
-
-    gboolean addme = TRUE;
 
     if(!gnome_vfs_get_file_info_uri(uri, info,
                                 GNOME_VFS_FILE_INFO_GET_MIME_TYPE |
                                 GNOME_VFS_FILE_INFO_FORCE_FAST_MIME_TYPE |
                                 GNOME_VFS_FILE_INFO_FOLLOW_LINKS))
     {
-             if(!strcmp("audio/x-mpegurl",        info->mime_type)) addme = parse_m3u(uri);
-        else if(!strcmp("x-directory/normal",     info->mime_type)) addme = parse_dir(uri);
-        else if(!strcmp("audio/x-scpls",          info->mime_type)) addme = parse_pls(uri);
-        else if(!strcmp("application/pls",        info->mime_type)) addme = parse_pls(uri);
-        else if(!strcmp("application/pls+xml",    info->mime_type)) addme = parse_pls(uri);
+             if(!strcmp("audio/x-mpegurl",        info->mime_type)) result = parse_m3u(uri);
+        else if(!strcmp("x-directory/normal",     info->mime_type)) result = parse_dir(uri);
+        else if(!strcmp("audio/x-scpls",          info->mime_type)) result = parse_pls(uri);
+        else if(!strcmp("application/pls",        info->mime_type)) result = parse_pls(uri);
+        else if(!strcmp("application/pls+xml",    info->mime_type)) result = parse_pls(uri);
     }
 
     gnome_vfs_file_info_unref(info);
     gnome_vfs_uri_unref(uri);
     g_free(uri_text);
-    return addme;
+    return result;
 }
