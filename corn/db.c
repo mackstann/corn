@@ -165,6 +165,8 @@ static void update(const gchar * uri)
     if(bitrate)     sqlite3_bind_int (insert_stmt, 8, g_value_get_int(bitrate));
 
     TRY(sqlite3_step(insert_stmt), "Couldn't step insert statement");
+
+    g_hash_table_unref(meta);
 }
 
 static void remove(const gchar * uri)
