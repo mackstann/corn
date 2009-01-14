@@ -38,13 +38,13 @@ void playlist_destroy(void)
     g_array_free(playlist, TRUE);
 }
 
-gint     playlist_position(void) { return position; }
-gint     playlist_length(void)   { return playlist ? playlist->len : 0; }
-gboolean playlist_empty(void)    { return !playlist || !playlist->len; }
-gchar *  playlist_nth(gint i)    { return g_array_index(playlist, gchar *, i); }
-gchar *  playlist_current(void)  { return g_array_index(playlist, gchar *, position); }
-gboolean playlist_modified(void) { return playlist_mtime != playlist_mtime_never; }
-void     playlist_mark_as_flushed(void) { playlist_mtime = playlist_mtime_never; }
+inline gint     playlist_position(void) { return position; }
+inline gint     playlist_length(void)   { return playlist ? playlist->len : 0; }
+inline gboolean playlist_empty(void)    { return !playlist || !playlist->len; }
+inline gchar *  playlist_nth(gint i)    { return g_array_index(playlist, gchar *, i); }
+inline gchar *  playlist_current(void)  { return g_array_index(playlist, gchar *, position); }
+inline gboolean playlist_modified(void) { return playlist_mtime != playlist_mtime_never; }
+inline void     playlist_mark_as_flushed(void) { playlist_mtime = playlist_mtime_never; }
 
 gboolean playlist_flush_due(void)
 {
@@ -173,8 +173,7 @@ void playlist_clear(void)
 
     plrand_clear();
 
-    position = -1;
-
+    reset_position();
     touch();
 }
 
