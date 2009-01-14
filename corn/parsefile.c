@@ -22,6 +22,15 @@ static gchar ** read_file(const gchar * path)
     return lines;
 }
 
+static gboolean looks_like_uri(const gchar * path)
+{
+    static GRegex * uri_pattern = NULL;
+    if(!uri_pattern)
+        uri_pattern = g_regex_new("^[a-z0-9+.-]+:",
+            G_REGEX_CASELESS | G_REGEX_OPTIMIZE, 0, NULL);
+    return g_regex_match(uri_pattern, path, 0, NULL);
+}
+
 // if #name is a relative path, then make it an absolute path by prepending
 // #dir_uri to it.  if scheme is unknown or file://, then return a non-uri unix
 // file path.  otherwise, return a uri.
@@ -33,14 +42,9 @@ static gchar * add_relative_dir(GnomeVFSURI * dir_uri, const gchar * name)
     if(name[0] == '/') // non-uri absolute filesystem path; quick short circuit
         return g_strdup(name);
 
-    static GRegex * uri_pattern = NULL;
-    if(!uri_pattern)
-        uri_pattern = g_regex_new("^[a-z0-9+.-]+://",
-            G_REGEX_CASELESS | G_REGEX_OPTIMIZE, 0, NULL);
-
     GnomeVFSURI * uri = NULL;
 
-    if(g_regex_match(uri_pattern, name, 0, NULL)) // absolute uri
+    if(looks_like_uri(name))
         uri = gnome_vfs_uri_new(name);
     else // relative path
         uri = gnome_vfs_uri_append_file_name(dir_uri, name);
