@@ -9,7 +9,7 @@
 
 FILE * state_file_open(const char * name, const char * mode)
 {
-    gchar * path = g_build_filename(g_get_user_config_dir(), main_instance_name, name, NULL);
+    gchar * path = g_build_filename(g_get_user_data_dir(), main_instance_name, name, NULL);
     FILE * f = g_fopen(path, mode);
     g_free(path);
     return f;

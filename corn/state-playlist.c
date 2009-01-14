@@ -16,7 +16,7 @@ static GThreadPool * pool;
 
 static void save_playlist(GString * pldata)
 {
-    FILE * f = state_file_open("playlist", "w");
+    FILE * f = state_file_open("playlist.m3u", "w");
     if(f)
     {
         fputs(pldata->str, f);
@@ -45,11 +45,11 @@ static GString * generate_playlist_data(void)
 
 void state_playlist_init(void)
 {
-    gchar * playlist_filename = g_build_filename(g_get_user_config_dir(), main_instance_name, "playlist", NULL);
-    GnomeVFSURI * pl_uri = gnome_vfs_uri_new(playlist_filename);
+    gchar * playlist_filename = g_build_filename(g_get_user_data_dir(), main_instance_name, "playlist.m3u", NULL);
+    GFile * file = g_file_new_for_path(playlist_filename);
+    parse_m3u(file);
+    g_object_unref(file);
     g_free(playlist_filename);
-    parse_m3u(pl_uri);
-    gnome_vfs_uri_unref(pl_uri);
 
     GError * error = NULL;
     pool = g_thread_pool_new(save_playlist_threadfunc, NULL, 1, FALSE, &error);

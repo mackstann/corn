@@ -73,17 +73,21 @@ void playlist_append(gchar * path) // takes ownership of the path passed in
     g_return_if_fail(path != NULL);
     g_return_if_fail(g_utf8_validate(path, -1, NULL));
 
-    gint result = parse_file(path);
+    gchar * uri;
+    gint result = parse_file(path, &uri);
 
-    if(result & PARSE_RESULT_IMPORT_FILE)
+    if(uri)
     {
-        g_array_append_val(playlist, path);
-        db_schedule_update(path);
+        g_array_append_val(playlist, uri);
+        db_schedule_update(uri);
     }
+    // this shit is broken right now
+#if 0
     if(result & PARSE_RESULT_WATCH_PARENT)
         watch_parent(path);
     if(result & PARSE_RESULT_WATCH_FILE)
         watch_file(path);
+#endif
 
     reset_position();
     touch();
@@ -164,7 +168,9 @@ void playlist_clear(void)
 
     for(gint i = 0; i < playlist_length(); i++)
     {
+#if 0
         unwatch_parent(playlist_nth(i));
+#endif
         db_schedule_remove(playlist_nth(i));
         g_free(playlist_nth(i));
     }
@@ -188,7 +194,9 @@ void playlist_remove(gint track)
     if(track < position)
         position--;
 
+#if 0
     unwatch_parent(playlist_nth(track));
+#endif
     db_schedule_remove(playlist_nth(track));
 
     g_free(playlist_nth(track));

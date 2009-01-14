@@ -67,13 +67,13 @@ void changed_callback(G_GNUC_UNUSED GFileMonitor * monitor,
                       G_GNUC_UNUSED gpointer user_data)
 {
     gchar * path = g_file_get_path(file);
-    if(event_type == G_FILE_MONITOR_EVENT_CHANGED) g_message("%40s %s", "G_FILE_MONITOR_EVENT_CHANGED", path);
-    if(event_type == G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT) g_message("%40s %s", "G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT", path);
-    if(event_type == G_FILE_MONITOR_EVENT_DELETED) g_message("%40s %s", "G_FILE_MONITOR_EVENT_DELETED", path);
-    if(event_type == G_FILE_MONITOR_EVENT_CREATED) g_message("%40s %s", "G_FILE_MONITOR_EVENT_CREATED", path);
-    if(event_type == G_FILE_MONITOR_EVENT_ATTRIBUTE_CHANGED) g_message("%40s %s", "G_FILE_MONITOR_EVENT_ATTRIBUTE_CHANGED", path);
-    if(event_type == G_FILE_MONITOR_EVENT_PRE_UNMOUNT) g_message("%40s %s", "G_FILE_MONITOR_EVENT_PRE_UNMOUNT", path);
-    if(event_type == G_FILE_MONITOR_EVENT_UNMOUNTED) g_message("%40s %s", "G_FILE_MONITOR_EVENT_UNMOUNTED", path);
+    if(event_type == G_FILE_MONITOR_EVENT_CHANGED) g_message("%-40s %s", "G_FILE_MONITOR_EVENT_CHANGED", path);
+    if(event_type == G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT) g_message("%-40s %s", "G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT", path);
+    if(event_type == G_FILE_MONITOR_EVENT_DELETED) g_message("%-40s %s", "G_FILE_MONITOR_EVENT_DELETED", path);
+    if(event_type == G_FILE_MONITOR_EVENT_CREATED) g_message("%-40s %s", "G_FILE_MONITOR_EVENT_CREATED", path);
+    if(event_type == G_FILE_MONITOR_EVENT_ATTRIBUTE_CHANGED) g_message("%-40s %s", "G_FILE_MONITOR_EVENT_ATTRIBUTE_CHANGED", path);
+    if(event_type == G_FILE_MONITOR_EVENT_PRE_UNMOUNT) g_message("%-40s %s", "G_FILE_MONITOR_EVENT_PRE_UNMOUNT", path);
+    if(event_type == G_FILE_MONITOR_EVENT_UNMOUNTED) g_message("%-40s %s", "G_FILE_MONITOR_EVENT_UNMOUNTED", path);
     g_free(path);
 
     switch(event_type)
