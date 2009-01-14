@@ -8,7 +8,7 @@
 
 #include <string.h>
 
-static GQueue * event_queue = NULL;
+static GQueue event_queue = G_QUEUE_INIT;
 static GHashTable * watches = NULL;
 
 typedef struct
@@ -36,7 +36,7 @@ static gint locate(const gchar * path)
 
 gboolean handle_event_when_idle(G_GNUC_UNUSED gpointer data)
 {
-    GFile * file = g_queue_pop_head(event_queue);
+    GFile * file = g_queue_pop_head(&event_queue);
     gchar * path = g_file_get_path(file); // XXX should use uri
     g_object_unref(file);
     if(path)
@@ -57,7 +57,7 @@ gboolean handle_event_when_idle(G_GNUC_UNUSED gpointer data)
         else if(pos == -1 && has_meta)
             playlist_append(path);
     }
-    return !g_queue_is_empty(event_queue);
+    return !g_queue_is_empty(&event_queue);
 }
 
 void changed_callback(G_GNUC_UNUSED GFileMonitor * monitor,
@@ -82,12 +82,12 @@ void changed_callback(G_GNUC_UNUSED GFileMonitor * monitor,
         case G_FILE_MONITOR_EVENT_DELETED:
         case G_FILE_MONITOR_EVENT_CREATED:
         case G_FILE_MONITOR_EVENT_ATTRIBUTE_CHANGED:
-            if(g_queue_is_empty(event_queue) ||
-               !g_file_equal((GFile *)g_queue_peek_tail(event_queue), file))
+            if(g_queue_is_empty(&event_queue) ||
+               !g_file_equal((GFile *)g_queue_peek_tail(&event_queue), file))
             {
                 g_object_ref(file);
-                g_queue_push_tail(event_queue, file);
-                if(g_queue_get_length(event_queue) == 1)
+                g_queue_push_tail(&event_queue, file);
+                if(g_queue_get_length(&event_queue) == 1)
                     g_idle_add(handle_event_when_idle, NULL);
             }
         default:
@@ -98,10 +98,7 @@ void changed_callback(G_GNUC_UNUSED GFileMonitor * monitor,
 void watch_file(const gchar * file_uri)
 {
     if(!watches)
-    {
         watches = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, watch_free);
-        event_queue = g_queue_new();
-    }
 
     DirWatch * watch = (DirWatch *)g_hash_table_lookup(watches, file_uri);
     if(watch)
