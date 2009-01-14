@@ -40,7 +40,7 @@ void playlist_destroy(void)
 
 gint     playlist_position(void) { return position; }
 gint     playlist_length(void)   { return playlist ? playlist->len : 0; }
-gboolean playlist_empty(void)    { return !playlist->len; }
+gboolean playlist_empty(void)    { return !playlist || !playlist->len; }
 gchar *  playlist_nth(gint i)    { return g_array_index(playlist, gchar *, i); }
 gchar *  playlist_current(void)  { return g_array_index(playlist, gchar *, position); }
 gboolean playlist_modified(void) { return playlist_mtime != playlist_mtime_never; }
@@ -62,7 +62,7 @@ static void touch()
 
 static inline void reset_position(void)
 {
-    if(!playlist || !playlist->len)
+    if(playlist_empty())
         position = -1;
     else if(position == -1)
         position = 0;
@@ -91,7 +91,7 @@ void playlist_append(gchar * path) // takes ownership of the path passed in
 
 void playlist_replace_path(const gchar * path)
 {
-    g_return_if_fail(playlist->len > 0);
+    g_return_if_fail(!playlist_empty());
     g_free(playlist_current());
     g_array_index(playlist, gchar *, position) = g_strdup(path);
     touch();
@@ -102,7 +102,7 @@ void playlist_advance(gint how)
     gboolean looped = FALSE;
     gint wasplaying = music_playing;
 
-    if(!playlist->len || G_UNLIKELY(!how))
+    if(playlist_empty() || G_UNLIKELY(!how))
         return;
 
     if(!setting_repeat_track)
@@ -110,17 +110,17 @@ void playlist_advance(gint how)
         if(setting_random_order)
         {
             if(how > 0)
-                position = plrand_next(position, playlist->len);
+                position = plrand_next(position, playlist_length());
             else if(how < 0)
-                position = plrand_prev(position, playlist->len);
+                position = plrand_prev(position, playlist_length());
         }
         else
         {
             looped = TRUE;
             position += how;
             if(position < 0)
-                position = playlist->len - 1;
-            else if(position == playlist->len)
+                position = playlist_length() - 1;
+            else if(position == playlist_length())
                 position = 0;
             else
                 looped = FALSE;
@@ -137,8 +137,8 @@ void playlist_advance(gint how)
 
 void playlist_seek(gint track)
 {
-    if G_UNLIKELY(track < 0) return;
-    if G_UNLIKELY(track >= playlist->len) return;
+    if(G_UNLIKELY(track < 0)) return;
+    if(G_UNLIKELY(track >= playlist_length())) return;
 
     gint was_playing = music_playing;
 
@@ -162,7 +162,7 @@ void playlist_clear(void)
 {
     music_stop();
 
-    for(gint i = 0; i < playlist->len; i++)
+    for(gint i = 0; i < playlist_length(); i++)
     {
         unwatch_parent(playlist_nth(i));
         db_schedule_remove(playlist_nth(i));
@@ -181,7 +181,7 @@ void playlist_clear(void)
 void playlist_remove(gint track)
 {
     if(G_UNLIKELY(track < 0)) return;
-    if(G_UNLIKELY(track >= playlist->len)) return;
+    if(G_UNLIKELY(track >= playlist_length())) return;
 
     if(track == position)
         playlist_advance(1);
@@ -195,7 +195,7 @@ void playlist_remove(gint track)
     g_free(playlist_nth(track));
     g_array_remove_index(playlist, track); // O(n)
 
-    plrand_shift_track_numbers(track + 1, playlist->len - 1, -1);
+    plrand_shift_track_numbers(track + 1, playlist_length() - 1, -1);
     plrand_forget_track(track);
 
     // if we're still in the same spot, there was no track to advance to.  set
@@ -211,7 +211,7 @@ void playlist_move(gint track, gint dest)
     // XXX segfaults
     if(G_UNLIKELY(track == dest)) return;
     if(G_UNLIKELY(track < 0)) return;
-    if(G_UNLIKELY(track >= playlist->len)) return;
+    if(G_UNLIKELY(track >= playlist_length())) return;
 
     if(dest > track)
         plrand_shift_track_numbers(track+1, dest-1, -1);
