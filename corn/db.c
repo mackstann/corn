@@ -211,6 +211,7 @@ static gboolean do_when_idle(GHashTable * table, void (* runfunc)(const gchar *)
     if(!g_hash_table_iter_next(&iter, &key, &value))
         return FALSE;
 
+    // TODO: run this periodically on its own
     if(main_time_counter - transaction_start_time >= 10)
     {
         sqlite3_reset(commit_stmt);

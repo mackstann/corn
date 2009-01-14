@@ -106,6 +106,7 @@ GHashTable * music_get_playlist_item_metadata(const gchar * item)
                      "Could not convert from UTF-8. Bug?"), item);
     else if(xine_open(strm, path))
         get_stream_metadata(meta, strm);
+    g_free(path);
 
     xine_dispose(strm);
     xine_close_audio_driver(xine, audio);

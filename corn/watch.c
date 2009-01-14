@@ -137,8 +137,6 @@ void unwatch_file(const gchar * file_uri)
         if(--watch->refcount == 0)
             g_hash_table_remove(watches, watch);
     }
-    else
-        g_warning("Tried to unwatch unknown file: %s", file_uri);
 }
 
 static GFile * get_parent(const gchar * uri)
