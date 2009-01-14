@@ -32,6 +32,7 @@ void add_metadata_from_string(GHashTable * meta, const gchar * name, const gchar
     g_value_init(val, G_TYPE_STRING);
     g_value_set_string(val, u);
     g_hash_table_insert(meta, (gchar *)name, val);
+    g_free(u);
 }
 
 void add_metadata_from_int(GHashTable * meta, const gchar * name, gint num)

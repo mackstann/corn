@@ -170,7 +170,9 @@ gboolean music_try_to_play(void)
     if(xine_get_status(music_stream) != XINE_STATUS_IDLE)
         xine_close(music_stream);
 
-    if(!xine_open(music_stream, path))
+    gboolean opened = xine_open(music_stream, path);
+    g_free(path);
+    if(!opened)
         return FALSE;
 
 #if defined(XINE_PARAM_GAPLESS_SWITCH) && defined(XINE_PARAM_EARLY_FINISHED_EVENT)
