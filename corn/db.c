@@ -31,14 +31,14 @@ static const char * sql_create_table =
     "    title text,"
     "    album text,"
     "    tracknumber text,"
-    "    ms int,"
+    "    mtime int,"
     "    samplerate int,"
     "    bitrate int"
     ")";
 
 static const char * sql_item_insert =
     "insert or replace into metadata ("
-    "    location, artist, title, album, tracknumber, ms, samplerate, bitrate"
+    "    location, artist, title, album, tracknumber, mtime, samplerate, bitrate"
     ") values (?, ?, ?, ?, ?, ?, ?, ?)";
 
 static const char * sql_item_delete =
@@ -148,7 +148,7 @@ static void update_with_metadata(const gchar * uri, GHashTable * meta)
     GValue * title       = g_hash_table_lookup(meta, "title");
     GValue * album       = g_hash_table_lookup(meta, "album");
     GValue * tracknumber = g_hash_table_lookup(meta, "tracknumber");
-    GValue * ms          = g_hash_table_lookup(meta, "mtime");
+    GValue * mtime       = g_hash_table_lookup(meta, "mtime");
     GValue * samplerate  = g_hash_table_lookup(meta, "audio-samplerate");
     GValue * bitrate     = g_hash_table_lookup(meta, "audio-bitrate");
 
@@ -157,7 +157,7 @@ static void update_with_metadata(const gchar * uri, GHashTable * meta)
     if(title)       sqlite3_bind_text(insert_stmt, 3, g_value_get_string(title),       -1, SQLITE_STATIC);
     if(album)       sqlite3_bind_text(insert_stmt, 4, g_value_get_string(album),       -1, SQLITE_STATIC);
     if(tracknumber) sqlite3_bind_text(insert_stmt, 5, g_value_get_string(tracknumber), -1, SQLITE_STATIC);
-    if(ms)          sqlite3_bind_int (insert_stmt, 6, g_value_get_int(ms));
+    if(mtime)       sqlite3_bind_int (insert_stmt, 6, g_value_get_int(mtime));
     if(samplerate)  sqlite3_bind_int (insert_stmt, 7, g_value_get_int(samplerate));
     if(bitrate)     sqlite3_bind_int (insert_stmt, 8, g_value_get_int(bitrate));
 
@@ -194,7 +194,7 @@ GHashTable * db_get(const gchar * uri)
     add_metadata_from_string(meta, "tracknumber", sqlite3_column_text(select_stmt, 4));
 
     if(sqlite3_column_text(select_stmt, 5))
-        add_metadata_from_int(meta, "ms",               sqlite3_column_int(select_stmt, 5));
+        add_metadata_from_int(meta, "mtime",            sqlite3_column_int(select_stmt, 5));
     if(sqlite3_column_text(select_stmt, 6))
         add_metadata_from_int(meta, "audio-samplerate", sqlite3_column_int(select_stmt, 6));
     if(sqlite3_column_text(select_stmt, 7))
