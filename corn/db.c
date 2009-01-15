@@ -220,7 +220,7 @@ static void remove(const gchar * uri)
 
 // idle callback functions
 
-static gboolean do_when_idle(GHashTable * table, void (* runfunc)(const gchar *))
+static gboolean process_when_idle(GHashTable * table, void (* runfunc)(const gchar *))
 {
     GHashTableIter iter;
     gpointer key, value;
@@ -228,8 +228,7 @@ static gboolean do_when_idle(GHashTable * table, void (* runfunc)(const gchar *)
     if(!g_hash_table_iter_next(&iter, &key, &value))
         return FALSE;
 
-    const gchar * path = (const gchar *)key;
-    runfunc(path);
+    runfunc((const gchar *)key);
     g_hash_table_iter_remove(&iter);
 
     return !!g_hash_table_size(table);
@@ -237,22 +236,22 @@ static gboolean do_when_idle(GHashTable * table, void (* runfunc)(const gchar *)
 
 static gboolean update_when_idle(G_GNUC_UNUSED gpointer data)
 {
-    return do_when_idle(to_update, update);
+    return process_when_idle(to_update, update);
 }
 
 static gboolean remove_when_idle(G_GNUC_UNUSED gpointer data)
 {
-    return do_when_idle(to_remove, remove);
+    return process_when_idle(to_remove, remove);
 }
 
 // scheduling functions
 
-static void schedule(GHashTable * table, GHashTable * othertable,
+static void schedule(GHashTable * add_to, GHashTable * remove_from,
         gboolean (* idlefunc)(gpointer), const gchar * path)
 {
-    g_hash_table_remove(othertable, path);
-    gboolean was_empty = !g_hash_table_size(table);
-    g_hash_table_insert(table, g_strdup(path), GINT_TO_POINTER(1));
+    g_hash_table_remove(remove_from, path);
+    gboolean was_empty = !g_hash_table_size(add_to);
+    g_hash_table_insert(add_to, g_strdup(path), GINT_TO_POINTER(1));
     if(was_empty)
         g_idle_add_full(G_PRIORITY_LOW, idlefunc, NULL, NULL);
 }
