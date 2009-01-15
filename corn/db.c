@@ -47,9 +47,9 @@ static const char * sql_item_delete =
 static const char * sql_item_select =
     "select * from metadata where location = ?";
 
-static void printerr(const char * msg)
+static void printerr(const char * func, const char * msg)
 {
-    g_printerr("%s (%s).\n", msg, db ? sqlite3_errmsg(db) : "?");
+    g_printerr("DB Error in function %s(): %s (%s).\n", func, msg, db ? sqlite3_errmsg(db) : "?");
 }
 
 static gboolean periodic_commit(G_GNUC_UNUSED gpointer data)
@@ -65,50 +65,74 @@ static gboolean periodic_commit(G_GNUC_UNUSED gpointer data)
     return TRUE;
 }
 
-#define INIT_TRY(code, errmsg) do { \
+#define _db_try(code, errmsg, action) do { \
         int result; \
         do { result = (code); } while(result == SQLITE_BUSY); \
         if(result != SQLITE_OK && result != SQLITE_DONE) \
         { \
-            printerr(errmsg); \
-            if(db) sqlite3_close(db); \
-            return 40; \
+            printerr(__func__, errmsg); \
+            if(db) { sqlite3_close(db); db = NULL; }\
+            action; \
         } \
     } while(0)
 
-#define TRY(code, errmsg) do { \
-        int result; \
-        do { result = (code); } while(result == SQLITE_BUSY); \
-        if(result != SQLITE_OK && result != SQLITE_DONE) \
-        { \
-            printerr(errmsg); \
-            return; \
-        } \
-    } while(0)
+#define db_init_return_if_fail(code, errmsg) \
+    _db_try(code, errmsg, return 40)
+
+#define db_return_if_fail(code, errmsg) \
+    _db_try(code, errmsg, return)
+
+#define db_warn_if_fail(code, errmsg) \
+    _db_try(code, errmsg, break) 
 
 gint db_init(void)
 {
     gchar * db_path = g_build_filename(g_get_user_data_dir(), main_instance_name, "metadata.db", NULL);
 
-    INIT_TRY(sqlite3_open_v2(db_path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL),
-             "Couldn't open metadata db file");
+    db_init_return_if_fail(
+        sqlite3_open_v2(db_path, &db,
+            SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL),
+        "Couldn't open metadata db file");
 
     g_free(db_path);
 
     sqlite3_stmt * create_stmt;
 
-    INIT_TRY(sqlite3_prepare_v2(db, sql_create_table, -1, &create_stmt, NULL), "Couldn't prepare create statement");
-    INIT_TRY(sqlite3_step(create_stmt), "Couldn't step create statement");
-    INIT_TRY(sqlite3_finalize(create_stmt), "Couldn't finalize create statement");
+    db_init_return_if_fail(
+        sqlite3_prepare_v2(db, sql_create_table, -1, &create_stmt, NULL),
+        "Couldn't prepare create stmt");
 
-    INIT_TRY(sqlite3_prepare_v2(db, sql_item_insert, -1, &insert_stmt, NULL), "Couldn't prepare insert statement");
-    INIT_TRY(sqlite3_prepare_v2(db, sql_item_delete, -1, &delete_stmt, NULL), "Couldn't prepare delete statement");
-    INIT_TRY(sqlite3_prepare_v2(db, sql_item_select, -1, &select_stmt, NULL), "Couldn't prepare select statement");
+    db_init_return_if_fail(
+        sqlite3_step(create_stmt),
+        "Couldn't step create stmt");
 
-    INIT_TRY(sqlite3_prepare_v2(db, "begin",  -1, &begin_stmt,  NULL), "Couldn't prepare begin statement");
-    INIT_TRY(sqlite3_prepare_v2(db, "commit", -1, &commit_stmt, NULL), "Couldn't prepare commit statement");
+    db_init_return_if_fail(
+        sqlite3_finalize(create_stmt),
+        "Couldn't finalize create stmt");
 
-    INIT_TRY(sqlite3_step(begin_stmt), "Couldn't begin transaction");
+    db_init_return_if_fail(
+        sqlite3_prepare_v2(db, sql_item_insert, -1, &insert_stmt, NULL),
+        "Couldn't prepare insert stmt");
+
+    db_init_return_if_fail(
+        sqlite3_prepare_v2(db, sql_item_delete, -1, &delete_stmt, NULL),
+        "Couldn't prepare delete stmt");
+
+    db_init_return_if_fail(
+        sqlite3_prepare_v2(db, sql_item_select, -1, &select_stmt, NULL),
+        "Couldn't prepare select stmt");
+
+    db_init_return_if_fail(
+        sqlite3_prepare_v2(db, "begin",  -1, &begin_stmt,  NULL),
+        "Couldn't prepare begin stmt");
+
+    db_init_return_if_fail(
+        sqlite3_prepare_v2(db, "commit", -1, &commit_stmt, NULL),
+        "Couldn't prepare commit stmt");
+
+    db_init_return_if_fail(
+        sqlite3_step(begin_stmt),
+        "Couldn't begin transaction");
 
     to_update = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
     to_remove = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
@@ -120,14 +144,14 @@ gint db_init(void)
 
 void db_destroy(void)
 {
-    sqlite3_reset(commit_stmt);
-    sqlite3_step(commit_stmt);
+    db_warn_if_fail(sqlite3_reset(commit_stmt), "Couldn't reset commit stmt");
+    db_warn_if_fail(sqlite3_step(commit_stmt),  "Couldn't step commit stmt");
 
-    sqlite3_finalize(insert_stmt);
-    sqlite3_finalize(delete_stmt);
-    sqlite3_finalize(select_stmt);
-    sqlite3_finalize(begin_stmt);
-    sqlite3_finalize(commit_stmt);
+    db_warn_if_fail(sqlite3_finalize(insert_stmt), "Couldn't finalize insert stmt");
+    db_warn_if_fail(sqlite3_finalize(delete_stmt), "Couldn't finalize delete stmt");
+    db_warn_if_fail(sqlite3_finalize(select_stmt), "Couldn't finalize select stmt");
+    db_warn_if_fail(sqlite3_finalize(begin_stmt),  "Couldn't finalize begin stmt");
+    db_warn_if_fail(sqlite3_finalize(commit_stmt), "Couldn't finalize commit stmt");
 
     if(db)
         sqlite3_close(db);
@@ -161,7 +185,7 @@ static void update_with_metadata(const gchar * uri, GHashTable * meta)
     if(samplerate)  sqlite3_bind_int (insert_stmt, 7, g_value_get_int(samplerate));
     if(bitrate)     sqlite3_bind_int (insert_stmt, 8, g_value_get_int(bitrate));
 
-    TRY(sqlite3_step(insert_stmt), "Couldn't step insert statement");
+    db_return_if_fail(sqlite3_step(insert_stmt), "Couldn't step insert stmt");
     need_commit = TRUE;
 }
 
@@ -178,7 +202,7 @@ GHashTable * db_get(const gchar * uri)
     if(result != SQLITE_ROW)
     {
         if(result != SQLITE_DONE)
-            printerr("Couldn't step select statement");
+            printerr(__func__, "Couldn't step select stmt");
 
         // not in db yet, fetch manually and insert it while we have it
         GHashTable * meta = music_get_playlist_item_metadata(uri);
@@ -214,7 +238,7 @@ static void remove(const gchar * uri)
 {
     sqlite3_reset(delete_stmt);
     sqlite3_bind_text(delete_stmt, 1, uri, -1, SQLITE_STATIC);
-    TRY(sqlite3_step(delete_stmt), "Couldn't step delete statement");
+    db_return_if_fail(sqlite3_step(delete_stmt), "Couldn't step delete stmt");
     need_commit = TRUE;
 }
 
