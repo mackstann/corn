@@ -187,11 +187,11 @@ GHashTable * db_get(const gchar * uri)
     }
 
     GHashTable * meta = g_hash_table_new(g_str_hash, g_str_equal);
-    add_metadata_from_string(meta, "location",    sqlite3_column_text(select_stmt, 0));
-    add_metadata_from_string(meta, "artist",      sqlite3_column_text(select_stmt, 1));
-    add_metadata_from_string(meta, "title",       sqlite3_column_text(select_stmt, 2));
-    add_metadata_from_string(meta, "album",       sqlite3_column_text(select_stmt, 3));
-    add_metadata_from_string(meta, "tracknumber", sqlite3_column_text(select_stmt, 4));
+    add_metadata_from_string(meta, "location",    (const gchar *)sqlite3_column_text(select_stmt, 0));
+    add_metadata_from_string(meta, "artist",      (const gchar *)sqlite3_column_text(select_stmt, 1));
+    add_metadata_from_string(meta, "title",       (const gchar *)sqlite3_column_text(select_stmt, 2));
+    add_metadata_from_string(meta, "album",       (const gchar *)sqlite3_column_text(select_stmt, 3));
+    add_metadata_from_string(meta, "tracknumber", (const gchar *)sqlite3_column_text(select_stmt, 4));
 
     if(sqlite3_column_text(select_stmt, 5))
         add_metadata_from_int(meta, "mtime",            sqlite3_column_int(select_stmt, 5));
