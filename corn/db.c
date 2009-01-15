@@ -22,7 +22,7 @@ static sqlite3_stmt * select_stmt;
 static sqlite3_stmt * begin_stmt;
 static sqlite3_stmt * commit_stmt;
 
-static gint transaction_start_time = 0;
+gboolean need_commit = FALSE;
 
 static const char * sql_create_table =
     "create table if not exists metadata ("
@@ -50,6 +50,19 @@ static const char * sql_item_select =
 static void printerr(const char * msg)
 {
     g_printerr("%s (%s).\n", msg, db ? sqlite3_errmsg(db) : "?");
+}
+
+static gboolean periodic_commit(G_GNUC_UNUSED gpointer data)
+{
+    if(need_commit)
+    {
+        sqlite3_reset(commit_stmt);
+        sqlite3_reset(begin_stmt);
+        sqlite3_step(commit_stmt);
+        sqlite3_step(begin_stmt);
+        need_commit = FALSE;
+    }
+    return TRUE;
 }
 
 #define INIT_TRY(code, errmsg) do { \
@@ -100,6 +113,8 @@ gint db_init(void)
     to_update = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
     to_remove = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 
+    g_timeout_add_seconds_full(G_PRIORITY_DEFAULT, 10, periodic_commit, NULL, NULL);
+
     return 0;
 }
 
@@ -147,6 +162,7 @@ static void update_with_metadata(const gchar * uri, GHashTable * meta)
     if(bitrate)     sqlite3_bind_int (insert_stmt, 8, g_value_get_int(bitrate));
 
     TRY(sqlite3_step(insert_stmt), "Couldn't step insert statement");
+    need_commit = TRUE;
 }
 
 GHashTable * db_get(const gchar * uri)
@@ -199,6 +215,7 @@ static void remove(const gchar * uri)
     sqlite3_reset(delete_stmt);
     sqlite3_bind_text(delete_stmt, 1, uri, -1, SQLITE_STATIC);
     TRY(sqlite3_step(delete_stmt), "Couldn't step delete statement");
+    need_commit = TRUE;
 }
 
 // idle callback functions
@@ -210,16 +227,6 @@ static gboolean do_when_idle(GHashTable * table, void (* runfunc)(const gchar *)
     g_hash_table_iter_init(&iter, table);
     if(!g_hash_table_iter_next(&iter, &key, &value))
         return FALSE;
-
-    // TODO: run this periodically on its own
-    if(main_time_counter - transaction_start_time >= 10)
-    {
-        sqlite3_reset(commit_stmt);
-        sqlite3_reset(begin_stmt);
-        sqlite3_step(commit_stmt);
-        sqlite3_step(begin_stmt);
-        transaction_start_time = main_time_counter;
-    }
 
     const gchar * path = (const gchar *)key;
     runfunc(path);
