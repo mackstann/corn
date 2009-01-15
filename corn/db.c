@@ -9,8 +9,6 @@
 #include <glib-object.h>
 #include <glib.h>
 
-#include <stdlib.h>
-
 static sqlite3 * db = NULL;
 
 static GHashTable * to_update = NULL;
