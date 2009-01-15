@@ -47,9 +47,10 @@ static const char * sql_item_delete =
 static const char * sql_item_select =
     "select * from metadata where location = ?";
 
-static void printerr(const char * func, const char * msg)
+static void printerr(gint loglevel, const char * func, const char * msg)
 {
-    g_printerr("DB Error in function %s(): %s (%s).\n", func, msg, db ? sqlite3_errmsg(db) : "?");
+    g_log(G_LOG_DOMAIN, loglevel, "DB Error in function %s(): %s (%s).",
+            func, msg, db ? sqlite3_errmsg(db) : "?");
 }
 
 static gboolean periodic_commit(G_GNUC_UNUSED gpointer data)
@@ -65,25 +66,25 @@ static gboolean periodic_commit(G_GNUC_UNUSED gpointer data)
     return TRUE;
 }
 
-#define _db_try(code, errmsg, action) do { \
+#define _db_try(loglevel, code, errmsg, action) do { \
         int result; \
         do { result = (code); } while(result == SQLITE_BUSY); \
         if(result != SQLITE_OK && result != SQLITE_DONE) \
         { \
-            printerr(__func__, errmsg); \
+            printerr(loglevel, __func__, errmsg); \
             if(db) { sqlite3_close(db); db = NULL; }\
             action; \
         } \
     } while(0)
 
 #define db_init_return_if_fail(code, errmsg) \
-    _db_try(code, errmsg, return 40)
+    _db_try(G_LOG_LEVEL_CRITICAL, code, errmsg, return 40)
 
 #define db_return_if_fail(code, errmsg) \
-    _db_try(code, errmsg, return)
+    _db_try(G_LOG_LEVEL_WARNING, code, errmsg, return)
 
 #define db_warn_if_fail(code, errmsg) \
-    _db_try(code, errmsg, break) 
+    _db_try(G_LOG_LEVEL_WARNING, code, errmsg, break) 
 
 gint db_init(void)
 {
@@ -202,7 +203,7 @@ GHashTable * db_get(const gchar * uri)
     if(result != SQLITE_ROW)
     {
         if(result != SQLITE_DONE)
-            printerr(__func__, "Couldn't step select stmt");
+            printerr(G_LOG_LEVEL_WARNING, __func__, "Couldn't step select stmt");
 
         // not in db yet, fetch manually and insert it while we have it
         GHashTable * meta = music_get_playlist_item_metadata(uri);
