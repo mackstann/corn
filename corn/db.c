@@ -51,22 +51,12 @@ static void printerr(gint loglevel, const char * func, const char * msg)
             func, msg, db ? sqlite3_errmsg(db) : "?");
 }
 
-static gboolean periodic_commit(G_GNUC_UNUSED gpointer data)
-{
-    if(need_commit)
-    {
-        sqlite3_reset(commit_stmt);
-        sqlite3_reset(begin_stmt);
-        sqlite3_step(commit_stmt);
-        sqlite3_step(begin_stmt);
-        need_commit = FALSE;
-    }
-    return TRUE;
-}
+#define retry(code) \
+    do { int _ret; do { _ret = code; } while(_ret == SQLITE_BUSY); } while(0)
 
 #define _db_try(loglevel, code, errmsg, action) do { \
         int result; \
-        do { result = (code); } while(result == SQLITE_BUSY); \
+        retry(code); \
         if(result != SQLITE_OK && result != SQLITE_DONE) \
         { \
             printerr(loglevel, __func__, errmsg); \
@@ -83,6 +73,19 @@ static gboolean periodic_commit(G_GNUC_UNUSED gpointer data)
 
 #define db_warn_if_fail(code, errmsg) \
     _db_try(G_LOG_LEVEL_WARNING, code, errmsg, break) 
+
+static gboolean periodic_commit(G_GNUC_UNUSED gpointer data)
+{
+    if(need_commit)
+    {
+        retry(sqlite3_reset(commit_stmt));
+        retry(sqlite3_reset(begin_stmt));
+        retry(sqlite3_step(commit_stmt));
+        retry(sqlite3_step(begin_stmt));
+        need_commit = FALSE;
+    }
+    return TRUE;
+}
 
 gint db_init(void)
 {
