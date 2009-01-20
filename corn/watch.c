@@ -24,7 +24,6 @@ static void watch_free(gpointer data)
     g_free(watch);
 }
 
-// XXX temporary hack because we lack a database
 static gint locate(const gchar * path)
 {
     for(gint i = 0; i < playlist_length(); i++)
@@ -36,7 +35,7 @@ static gint locate(const gchar * path)
 gboolean handle_event_when_idle(G_GNUC_UNUSED gpointer data)
 {
     GFile * file = g_queue_pop_head(&event_queue);
-    gchar * uri = g_file_get_uri(file); // XXX should use uri
+    gchar * uri = g_file_get_uri(file);
     g_object_unref(file);
     if(uri)
     {
@@ -58,7 +57,7 @@ gboolean handle_event_when_idle(G_GNUC_UNUSED gpointer data)
 
 void changed_callback(G_GNUC_UNUSED GFileMonitor * monitor,
                                     GFile * file,
-                                    GFile * other_file,
+                      G_GNUC_UNUSED GFile * other_file,
                                     GFileMonitorEvent event_type,
                       G_GNUC_UNUSED gpointer user_data)
 {
@@ -71,19 +70,6 @@ void changed_callback(G_GNUC_UNUSED GFileMonitor * monitor,
     if(event_type == G_FILE_MONITOR_EVENT_PRE_UNMOUNT) g_message("file : %-40s %s", "G_FILE_MONITOR_EVENT_PRE_UNMOUNT", path);
     if(event_type == G_FILE_MONITOR_EVENT_UNMOUNTED) g_message("file : %-40s %s", "G_FILE_MONITOR_EVENT_UNMOUNTED", path);
     g_free(path);
-
-    if(other_file)
-    {
-        path = g_file_get_path(other_file);
-        if(event_type == G_FILE_MONITOR_EVENT_CHANGED) g_message("other: %-40s %s", "G_FILE_MONITOR_EVENT_CHANGED", path);
-        if(event_type == G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT) g_message("other: %-40s %s", "G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT", path);
-        if(event_type == G_FILE_MONITOR_EVENT_DELETED) g_message("other: %-40s %s", "G_FILE_MONITOR_EVENT_DELETED", path);
-        if(event_type == G_FILE_MONITOR_EVENT_CREATED) g_message("other: %-40s %s", "G_FILE_MONITOR_EVENT_CREATED", path);
-        if(event_type == G_FILE_MONITOR_EVENT_ATTRIBUTE_CHANGED) g_message("other: %-40s %s", "G_FILE_MONITOR_EVENT_ATTRIBUTE_CHANGED", path);
-        if(event_type == G_FILE_MONITOR_EVENT_PRE_UNMOUNT) g_message("other: %-40s %s", "G_FILE_MONITOR_EVENT_PRE_UNMOUNT", path);
-        if(event_type == G_FILE_MONITOR_EVENT_UNMOUNTED) g_message("other: %-40s %s", "G_FILE_MONITOR_EVENT_UNMOUNTED", path);
-        g_free(path);
-    }
 
     switch(event_type)
     {
