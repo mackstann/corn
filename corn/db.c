@@ -56,7 +56,7 @@ static void printerr(gint loglevel, const char * func, const char * msg)
 
 #define _db_try(loglevel, code, errmsg, action) do { \
         int result; \
-        retry(code); \
+        do { result = code; } while(result == SQLITE_BUSY); \
         if(result != SQLITE_OK && result != SQLITE_DONE) \
         { \
             printerr(loglevel, __func__, errmsg); \
@@ -191,7 +191,7 @@ static void update_with_metadata(const gchar * uri, GHashTable * meta)
     need_commit = TRUE;
 }
 
-GHashTable * db_get(const gchar * uri)
+static GHashTable * get(const gchar * uri, gboolean autoadd)
 {
     sqlite3_reset(select_stmt);
     sqlite3_bind_text(select_stmt, 1, uri, -1, SQLITE_STATIC);
@@ -208,7 +208,8 @@ GHashTable * db_get(const gchar * uri)
 
         // not in db yet, fetch manually and insert it while we have it
         GHashTable * meta = music_get_playlist_item_metadata(uri);
-        update_with_metadata(uri, meta);
+        if(autoadd)
+            update_with_metadata(uri, meta);
         return meta;
     }
 
@@ -228,6 +229,9 @@ GHashTable * db_get(const gchar * uri)
 
     return meta;
 }
+
+GHashTable * db_get(const gchar * uri) { return get(uri, TRUE); }
+GHashTable * db_get_noadd(const gchar * uri) { return get(uri, FALSE); }
 
 static void update(const gchar * uri)
 {

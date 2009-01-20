@@ -46,9 +46,7 @@ static GString * generate_playlist_data(void)
 void state_playlist_init(void)
 {
     gchar * playlist_filename = g_build_filename(g_get_user_data_dir(), main_instance_name, "playlist.m3u", NULL);
-    GFile * file = g_file_new_for_path(playlist_filename);
-    parse_m3u(file);
-    g_object_unref(file);
+    playlist_append(playlist_filename);
     g_free(playlist_filename);
 
     GError * error = NULL;

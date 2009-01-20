@@ -14,7 +14,6 @@ static GHashTable * watches = NULL;
 typedef struct
 {
     GFileMonitor * monitor;
-    gint refcount;
 } DirWatch;
 
 static void watch_free(gpointer data)
@@ -37,44 +36,54 @@ static gint locate(const gchar * path)
 gboolean handle_event_when_idle(G_GNUC_UNUSED gpointer data)
 {
     GFile * file = g_queue_pop_head(&event_queue);
-    gchar * path = g_file_get_path(file); // XXX should use uri
+    gchar * uri = g_file_get_uri(file); // XXX should use uri
     g_object_unref(file);
-    if(path)
+    if(uri)
     {
-        GHashTable * meta = music_get_playlist_item_metadata(path);
+        gint pos = locate(uri);
+        GHashTable * meta = db_get_noadd(uri);
         gboolean has_meta = g_hash_table_size(meta);
-        gint pos = locate(path);
         if(pos > -1)
         {
-            if(has_meta)
-                db_schedule_update(playlist_nth(pos));
-            else
-            {
+            if(!has_meta)
                 playlist_remove(pos);
-                g_free(path);
-            }
+            db_schedule_update(uri);
+            g_free(uri);
         }
-        else if(pos == -1 && has_meta)
-            playlist_append(path);
+        else if(has_meta)
+            playlist_append(uri);
     }
     return !g_queue_is_empty(&event_queue);
 }
 
 void changed_callback(G_GNUC_UNUSED GFileMonitor * monitor,
                                     GFile * file,
-                      G_GNUC_UNUSED GFile * other_file,
+                                    GFile * other_file,
                                     GFileMonitorEvent event_type,
                       G_GNUC_UNUSED gpointer user_data)
 {
     gchar * path = g_file_get_path(file);
-    if(event_type == G_FILE_MONITOR_EVENT_CHANGED) g_message("%-40s %s", "G_FILE_MONITOR_EVENT_CHANGED", path);
-    if(event_type == G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT) g_message("%-40s %s", "G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT", path);
-    if(event_type == G_FILE_MONITOR_EVENT_DELETED) g_message("%-40s %s", "G_FILE_MONITOR_EVENT_DELETED", path);
-    if(event_type == G_FILE_MONITOR_EVENT_CREATED) g_message("%-40s %s", "G_FILE_MONITOR_EVENT_CREATED", path);
-    if(event_type == G_FILE_MONITOR_EVENT_ATTRIBUTE_CHANGED) g_message("%-40s %s", "G_FILE_MONITOR_EVENT_ATTRIBUTE_CHANGED", path);
-    if(event_type == G_FILE_MONITOR_EVENT_PRE_UNMOUNT) g_message("%-40s %s", "G_FILE_MONITOR_EVENT_PRE_UNMOUNT", path);
-    if(event_type == G_FILE_MONITOR_EVENT_UNMOUNTED) g_message("%-40s %s", "G_FILE_MONITOR_EVENT_UNMOUNTED", path);
+    if(event_type == G_FILE_MONITOR_EVENT_CHANGED) g_message("file : %-40s %s", "G_FILE_MONITOR_EVENT_CHANGED", path);
+    if(event_type == G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT) g_message("file : %-40s %s", "G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT", path);
+    if(event_type == G_FILE_MONITOR_EVENT_DELETED) g_message("file : %-40s %s", "G_FILE_MONITOR_EVENT_DELETED", path);
+    if(event_type == G_FILE_MONITOR_EVENT_CREATED) g_message("file : %-40s %s", "G_FILE_MONITOR_EVENT_CREATED", path);
+    if(event_type == G_FILE_MONITOR_EVENT_ATTRIBUTE_CHANGED) g_message("file : %-40s %s", "G_FILE_MONITOR_EVENT_ATTRIBUTE_CHANGED", path);
+    if(event_type == G_FILE_MONITOR_EVENT_PRE_UNMOUNT) g_message("file : %-40s %s", "G_FILE_MONITOR_EVENT_PRE_UNMOUNT", path);
+    if(event_type == G_FILE_MONITOR_EVENT_UNMOUNTED) g_message("file : %-40s %s", "G_FILE_MONITOR_EVENT_UNMOUNTED", path);
     g_free(path);
+
+    if(other_file)
+    {
+        path = g_file_get_path(other_file);
+        if(event_type == G_FILE_MONITOR_EVENT_CHANGED) g_message("other: %-40s %s", "G_FILE_MONITOR_EVENT_CHANGED", path);
+        if(event_type == G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT) g_message("other: %-40s %s", "G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT", path);
+        if(event_type == G_FILE_MONITOR_EVENT_DELETED) g_message("other: %-40s %s", "G_FILE_MONITOR_EVENT_DELETED", path);
+        if(event_type == G_FILE_MONITOR_EVENT_CREATED) g_message("other: %-40s %s", "G_FILE_MONITOR_EVENT_CREATED", path);
+        if(event_type == G_FILE_MONITOR_EVENT_ATTRIBUTE_CHANGED) g_message("other: %-40s %s", "G_FILE_MONITOR_EVENT_ATTRIBUTE_CHANGED", path);
+        if(event_type == G_FILE_MONITOR_EVENT_PRE_UNMOUNT) g_message("other: %-40s %s", "G_FILE_MONITOR_EVENT_PRE_UNMOUNT", path);
+        if(event_type == G_FILE_MONITOR_EVENT_UNMOUNTED) g_message("other: %-40s %s", "G_FILE_MONITOR_EVENT_UNMOUNTED", path);
+        g_free(path);
+    }
 
     switch(event_type)
     {
@@ -95,81 +104,31 @@ void changed_callback(G_GNUC_UNUSED GFileMonitor * monitor,
     }
 }
 
-void watch_file(const gchar * file_uri)
+void watch_dir(const gchar * uri)
 {
     if(!watches)
         watches = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, watch_free);
 
-    DirWatch * watch = (DirWatch *)g_hash_table_lookup(watches, file_uri);
-    if(watch)
-        watch->refcount++;
-    else
+    if(!g_hash_table_lookup(watches, uri))
     {
         GError * error = NULL;
-        watch = g_new(DirWatch, 1);
-        watch->refcount = 1;
-        GFile * f = g_file_new_for_uri(file_uri);
+        DirWatch * watch = g_new(DirWatch, 1);
+        GFile * f = g_file_new_for_uri(uri);
         watch->monitor = g_file_monitor_directory(f, G_FILE_MONITOR_NONE, NULL, &error);
         g_object_unref(f);
         if(error)
         {
-            g_printerr("Unable to monitor directory %s (%s).\n", file_uri, error->message);
+            g_printerr("Unable to monitor directory %s (%s).\n", uri, error->message);
             g_error_free(error);
             g_free(watch);
         }
         else
         {
+            g_debug("Monitor directory %s", uri);
             // connect to signal
             g_signal_connect(watch->monitor, "changed", (gpointer)changed_callback, NULL);
-            g_hash_table_insert(watches, g_strdup(file_uri), watch);
+            g_hash_table_insert(watches, g_strdup(uri), watch);
         }
     }
-}
-
-void unwatch_file(const gchar * file_uri)
-{
-    DirWatch * watch = (DirWatch *)g_hash_table_lookup(watches, file_uri);
-    if(watch)
-    {
-        if(--watch->refcount == 0)
-            g_hash_table_remove(watches, watch);
-    }
-}
-
-static GFile * get_parent(const gchar * uri)
-{
-    GFile * f = g_file_new_for_path(uri);
-    if(!f)
-        return NULL;
-
-    GFile * parent = g_file_get_parent(f);
-    g_object_unref(f);
-    return parent;
-}
-
-void watch_parent(const gchar * file_uri)
-{
-    GFile * parent = get_parent(file_uri);
-
-    if(!parent)
-        return;
-
-    gchar * parent_uri = g_file_get_uri(parent);
-    watch_file(parent_uri);
-    g_free(parent_uri);
-    g_object_unref(parent);
-}
-
-void unwatch_parent(const gchar * file_uri)
-{
-    GFile * parent = get_parent(file_uri);
-
-    if(!parent)
-        return;
-
-    gchar * parent_uri = g_file_get_uri(parent);
-    unwatch_file(parent_uri);
-    g_free(parent_uri);
-    g_object_unref(parent);
 }
 
