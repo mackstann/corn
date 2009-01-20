@@ -7,6 +7,7 @@
 #include "mpris-tracklist.h"
 #include "main.h"
 #include "parsefile.h"
+#include "sniff-file.h"
 #include "state-settings.h"
 #include "dbus.h"
 #include "watch.h"
@@ -79,12 +80,12 @@ void playlist_append(gchar * path) // takes ownership of the path passed in
     for(gint i = 0; i < len; i++)
     {
         FoundFile * ff = g_queue_pop_head(&found_files);
-        if(ff->flags & PARSE_RESULT_FILE)
+        if(ff->type & SNIFFED_FILE)
         {
             g_array_append_val(playlist, ff->uri);
             db_schedule_update(ff->uri);
         }
-        else if(ff->flags & PARSE_RESULT_DIRECTORY)
+        else if(ff->type & SNIFFED_DIRECTORY)
         {
             watch_dir(ff->uri);
             g_free(ff->uri);

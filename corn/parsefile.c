@@ -3,6 +3,7 @@
 
 #include "playlist.h"
 #include "parsefile.h"
+#include "sniff-file.h"
 
 #include <gio/gio.h>
 #include <string.h>
@@ -23,24 +24,12 @@ static gchar ** read_file(GFile * file)
     return lines;
 }
 
-static gboolean looks_like_uri(const gchar * path)
-{
-    static GRegex * uri_pattern = NULL;
-    if(!uri_pattern)
-        uri_pattern = g_regex_new("^[a-z0-9+.-]+:",
-            G_REGEX_CASELESS | G_REGEX_OPTIMIZE, 0, NULL);
-    return g_regex_match(uri_pattern, path, 0, NULL);
-}
-
-// if #name is a relative path, then make it an absolute path by prepending
-// #dir to it.  if absolute or a uri, return unmodified.  return value may be a
-// uri or a unix path, but is always newly allocated and owned by the caller.
 static gchar * add_relative_dir(GFile * dir, const gchar * name, gboolean force)
 {
     g_assert(dir != NULL);
     g_assert(name != NULL);
 
-    if(!force && (name[0] == '/' || looks_like_uri(name)))
+    if(!force && (name[0] == '/' || sniff_looks_like_uri(name)))
         return g_strdup(name);
 
     // else, relative path
@@ -52,7 +41,7 @@ static gchar * add_relative_dir(GFile * dir, const gchar * name, gboolean force)
     return abs_uri;
 }
 
-void parse_m3u(GFile * m3u)
+static void parse_m3u(GFile * m3u)
 {
     gchar ** lines;
     if((lines = read_file(m3u)))
@@ -71,7 +60,7 @@ void parse_m3u(GFile * m3u)
     }
 }
 
-void parse_pls(GFile * pls)
+static void parse_pls(GFile * pls)
 {
     GKeyFile * keyfile = g_key_file_new();
 
@@ -156,91 +145,22 @@ void parse_dir(GFile * dir)
     g_slist_free(entries);
 }
 
-static FoundFile * found_file_new(gchar * uri, gint flags)
-{
-    FoundFile * ff = g_new(FoundFile, 1);
-    ff->uri = uri;
-    ff->flags = flags;
-    return ff;
-}
-
-static FoundFile * _parse_file_fallback_dumb_and_slow(const gchar * path, GFile * file)
-{
-    GFileInfo * info = g_file_query_info(file, G_FILE_ATTRIBUTE_STANDARD_TYPE,
-            G_FILE_QUERY_INFO_NONE, NULL, NULL);
-    if(info)
-    {
-        guint type = g_file_info_get_attribute_uint32(info,
-                G_FILE_ATTRIBUTE_STANDARD_TYPE);
-        g_object_unref(info);
-        if(type == G_FILE_TYPE_DIRECTORY)
-        {
-            parse_dir(file);
-            return found_file_new(g_file_get_uri(file), PARSE_RESULT_DIRECTORY);
-        }
-    }
-
-    // i guess it's just some file.  we'll find out later when we try to play it.
-    return found_file_new(g_file_get_uri(file), PARSE_RESULT_FILE);
-}
-
-static FoundFile * _parse_file(const gchar * path, GFile * file)
-{
-    gsize pathlen = strlen(path);
-
-    if(pathlen < 5)
-    {
-        // screw it, can't guess based on name
-        return _parse_file_fallback_dumb_and_slow(path, file);
-    }
-
-    // to match these we want at least one character, followed by a dot,
-    // followed by the file extension
-    if((pathlen >= 5 &&
-        (g_str_has_suffix(path+pathlen-4, ".mp3") ||
-         g_str_has_suffix(path+pathlen-4, ".ogg") ||
-         g_str_has_suffix(path+pathlen-4, ".m4a") ||
-         g_str_has_suffix(path+pathlen-4, ".ape") ||
-         g_str_has_suffix(path+pathlen-4, ".mpc") ||
-         g_str_has_suffix(path+pathlen-4, ".wav") ||
-         g_str_has_suffix(path+pathlen-4, ".pcm") ||
-         g_str_has_suffix(path+pathlen-4, ".wma") ||
-         g_str_has_suffix(path+pathlen-4, ".ram")))
-       ||
-       (pathlen >= 6 &&
-        (g_str_has_suffix(path+pathlen-5, ".flac") ||
-         g_str_has_suffix(path+pathlen-5, ".aiff"))))
-    {
-        // looks like a boring media file with predictable file extension
-        return found_file_new(g_file_get_uri(file), PARSE_RESULT_FILE);
-    }
-
-    // maybe a playlist?
-
-    if(g_str_has_suffix(path+pathlen-4, ".m3u"))
-    {
-        parse_m3u(file);
-        return found_file_new(NULL, PARSE_RESULT_PLAYLIST);
-    }
-
-    if(g_str_has_suffix(path+pathlen-4, ".pls"))
-    {
-        parse_pls(file);
-        return found_file_new(NULL, PARSE_RESULT_PLAYLIST);
-    }
-
-    return _parse_file_fallback_dumb_and_slow(path, file);
-}
-
 void parse_file(const gchar * path)
 {
     g_return_if_fail(path != NULL);
 
-    GFile * file = looks_like_uri(path)
+    GFile * file = sniff_looks_like_uri(path)
         ? g_file_new_for_uri(path)
         : g_file_new_for_path(path);
 
-    FoundFile * ff = _parse_file(path, file);
+    FoundFile * ff = sniff_file(path, file);
+
+    if(ff->type & SNIFFED_DIRECTORY)
+        parse_dir(file);
+    else if(ff->type & SNIFFED_M3U)
+        parse_m3u(file);
+    else if(ff->type & SNIFFED_PLS)
+        parse_pls(file);
 
     g_object_unref(file);
     g_queue_push_tail(&found_files, ff);

@@ -30,6 +30,8 @@ corn_SOURCES = \
   playlist-random.c \
   parsefile.h \
   parsefile.c \
+  sniff-file.h \
+  sniff-file.c \
   state.h \
   state.c \
   state-settings.h \
